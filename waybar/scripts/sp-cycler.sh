@@ -1,7 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# ══════════════════════════════════════════════════════════════════════════════
+#  TOKYO 80s TRV30 — Waybar Scratchpad Cycler & Indicator (Optimized 0.57)
+#  東京 80's デジタル // ウェイバー・スクラッチパッド・サイクル機構
+# ══════════════════════════════════════════════════════════════════════════════
+
 ACTION=${1:-status}
 ORDER=("music" "discord" "calendar" "notes")
 STATE_FILE="/tmp/current_scratchpad"
+ACTIVE_FILE="/tmp/scratchpad_active"
 
 get_label() {
     case "$1" in
@@ -12,64 +18,34 @@ get_label() {
         dev) echo "DEV " ;;
         antigravity) echo "AG  " ;;
         center) echo "DECK" ;;
+        radar) echo "RDR " ;;
         magic) echo "CUST" ;;
         *) echo "PAD " ;;
     esac
 }
 
 get_active() {
-    # 1. Check if active window is one of the scratchpads
-    local ACTIVE_CLASS=$(hyprctl activewindow -j 2>/dev/null | jq -r '.class // ""')
-    case "$ACTIVE_CLASS" in
-        Spotify|spotify) echo "music"; return ;;
-        vesktop|discord|Discord) echo "discord"; return ;;
-        *calendar*) echo "calendar"; return ;;
-        notes-term|*copyq*) echo "notes"; return ;;
-        *commandcenter*|*command-center*) echo "center"; return ;;
-        *radar*) echo "radar"; return ;;
-        *displaydeck*|*display-deck*) echo "display"; return ;;
-        antigravity-ide) echo "dev"; return ;;
-    esac
-
-    # 2. Check if any modal scratchpad is un-stowed on any visible workspace
-    for target in "music" "discord" "calendar" "notes"; do
-        local CLASS_REGEX=""
-        case "$target" in
-            music) CLASS_REGEX="^([Ss]potify)$" ;;
-            discord) CLASS_REGEX="^([Vv]esktop)$" ;;
-            calendar) CLASS_REGEX="calendar" ;;
-            notes) CLASS_REGEX="notes-term|com.github.hluk.copyq" ;;
-        esac
-        local WS=$(hyprctl clients -j 2>/dev/null | jq -r ".[] | select(.class | test(\"$CLASS_REGEX\"; \"i\")) | .workspace.name" | head -n 1)
-        if [ -n "$WS" ] && [[ "$WS" != special:* ]]; then
-            echo "$target"
+    if [ -f "$ACTIVE_FILE" ]; then
+        local act
+        read -r act < "$ACTIVE_FILE" 2>/dev/null
+        if [ -n "$act" ]; then
+            echo "$act"
             return
         fi
-    done
-
-    # 3. Check special workspaces on monitors
-    local WS
-    WS=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .specialWorkspace.name // ""' | grep -E '^special:.+' | sed 's/^special://' | head -n 1)
-    if [ -n "$WS" ]; then
-        echo "$WS"
-        return
     fi
-    WS=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | .specialWorkspace.name // ""' | grep -E '^special:.+' | sed 's/^special://' | head -n 1)
-    if [ -n "$WS" ]; then
-        echo "$WS"
+
+    # Fast single fallback if file is empty
+    local mon_sp
+    mon_sp=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .specialWorkspace.name // ""' | sed 's/^special://')
+    if [ -n "$mon_sp" ] && [ "$mon_sp" != "null" ]; then
+        echo "$mon_sp"
         return
     fi
 }
 
 launch_target() {
     local TARGET=$1
-    if [ "$TARGET" = "notes" ]; then
-        ~/.config/hypr/scripts/launch-notes.sh >/dev/null 2>&1
-    elif [ "$TARGET" = "antigravity" ]; then
-        ~/.config/hypr/scripts/launch-ag.sh >/dev/null 2>&1
-    else
-        ~/.config/hypr/scripts/toggle-scratchpad.sh "$TARGET" >/dev/null 2>&1
-    fi
+    hyprctl eval "require('scratchpads').toggle('$TARGET')" >/dev/null 2>&1
 }
 
 ACTIVE=$(get_active)
@@ -78,32 +54,35 @@ if [ "$ACTION" = "status" ]; then
     if [ -n "$ACTIVE" ]; then
         echo "$ACTIVE" > "$STATE_FILE"
         LABEL=$(get_label "$ACTIVE")
-        TEXT="<span foreground=\"#c44444\">●</span> <span foreground=\"#f2a533\">$LABEL</span>"
-        TOOLTIP="Scratchpad: $ACTIVE (Active)
-Click: Close | Scroll: Cycle"
-        jq -nc --arg text "$TEXT" --arg tooltip "$TOOLTIP" --arg class "active" '{"text": $text, "tooltip": $tooltip, "class": $class}'
+        printf '{"text":"<span foreground=\\"#c44444\\">●</span> <span foreground=\\"#f2a533\\">%s</span>","tooltip":"Scratchpad: %s (Active)\\nClick: Close | Scroll: Cycle","class":"active"}\n' "$LABEL" "$ACTIVE"
     else
-        CURRENT=$(cat "$STATE_FILE" 2>/dev/null)
+        CURRENT=""
+        if [ -f "$STATE_FILE" ]; then
+            read -r CURRENT < "$STATE_FILE" 2>/dev/null
+        fi
         if [ -z "$CURRENT" ]; then CURRENT="music"; fi
         LABEL=$(get_label "$CURRENT")
-        TEXT="<span foreground=\"#8a7e72\">○ $LABEL</span>"
-        TOOLTIP="Scratchpad: $CURRENT
-Click: Open | Scroll: Cycle"
-        jq -nc --arg text "$TEXT" --arg tooltip "$TOOLTIP" --arg class "inactive" '{"text": $text, "tooltip": $tooltip, "class": $class}'
+        printf '{"text":"<span foreground=\\"#8a7e72\\">○ %s</span>","tooltip":"Scratchpad: %s\\nClick: Open | Scroll: Cycle","class":"inactive"}\n' "$LABEL" "$CURRENT"
     fi
 
 elif [ "$ACTION" = "toggle" ]; then
     if [ -n "$ACTIVE" ]; then
-        ~/.config/hypr/scripts/toggle-scratchpad.sh "$ACTIVE" >/dev/null 2>&1
+        hyprctl eval "require('scratchpads').toggle('$ACTIVE')" >/dev/null 2>&1
     else
-        CURRENT=$(cat "$STATE_FILE" 2>/dev/null)
+        CURRENT=""
+        if [ -f "$STATE_FILE" ]; then
+            read -r CURRENT < "$STATE_FILE" 2>/dev/null
+        fi
         if [ -z "$CURRENT" ]; then CURRENT="music"; fi
         launch_target "$CURRENT"
     fi
     ( sleep 0.1 ; pkill -RTMIN+1 waybar ; sleep 0.35 ; pkill -RTMIN+1 waybar ) &
 
 elif [ "$ACTION" = "next" ] || [ "$ACTION" = "prev" ]; then
-    CURRENT=$(cat "$STATE_FILE" 2>/dev/null)
+    CURRENT=""
+    if [ -f "$STATE_FILE" ]; then
+        read -r CURRENT < "$STATE_FILE" 2>/dev/null
+    fi
     if [ -z "$CURRENT" ]; then CURRENT="music"; fi
 
     CURRENT_IDX=0

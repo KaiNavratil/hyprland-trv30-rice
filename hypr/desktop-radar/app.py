@@ -527,7 +527,7 @@ class RadarWindow(Gtk.ApplicationWindow):
                 # Close/stow special workspace
                 subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
                 if space:
-                    subprocess.run(["python3", os.path.expanduser("~/.config/hypr/scripts/switch-ws.sh"), str(space)], stdout=subprocess.DEVNULL)
+                    subprocess.run(["hyprctl", "eval", f"require('spaces').switch_desktop_space({space})"], stdout=subprocess.DEVNULL)
                 if addr:
                     subprocess.run(["hyprctl", "dispatch", "focuswindow", f"address:{addr}"], stdout=subprocess.DEVNULL)
 
@@ -584,7 +584,7 @@ class RadarWindow(Gtk.ApplicationWindow):
             elif action == "toggle_floating":
                 addr = msg.get("address")
                 if addr:
-                    subprocess.run(["hyprctl", "dispatch", "togglefloating", f"address:{addr}"], stdout=subprocess.DEVNULL)
+                    subprocess.run(["hyprctl", "--batch", f"dispatch focuswindow address:{addr} ; dispatch togglefloating"], stdout=subprocess.DEVNULL)
                     time.sleep(0.08)
                     self.send_state_to_js()
 
@@ -606,13 +606,13 @@ class RadarWindow(Gtk.ApplicationWindow):
                 space = msg.get("space")
                 subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
                 if space:
-                    subprocess.run(["python3", os.path.expanduser("~/.config/hypr/scripts/switch-ws.sh"), str(space)], stdout=subprocess.DEVNULL)
+                    subprocess.run(["hyprctl", "eval", f"require('spaces').switch_desktop_space({space})"], stdout=subprocess.DEVNULL)
 
             elif action == "toggle_scratchpad":
                 target = msg.get("target")
                 subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
                 if target:
-                    subprocess.run(["bash", os.path.expanduser("~/.config/hypr/scripts/toggle-scratchpad.sh"), target], stdout=subprocess.DEVNULL)
+                    subprocess.run(["hyprctl", "eval", f"require('scratchpads').toggle('{target}')"], stdout=subprocess.DEVNULL)
 
             elif action == "close":
                 subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
@@ -631,7 +631,7 @@ class RadarWindow(Gtk.ApplicationWindow):
         elif keyname in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]:
             space = int(keyname)
             subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
-            subprocess.run(["python3", os.path.expanduser("~/.config/hypr/scripts/switch-ws.sh"), str(space)], stdout=subprocess.DEVNULL)
+            subprocess.run(["hyprctl", "eval", f"require('spaces').switch_desktop_space({space})"], stdout=subprocess.DEVNULL)
             return True
         return False
 

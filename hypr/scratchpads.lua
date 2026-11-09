@@ -121,6 +121,44 @@ local SCRATCHPAD_CONFIG = {
     },
 }
 
+local PANORAMIC_DECKS = {
+    music = {
+        name = "MUSIC STUDIO // 音響機構",
+        main = "music",
+        comp = "cava",
+    },
+    comms = {
+        name = "COMMS OPS // 通信作戦",
+        main = "discord",
+        comp = "calendar",
+    },
+    discord = {
+        name = "COMMS OPS // 通信作戦",
+        main = "discord",
+        comp = "calendar",
+    },
+    research = {
+        name = "RESEARCH DECK // 開発記録",
+        main = "dev",
+        comp = "notes",
+    },
+    notes = {
+        name = "RESEARCH DECK // 開発記録",
+        main = "dev",
+        comp = "notes",
+    },
+    cockpit = {
+        name = "COMMAND CENTER // 司令室",
+        main = "center",
+        comp = "sysmon",
+    },
+    center = {
+        name = "COMMAND CENTER // 司令室",
+        main = "center",
+        comp = "sysmon",
+    },
+}
+
 --- Check if an anchor file exists for this scratchpad
 local function is_anchored(name)
     local f = io.open("/tmp/scratchpad_anchored_" .. name, "r")
@@ -129,6 +167,40 @@ local function is_anchored(name)
         return true
     end
     return false
+end
+
+--- Updates atomic state file for Waybar and external scripts (0 hyprctl overhead)
+function M.update_active_scratchpad(override_name)
+    local active_name = override_name
+    if not active_name then
+        local sp = hl.get_active_special_workspace()
+        active_name = (sp and sp.name and sp.name:find("^special:")) and sp.name:gsub("^special:", "") or ""
+
+        if active_name == "" then
+            local mons = hl.get_monitors() or {}
+            for _, m in ipairs(mons) do
+                local msp = m.active_special_workspace or m.specialWorkspace
+                local msp_name = ""
+                if type(msp) == "table" then
+                    msp_name = msp.name or ""
+                elseif type(msp) == "string" then
+                    msp_name = msp
+                end
+                if msp_name:find("^special:") then
+                    active_name = msp_name:gsub("^special:", "")
+                    break
+                end
+            end
+        end
+    end
+
+    local tmp = "/tmp/scratchpad_active.tmp"
+    local f = io.open(tmp, "w")
+    if f then
+        f:write(active_name .. "\n")
+        f:close()
+        os.rename(tmp, "/tmp/scratchpad_active")
+    end
 end
 
 --- Native scratchpad toggler
@@ -147,16 +219,36 @@ function M.toggle(target, is_stack)
     local target_special = "special:" .. target
     local cur_sp = hl.get_active_special_workspace()
 
-    -- Check if target is already open on THIS monitor
-    local is_open_here = cur_sp and cur_sp.name == target_special
+    -- Check if target is already open on THIS monitor or ANY monitor
+    local is_open_on_mon = nil
+    if cur_sp and cur_sp.name == target_special then
+        is_open_on_mon = cur_mon.name
+    else
+        for _, m in ipairs(hl.get_monitors() or {}) do
+            local msp = m.active_special_workspace or m.specialWorkspace
+            local msp_name = (type(msp) == "table") and msp.name or tostring(msp or "")
+            if msp_name == target_special then
+                is_open_on_mon = m.name
+                break
+            end
+        end
+    end
 
-    if is_open_here then
+    if is_open_on_mon then
         -- Stow target and clear anchor
         os.remove("/tmp/scratchpad_anchored_" .. target)
+        if is_open_on_mon ~= cur_mon.name then
+            hl.dispatch(hl.dsp.focus({ monitor = is_open_on_mon }))
+        end
         hl.dispatch(hl.dsp.workspace.toggle_special(target))
+        if is_open_on_mon ~= cur_mon.name then
+            hl.dispatch(hl.dsp.focus({ monitor = cur_mon.name }))
+        end
         if target == "notes" then
             os.execute("copyq hide &")
         end
+        M.update_active_scratchpad("")
+        set_timeout(M.update_active_scratchpad, 100)
         os.execute("pkill -RTMIN+1 waybar &")
         return
     end
@@ -294,8 +386,90 @@ function M.toggle(target, is_stack)
     enforce_tiled()
     set_timeout(enforce_tiled, 150)
     set_timeout(enforce_tiled, 450)
+    M.update_active_scratchpad(target)
+    set_timeout(M.update_active_scratchpad, 120)
 
     os.execute("(sleep 0.1; pkill -RTMIN+1 waybar; sleep 0.3; pkill -RTMIN+1 waybar) &")
+end
+
+--- Panoramic (Multi-Monitor) Coordinated Scratchpad Toggler
+function M.toggle_panoramic(deck_key)
+    local deck = PANORAMIC_DECKS[deck_key]
+    if not deck then
+        M.toggle(deck_key)
+        return
+    end
+
+    local mons = hl.get_monitors() or {}
+    if #mons <= 1 then
+        M.toggle(deck.main)
+        return
+    end
+
+    local main_mon = nil
+    local comp_mon = nil
+    local focused_mon = hl.get_active_monitor()
+    local focused_name = focused_mon and focused_mon.name or nil
+
+    for _, m in ipairs(mons) do
+        if m.name == "HDMI-A-1" or (not m.name:find("^eDP") and not main_mon) then
+            main_mon = m
+        else
+            comp_mon = m
+        end
+    end
+    if not main_mon then main_mon = mons[1] end
+    if not comp_mon then comp_mon = mons[2] end
+
+    local main_sp_target = "special:" .. deck.main
+    local comp_sp_target = "special:" .. deck.comp
+
+    local main_sp_obj = main_mon.active_special_workspace or main_mon.specialWorkspace
+    local comp_sp_obj = comp_mon.active_special_workspace or comp_mon.specialWorkspace
+    local main_cur_sp = main_sp_obj and (type(main_sp_obj) == "table" and main_sp_obj.name or tostring(main_sp_obj)) or ""
+    local comp_cur_sp = comp_sp_obj and (type(comp_sp_obj) == "table" and comp_sp_obj.name or tostring(comp_sp_obj)) or ""
+
+    if main_cur_sp == main_sp_target and comp_cur_sp == comp_sp_target then
+        os.remove("/tmp/scratchpad_anchored_" .. deck.main)
+        os.remove("/tmp/scratchpad_anchored_" .. deck.comp)
+        hl.dispatch(hl.dsp.focus({ monitor = main_mon.name }))
+        hl.dispatch(hl.dsp.workspace.toggle_special(deck.main))
+        hl.dispatch(hl.dsp.focus({ monitor = comp_mon.name }))
+        hl.dispatch(hl.dsp.workspace.toggle_special(deck.comp))
+        if focused_name then
+            hl.dispatch(hl.dsp.focus({ monitor = focused_name }))
+        end
+        os.execute(string.format('dunstify -a "osd" -r 9997 -u normal "[ ❖ PANORAMIC STOWED / パノラマ格納 ]" "%s DISMISSED ACROSS ALL DISPLAYS"', deck.name))
+        M.update_active_scratchpad("")
+        set_timeout(M.update_active_scratchpad, 100)
+        os.execute("pkill -RTMIN+1 waybar &")
+        return
+    end
+
+    hl.dispatch(hl.dsp.focus({ monitor = main_mon.name }))
+    if main_cur_sp and main_cur_sp:find("^special:") and main_cur_sp ~= main_sp_target then
+        hl.dispatch(hl.dsp.workspace.toggle_special(main_cur_sp:gsub("^special:", "")))
+    end
+    if main_cur_sp ~= main_sp_target then
+        M.toggle(deck.main, true)
+    end
+
+    hl.dispatch(hl.dsp.focus({ monitor = comp_mon.name }))
+    if comp_cur_sp and comp_cur_sp:find("^special:") and comp_cur_sp ~= comp_sp_target then
+        hl.dispatch(hl.dsp.workspace.toggle_special(comp_cur_sp:gsub("^special:", "")))
+    end
+    if comp_cur_sp ~= comp_sp_target then
+        M.toggle(deck.comp, true)
+    end
+
+    if focused_name then
+        hl.dispatch(hl.dsp.focus({ monitor = focused_name }))
+    end
+
+    os.execute(string.format('dunstify -a "osd" -r 9997 -u normal "[ ❖ PANORAMIC ENGAGED / パノラマ展開 ]" "%s ONLINE ACROSS DUAL SCREENS"', deck.name))
+    M.update_active_scratchpad(deck.main)
+    set_timeout(M.update_active_scratchpad, 120)
+    os.execute("pkill -RTMIN+1 waybar &")
 end
 
 --- Toggles scratchpad anchor lock / window pin
@@ -327,6 +501,17 @@ function M.toggle_anchor()
             os.execute('dunstify -a "osd" -r 9998 -u low "[ ℹ ANCHOR HUD ]" "OPEN A SCRATCHPAD OR FLOAT A WINDOW (Super+Ctrl+T) TO PIN"')
         end
     end
+end
+
+--- Sets up native scratchpad hooks
+function M.setup()
+    hl.on("workspace.active", function()
+        M.update_active_scratchpad()
+    end)
+    hl.on("window.active", function()
+        M.update_active_scratchpad()
+    end)
+    M.update_active_scratchpad()
 end
 
 return M

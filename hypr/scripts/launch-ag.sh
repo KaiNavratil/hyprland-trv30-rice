@@ -1,6 +1,3 @@
-#!/bin/bash
-if ! hyprctl clients -j | grep -qi '"class": "antigravity"'; then
-    antigravity &
-    sleep 0.5
-fi
-~/.config/hypr/scripts/toggle-scratchpad.sh antigravity
+#!/usr/bin/env bash
+# Tokyo 80s TRV30 — Launch/Toggle Antigravity Scratchpad (Native Forwarder)
+hyprctl eval "require('scratchpads').toggle('antigravity')" >/dev/null 2>&1

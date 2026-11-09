@@ -183,6 +183,75 @@ function M.kill_and_remember()
     hl.dispatch(hl.dsp.window.kill())
 end
 
+--- Pops the most recently closed window and re-launches it in its original workspace
+function M.reopen_last()
+    local f = io.open(RECENTLY_CLOSED_FILE, "r")
+    if not f then
+        os.execute('dunstify -u low -t 1500 "REOPEN" "No recently closed windows in history"')
+        return
+    end
+    local raw = f:read("*a")
+    f:close()
+
+    local items = {}
+    for entry in raw:gmatch("%b{}") do
+        local cls = entry:match('"class"%s*:%s*"([^"]+)"')
+        local title = entry:match('"title"%s*:%s*"([^"]+)"')
+        local ws = entry:match('"workspace"%s*:%s*"([^"]+)"')
+        local mon = entry:match('"monitor"%s*:%s*(%d+)')
+        local exec_cmd = entry:match('"exec_cmd"%s*:%s*"([^"]+)"')
+        if exec_cmd and ws then
+            table.insert(items, {
+                class = cls or "",
+                title = title or "",
+                workspace = ws,
+                monitor = tonumber(mon) or 0,
+                exec_cmd = exec_cmd,
+            })
+        end
+    end
+
+    if #items == 0 then
+        os.execute('dunstify -u low -t 1500 "REOPEN" "No recently closed windows in history"')
+        return
+    end
+
+    local target = table.remove(items, 1)
+
+    local new_entries = {}
+    for _, it in ipairs(items) do
+        table.insert(new_entries, string.format(
+            '  {\n    "class": %q,\n    "title": %q,\n    "workspace": %q,\n    "monitor": %d,\n    "exec_cmd": %q\n  }',
+            it.class, it.title, it.workspace, it.monitor, it.exec_cmd
+        ))
+    end
+    local out = io.open(RECENTLY_CLOSED_FILE .. ".tmp", "w")
+    if out then
+        out:write("[\n" .. table.concat(new_entries, ",\n") .. "\n]\n")
+        out:close()
+        os.rename(RECENTLY_CLOSED_FILE .. ".tmp", RECENTLY_CLOSED_FILE)
+    end
+
+    hl.exec_cmd(string.format("[workspace %s] %s", target.workspace, target.exec_cmd))
+
+    local ws_num = tonumber(target.workspace)
+    local space_str = string.format("Workspace %s", target.workspace)
+    if ws_num then
+        if ws_num > 10 then
+            space_str = string.format("Space %d (Companion Monitor)", ws_num - 10)
+        else
+            space_str = string.format("Space %d (Main Monitor)", ws_num)
+        end
+    end
+
+    local display_name = (target.title and #target.title > 0 and target.title:find(" - ")) and target.title or (target.class or target.exec_cmd)
+    if #display_name > 42 then
+        display_name = display_name:sub(1, 39) .. "..."
+    end
+
+    os.execute(string.format('dunstify -u low -t 2000 "● REOPEN" "Restoring to %s:\\n%s"', space_str, display_name))
+end
+
 --- Sets up native event hooks
 function M.setup()
     -- Smart Split & Scratchpad Guard on window events

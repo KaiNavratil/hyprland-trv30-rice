@@ -23,6 +23,7 @@ local animations = require("animations")
 
 spaces.setup()
 guards.setup()
+scratchpads.setup()
 animations.setup()
 
 -- ┌─────────────────────────────────────────────────────────────┐
@@ -273,9 +274,9 @@ hl.bind(mod .. " + Q", guards.kill_and_remember)
 -- Neutralize Ctrl+Q (prevent accidental app exits in browsers/terminals)
 hl.bind("CTRL + Q", hl.dsp.exec_cmd("true"))
 
--- Reopen closed windows (Super+T and Super+Shift+T)
-hl.bind(mod .. " + T", hl.dsp.exec_cmd("~/.config/hypr/scripts/reopen-last.sh"))
-hl.bind(mod .. " + SHIFT + T", hl.dsp.exec_cmd("~/.config/hypr/scripts/reopen-last.sh"))
+-- Reopen closed windows (Super+T and Super+Shift+T - Native Engine)
+hl.bind(mod .. " + T", guards.reopen_last)
+hl.bind(mod .. " + SHIFT + T", guards.reopen_last)
 hl.bind(mod .. " + CTRL + T", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mod .. " + M", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/lock.sh"))
 
@@ -341,11 +342,11 @@ hl.bind(mod .. " + SHIFT + equal", function() scratchpads.toggle("center") end)
 hl.bind(mod .. " + SHIFT + plus", function() scratchpads.toggle("center") end)
 hl.bind(mod .. " + KP_Add", function() scratchpads.toggle("center") end)
 
--- Panoramic (Multi-Monitor Coordinated) Scratchpads
-hl.bind(mod .. " + SHIFT + Z", hl.dsp.exec_cmd("~/.config/hypr/scripts/panoramic-scratchpad.sh music"))
-hl.bind(mod .. " + SHIFT + X", hl.dsp.exec_cmd("~/.config/hypr/scripts/panoramic-scratchpad.sh comms"))
-hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd("~/.config/hypr/scripts/panoramic-scratchpad.sh research"))
-hl.bind(mod .. " + CTRL + equal", hl.dsp.exec_cmd("~/.config/hypr/scripts/panoramic-scratchpad.sh cockpit"))
+-- Panoramic (Multi-Monitor Coordinated) Scratchpads (Native C++/Lua Engine)
+hl.bind(mod .. " + SHIFT + Z", function() scratchpads.toggle_panoramic("music") end)
+hl.bind(mod .. " + SHIFT + X", function() scratchpads.toggle_panoramic("comms") end)
+hl.bind(mod .. " + SHIFT + V", function() scratchpads.toggle_panoramic("research") end)
+hl.bind(mod .. " + CTRL + equal", function() scratchpads.toggle_panoramic("cockpit") end)
 
 -- Scratchpad Stacking & Concurrent Mode (Native C++/Lua Engine)
 hl.bind(mod .. " + CTRL + Z", function() scratchpads.toggle("music", true) end)

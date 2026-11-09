@@ -26,11 +26,7 @@ if ! pgrep -f "kitty --class notes-term" > /dev/null; then
     sleep 0.3
 fi
 
-# Ensure both windows are tiled in dwindle layout (matching 60px margins)
-hyprctl dispatch settiled class:notes-term >/dev/null 2>&1
-hyprctl dispatch settiled class:com.github.hluk.copyq >/dev/null 2>&1
-
-# If called with --toggle or explicitly, show the hub
+# If called with --toggle or explicitly, show the hub via native Lua engine
 if [ "$1" == "--toggle" ]; then
-    hyprctl eval "require('scratchpads').toggle('notes')" >/dev/null 2>&1 || hyprctl dispatch togglespecialworkspace notes
+    hyprctl eval "require('scratchpads').toggle('notes')" >/dev/null 2>&1
 fi
