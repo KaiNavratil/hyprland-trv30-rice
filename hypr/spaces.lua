@@ -64,6 +64,10 @@ function M.switch_desktop_space(space_num)
         local anchor_file = "/tmp/scratchpad_anchored_" .. sp_name
         local f = io.open(anchor_file, "r")
         if not f then
+            local sp_mod = package.loaded["scratchpads"]
+            if sp_mod and sp_mod.remember_state then
+                sp_mod.remember_state(sp_name)
+            end
             hl.dispatch(hl.dsp.workspace.toggle_special(sp_name))
         else
             f:close()

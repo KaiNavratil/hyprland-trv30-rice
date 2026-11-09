@@ -140,11 +140,13 @@ function M.kill_and_remember()
     end
 
     local ws = win.workspace and win.workspace.name or ""
-    if not ws:find("^special:") and win.class then
+    if win.class and (not ws:find("^special:") or ws == "special:dev") then
         local c_class = win.class
         local c_title = win.title or ""
         local exec_cmd = c_class:lower()
-        if c_class == "vivaldi-stable" then
+        if c_class:find("vivaldi%-localhost") then
+            exec_cmd = "vivaldi-stable --app=http://localhost:3000"
+        elseif c_class == "vivaldi-stable" then
             if c_title:find("Notion Calendar") then
                 exec_cmd = "vivaldi-stable --app=https://calendar.notion.so"
             else
@@ -154,11 +156,14 @@ function M.kill_and_remember()
             exec_cmd = "spotify-launcher --skip-update"
         elseif c_class == "vesktop" or c_class == "discord" then
             exec_cmd = "vesktop"
+        elseif c_class == "antigravity-ide" then
+            exec_cmd = "/opt/antigravity-ide/antigravity-ide"
         end
 
+        local is_fs = (win.fullscreen and win.fullscreen > 0) or false
         local entry = string.format(
-            '  {\n    "class": %q,\n    "title": %q,\n    "workspace": %q,\n    "monitor": %d,\n    "exec_cmd": %q,\n    "timestamp": %d\n  }',
-            c_class, c_title, ws, win.monitor and win.monitor.id or 0, exec_cmd, os.time()
+            '  {\n    "class": %q,\n    "title": %q,\n    "workspace": %q,\n    "monitor": %d,\n    "exec_cmd": %q,\n    "fullscreen": %s,\n    "timestamp": %d\n  }',
+            c_class, c_title, ws, win.monitor and win.monitor.id or 0, exec_cmd, tostring(is_fs), os.time()
         )
 
         local f = io.open(RECENTLY_CLOSED_FILE, "r")
@@ -200,6 +205,7 @@ function M.reopen_last()
         local ws = entry:match('"workspace"%s*:%s*"([^"]+)"')
         local mon = entry:match('"monitor"%s*:%s*(%d+)')
         local exec_cmd = entry:match('"exec_cmd"%s*:%s*"([^"]+)"')
+        local fs = entry:match('"fullscreen"%s*:%s*(%a+)')
         if exec_cmd and ws then
             table.insert(items, {
                 class = cls or "",
@@ -207,6 +213,7 @@ function M.reopen_last()
                 workspace = ws,
                 monitor = tonumber(mon) or 0,
                 exec_cmd = exec_cmd,
+                fullscreen = fs == "true",
             })
         end
     end
@@ -221,8 +228,8 @@ function M.reopen_last()
     local new_entries = {}
     for _, it in ipairs(items) do
         table.insert(new_entries, string.format(
-            '  {\n    "class": %q,\n    "title": %q,\n    "workspace": %q,\n    "monitor": %d,\n    "exec_cmd": %q\n  }',
-            it.class, it.title, it.workspace, it.monitor, it.exec_cmd
+            '  {\n    "class": %q,\n    "title": %q,\n    "workspace": %q,\n    "monitor": %d,\n    "exec_cmd": %q,\n    "fullscreen": %s\n  }',
+            it.class, it.title, it.workspace, it.monitor, it.exec_cmd, tostring(it.fullscreen)
         ))
     end
     local out = io.open(RECENTLY_CLOSED_FILE .. ".tmp", "w")
@@ -233,6 +240,21 @@ function M.reopen_last()
     end
 
     hl.exec_cmd(string.format("[workspace %s] %s", target.workspace, target.exec_cmd))
+
+    if target.fullscreen then
+        hl.timer(function()
+            for _, w in ipairs(hl.get_windows() or {}) do
+                local c = w.class or ""
+                if c == target.class or (target.class:find("vivaldi%-localhost") and c:find("vivaldi%-localhost")) then
+                    if not (w.fullscreen and w.fullscreen > 0) then
+                        hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                        hl.dispatch(hl.dsp.window.fullscreen())
+                    end
+                    break
+                end
+            end
+        end, { timeout = 400, type = "oneshot" })
+    end
 
     local ws_num = tonumber(target.workspace)
     local space_str = string.format("Workspace %s", target.workspace)

@@ -7,6 +7,8 @@ local M = {}
 local HOME = os.getenv("HOME") or "/home/kaijnav"
 
 M._timers = {}
+M._fullscreen_state = {}
+M._last_focused = {}
 local function set_timeout(fn, ms)
     local t
     t = hl.timer(function()
@@ -57,7 +59,7 @@ local SCRATCHPAD_CONFIG = {
     },
     dev = {
         name = "dev",
-        class_pattern = "antigravity%-ide|antigravity",
+        class_pattern = "antigravity%-ide|antigravity|vivaldi%-localhost",
         cmd = "/opt/antigravity-ide/antigravity-ide",
         gaps_out = 0,
         gaps_in = 0,
@@ -203,6 +205,32 @@ function M.update_active_scratchpad(override_name)
     end
 end
 
+--- Remembers fullscreen state and active window for a scratchpad before it is hidden
+function M.remember_state(target)
+    M._fullscreen_state = M._fullscreen_state or {}
+    M._last_focused = M._last_focused or {}
+
+    local target_special = "special:" .. target
+    local fs_win = nil
+    local fs_class = nil
+
+    for _, w in ipairs(hl.get_windows() or {}) do
+        if w.workspace and w.workspace.name == target_special then
+            if w.fullscreen and w.fullscreen > 0 then
+                fs_win = w.address
+                fs_class = w.class
+            end
+        end
+    end
+
+    M._fullscreen_state[target] = { address = fs_win, class = fs_class }
+
+    local cur_act = hl.get_active_window()
+    if cur_act and cur_act.workspace and cur_act.workspace.name == target_special then
+        M._last_focused[target] = { address = cur_act.address, class = cur_act.class }
+    end
+end
+
 --- Native scratchpad toggler
 function M.toggle(target, is_stack)
     local cur_mon = hl.get_active_monitor()
@@ -235,6 +263,9 @@ function M.toggle(target, is_stack)
     end
 
     if is_open_on_mon then
+        -- Remember fullscreen and focus state before stowing
+        M.remember_state(target)
+
         -- Stow target and clear anchor
         os.remove("/tmp/scratchpad_anchored_" .. target)
         if is_open_on_mon ~= cur_mon.name then
@@ -265,6 +296,7 @@ function M.toggle(target, is_stack)
     if not is_stack and cur_sp and cur_sp.name and cur_sp.name:find("^special:") then
         local active_sp = cur_sp.name:gsub("^special:", "")
         if active_sp ~= target and not is_anchored(active_sp) then
+            M.remember_state(active_sp)
             hl.dispatch(hl.dsp.workspace.toggle_special(active_sp))
             if active_sp == "notes" then
                 os.execute("copyq hide &")
@@ -282,7 +314,41 @@ function M.toggle(target, is_stack)
         monitor = cur_mon.name,
     })
 
-    if target == "notes" then
+    if target == "dev" then
+        -- Tokyo 80s TRV30 Dev Deck: Antigravity IDE + Localhost Browser
+        local wins = hl.get_windows() or {}
+        local ide_found = false
+        local browser_found = false
+        for _, w in ipairs(wins) do
+            local c_class = w.class or ""
+            if c_class == "antigravity-ide" or c_class:find("antigravity%-ide") then
+                ide_found = true
+                if not (w.workspace and w.workspace.name == target_special) then
+                    hl.dispatch(hl.dsp.window.move({
+                        workspace = target_special,
+                        window = "address:" .. w.address,
+                        silent = true,
+                    }))
+                end
+            elseif c_class:find("vivaldi%-localhost") then
+                browser_found = true
+                if not (w.workspace and w.workspace.name == target_special) then
+                    hl.dispatch(hl.dsp.window.move({
+                        workspace = target_special,
+                        window = "address:" .. w.address,
+                        silent = true,
+                    }))
+                end
+            end
+        end
+
+        if not ide_found then
+            hl.exec_cmd("/opt/antigravity-ide/antigravity-ide")
+        end
+        if not browser_found then
+            hl.exec_cmd("vivaldi-stable --app=http://localhost:3000")
+        end
+    elseif target == "notes" then
         -- Tokyo 80s TRV30 Dual-Window Copy-Paste Hub
         -- 1. Ensure notes files exist
         os.execute("mkdir -p " .. HOME .. "/.config/notes && touch " .. HOME .. "/.config/notes/scratch.txt " .. HOME .. "/.config/notes/todo.txt " .. HOME .. "/.config/notes/ideas.txt &")
@@ -360,30 +426,93 @@ function M.toggle(target, is_stack)
 
     -- Ensure windows are tiled to respect gaps (immediate and async timer passes)
     local function enforce_tiled()
-        local sp_win = nil
+        local saved_fs = M._fullscreen_state and M._fullscreen_state[target]
+        local saved_foc = M._last_focused and M._last_focused[target]
+
+        local wins_in_sp = {}
+        local current_fs_win = nil
+        local matched_saved_fs_win = nil
+        local matched_saved_foc_win = nil
+        local notes_term_win = nil
+        local best_history_win = nil
+        local best_history_id = 999999
+        local first_win = nil
+
         for _, w in ipairs(hl.get_windows() or {}) do
             if w.workspace and w.workspace.name == target_special then
-                -- Only enforce un-fullscreen on modal HUD scratchpads with 60px gaps (music, discord, calendar, notes)
-                -- Full workspace decks (dev, antigravity, magic) preserve their fullscreen settings
-                if cfg.gaps_out > 0 then
-                    if w.fullscreen and w.fullscreen > 0 then
+                table.insert(wins_in_sp, w)
+                if not first_win then first_win = w end
+
+                -- Check fullscreen status
+                if w.fullscreen and w.fullscreen > 0 then
+                    if cfg.gaps_out > 0 then
+                        -- For modal HUD scratchpads (music, discord, calendar, notes), enforce un-fullscreen
                         hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
                         hl.dispatch(hl.dsp.window.fullscreen())
+                    else
+                        -- For 0-gap decks (dev, magic, antigravity), track current fullscreen window
+                        current_fs_win = w
                     end
                 end
+
+                if saved_fs and ((saved_fs.address and w.address == saved_fs.address) or (saved_fs.class and w.class and w.class:find(saved_fs.class, 1, true))) then
+                    matched_saved_fs_win = w
+                end
+
+                if saved_foc and ((saved_foc.address and w.address == saved_foc.address) or (saved_foc.class and w.class and w.class:find(saved_foc.class, 1, true))) then
+                    matched_saved_foc_win = w
+                end
+
+                if target == "notes" and (w.class == "notes-term" or (w.title and w.title:lower():find("notes"))) then
+                    notes_term_win = w
+                end
+
                 if w.floating then
                     hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
                     hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
                 end
-                if target == "notes" and (w.class == "notes-term" or (w.title and w.title:lower():find("notes"))) then
-                    sp_win = w
-                elseif not sp_win then
-                    sp_win = w
+
+                local hid = tonumber(w.focusHistoryID) or 999999
+                if hid < best_history_id then
+                    best_history_id = hid
+                    best_history_win = w
                 end
             end
         end
-        if sp_win then
+
+        if #wins_in_sp == 0 then return end
+
+        local sp_win = nil
+
+        -- Priority 1: Current fullscreen window in this special workspace
+        if current_fs_win then
+            sp_win = current_fs_win
+            M._fullscreen_state[target] = { address = current_fs_win.address, class = current_fs_win.class }
+        -- Priority 2: Restoring fullscreen for remembered fullscreen window in 0-gap deck
+        elseif matched_saved_fs_win and cfg.gaps_out == 0 then
+            sp_win = matched_saved_fs_win
             hl.dispatch(hl.dsp.focus({ window = "address:" .. sp_win.address }))
+            hl.dispatch(hl.dsp.window.fullscreen())
+            M._fullscreen_state[target] = { address = sp_win.address, class = sp_win.class }
+            return
+        -- Priority 3: Notes term for notes hub
+        elseif target == "notes" and notes_term_win then
+            sp_win = notes_term_win
+        -- Priority 4: Last focused window in this scratchpad
+        elseif matched_saved_foc_win then
+            sp_win = matched_saved_foc_win
+        -- Priority 5: Most recently active window (lowest focus history)
+        elseif best_history_win then
+            sp_win = best_history_win
+        else
+            sp_win = first_win
+        end
+
+        if sp_win then
+            local act = hl.get_active_window()
+            if not act or act.address ~= sp_win.address then
+                hl.dispatch(hl.dsp.focus({ window = "address:" .. sp_win.address }))
+            end
         end
     end
 
