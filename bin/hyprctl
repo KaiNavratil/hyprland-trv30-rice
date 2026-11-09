@@ -11,6 +11,22 @@ import shlex
 
 HYPRCTL_BIN = "/usr/bin/hyprctl"
 
+def parse_lua_val(val_str):
+    v_lower = val_str.lower().strip()
+    if v_lower in ("true", "yes"):
+        return "true"
+    if v_lower in ("false", "no"):
+        return "false"
+    try:
+        if "." in val_str:
+            float(val_str)
+            return val_str
+        int(val_str)
+        return val_str
+    except ValueError:
+        pass
+    return json.dumps(val_str)
+
 def translate_dispatch(subargs):
     if not subargs:
         return ["dispatch"]
@@ -146,14 +162,14 @@ def translate_keyword(subargs):
         return ["eval", f"hl.workspace_rule({{ {opt_str} }})"]
 
     if ":" in key:
-        sec, prop = key.split(":", 1)
-        if val.lower() in ("true", "false"):
-            v_lua = val.lower()
-        elif val.isdigit() or (val.startswith("-") and val[1:].isdigit()):
-            v_lua = val
-        else:
-            v_lua = f'"{val}"'
-        return ["eval", f"hl.config({{ {sec} = {{ {prop} = {v_lua} }} }})"]
+        raw_parts = key.split(":")
+        # Normalize dashes to underscores for options (e.g. tap-to-click -> tap_to_click)
+        parts = [p.replace("-", "_") if not p.startswith("col.") else p for p in raw_parts]
+        v_lua = parse_lua_val(val)
+        res = f'["{parts[-1]}"] = {v_lua}'
+        for p in reversed(parts[:-1]):
+            res = f'["{p}"] = {{ {res} }}'
+        return ["eval", f"hl.config({{ {res} }})"]
 
     return ["keyword"] + subargs
 
