@@ -40,18 +40,9 @@ local MEDIA_KEYWORDS = {
     "disney+", "hulu", "bilibili", "movie", "watch", "video", "stream"
 }
 
---- Smart-Split: Sets force_split to 2 if 1 window, 0 if multiple windows
+--- Smart-Split: Preserves natural mouse-driven split tracking (force_split = 0)
 function M.update_smart_split()
-    local ws = hl.get_active_workspace()
-    if not ws then return end
-
-    local wins = hl.get_workspace_windows(ws.id) or {}
-    local count = #wins
-    if count == 1 then
-        hl.config({ dwindle = { force_split = 2 } })
-    else
-        hl.config({ dwindle = { force_split = 0 } })
-    end
+    hl.config({ dwindle = { force_split = 0 } })
 end
 
 --- Cinema-Cursor: Auto-hides cursor after 3s on fullscreen/video, 0s (never) on desktop
@@ -198,6 +189,13 @@ function M.setup()
     hl.on("window.open", function(win)
         M.update_smart_split()
         if win then
+            local ws_name = win.workspace and win.workspace.name
+            if ws_name and ws_name:find("^special:") and ws_name ~= "special:magic" then
+                if win.floating then
+                    hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
+                    hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+                end
+            end
             M.check_scratchpad_guard(win)
         end
     end)
@@ -214,6 +212,12 @@ function M.setup()
     -- Scratchpad Guard Hook
     hl.on("window.move_to_workspace", function(win, ws)
         if win and ws then
+            if ws.name and ws.name:find("^special:") and ws.name ~= "special:magic" then
+                if win.floating then
+                    hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
+                    hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+                end
+            end
             M.check_scratchpad_guard(win, ws.name)
         end
     end)

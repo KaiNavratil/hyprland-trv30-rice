@@ -6,6 +6,22 @@ local M = {}
 
 local HOME = os.getenv("HOME") or "/home/kaijnav"
 
+M._timers = {}
+local function set_timeout(fn, ms)
+    local t
+    t = hl.timer(function()
+        fn()
+        for i, val in ipairs(M._timers) do
+            if val == t then
+                table.remove(M._timers, i)
+                break
+            end
+        end
+    end, { timeout = ms, type = "oneshot" })
+    table.insert(M._timers, t)
+    return t
+end
+
 local SCRATCHPAD_CONFIG = {
     music = {
         name = "music",
@@ -79,6 +95,30 @@ local SCRATCHPAD_CONFIG = {
         gaps_in = 0,
         no_border = true,
     },
+    antigravity = {
+        name = "antigravity",
+        class_pattern = "antigravity",
+        cmd = nil,
+        gaps_out = 0,
+        gaps_in = 0,
+        no_border = true,
+    },
+    cava = {
+        name = "cava",
+        class_pattern = "trv30%-cava|cava",
+        cmd = "kitty --class trv30-cava cava",
+        gaps_out = 60,
+        gaps_in = 0,
+        no_border = false,
+    },
+    sysmon = {
+        name = "sysmon",
+        class_pattern = "trv30%-btop|btop",
+        cmd = "kitty --class trv30-btop btop",
+        gaps_out = 60,
+        gaps_in = 0,
+        no_border = false,
+    },
 }
 
 --- Check if an anchor file exists for this scratchpad
@@ -146,6 +186,7 @@ function M.toggle(target, is_stack)
         gaps_out = cfg.gaps_out,
         gaps_in = cfg.gaps_in,
         no_border = cfg.no_border,
+        border_size = cfg.no_border and 0 or 2,
         monitor = cur_mon.name,
     })
 
@@ -225,22 +266,26 @@ function M.toggle(target, is_stack)
     -- Toggle special workspace on
     hl.dispatch(hl.dsp.workspace.toggle_special(target))
 
-    -- Ensure windows are tiled to respect gaps
-    for _, w in ipairs(hl.get_windows() or {}) do
-        if w.workspace and w.workspace.name == target_special then
-            hl.dispatch(hl.dsp.window.float({ action = "settiled", window = "address:" .. w.address }))
+    -- Ensure windows are tiled to respect gaps (immediate and async timer passes)
+    local function enforce_tiled()
+        local cur_active = hl.get_active_window()
+        local cur_addr = cur_active and cur_active.address
+        for _, w in ipairs(hl.get_windows() or {}) do
+            if w.workspace and w.workspace.name == target_special and w.floating then
+                hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+            end
+        end
+        if target == "notes" then
+            hl.dispatch(hl.dsp.focus({ window = "class:notes-term" }))
+        elseif cur_addr then
+            hl.dispatch(hl.dsp.focus({ window = "address:" .. cur_addr }))
         end
     end
 
-    if target == "notes" then
-        hl.dispatch(hl.dsp.window.float({ action = "settiled", window = "class:notes-term" }))
-        hl.dispatch(hl.dsp.window.float({ action = "settiled", window = "class:com.github.hluk.copyq" }))
-        hl.timer(function()
-            hl.dispatch(hl.dsp.window.float({ action = "settiled", window = "class:notes-term" }))
-            hl.dispatch(hl.dsp.window.float({ action = "settiled", window = "class:com.github.hluk.copyq" }))
-            hl.dispatch(hl.dsp.focus({ window = "class:notes-term" }))
-        end, { timeout = 200, type = "oneshot" })
-    end
+    enforce_tiled()
+    set_timeout(enforce_tiled, 150)
+    set_timeout(enforce_tiled, 450)
 
     os.execute("(sleep 0.1; pkill -RTMIN+1 waybar; sleep 0.3; pkill -RTMIN+1 waybar) &")
 end

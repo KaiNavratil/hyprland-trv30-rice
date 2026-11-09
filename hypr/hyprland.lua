@@ -8,6 +8,12 @@
 -- ┌─────────────────────────────────────────────────────────────┐
 -- │ 1. MONITORS (モニター)                                      │
 -- └─────────────────────────────────────────────────────────────┘
+package.loaded["monitors"] = nil
+package.loaded["spaces"] = nil
+package.loaded["guards"] = nil
+package.loaded["scratchpads"] = nil
+package.loaded["animations"] = nil
+
 require("monitors")
 
 local spaces = require("spaces")
@@ -48,6 +54,12 @@ hl.config({
         force_split = 0,
     },
 
+    group = {
+        drag_into_group = 0,
+        merge_groups_on_drag = false,
+        auto_group = false,
+    },
+
     decoration = {
         rounding = 0,
         blur = {
@@ -85,6 +97,8 @@ hl.config({
         focus_on_activate = true,
         mouse_move_enables_dpms = false,
         key_press_enables_dpms = true,
+        animate_mouse_windowdragging = false,
+        animate_manual_resizes = false,
     },
 
     xwayland = {
@@ -93,22 +107,7 @@ hl.config({
 })
 
 -- ┌─────────────────────────────────────────────────────────────┐
--- │ 4. ANIMATIONS (アニメーション - メカニカル)                 │
--- └─────────────────────────────────────────────────────────────┘
-hl.curve("snap", {
-    type = "bezier",
-    points = { { 0.0, 0.85 }, { 0.0, 1.0 } },
-})
-hl.animation({ leaf = "windows", enabled = true, speed = 1, bezier = "snap", style = "slide" })
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 1, bezier = "snap", style = "slide" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 1, bezier = "snap", style = "slide" })
-hl.animation({ leaf = "windowsMove", enabled = true, speed = 1, bezier = "snap", style = "slide" })
-hl.animation({ leaf = "fade", enabled = true, speed = 1, bezier = "snap" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = 1, bezier = "snap", style = "slide" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2, bezier = "snap", style = "fade" })
-
--- ┌─────────────────────────────────────────────────────────────┐
--- │ 5. WORKSPACES (ワークスペース)                              │
+-- │ 4. WORKSPACES (ワークスペース)                              │
 -- └─────────────────────────────────────────────────────────────┘
 -- Desktop Spaces across Dual Monitors:
 -- Main Monitor (HDMI-A-1 / Left): Workspaces 1-9
@@ -156,12 +155,14 @@ hl.window_rule({
     name = "workspace_special_music",
     match = { class = "^([Ss]potify)$" },
     workspace = "special:music silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_discord",
     match = { class = "^([Vv]esktop)$" },
     workspace = "special:discord silent",
+    tile = true,
 })
 
 hl.window_rule({
@@ -182,54 +183,63 @@ hl.window_rule({
     name = "workspace_special_calendar",
     match = { class = "^(vivaldi-calendar\\.notion\\.so.*)$" },
     workspace = "special:calendar silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_center",
     match = { class = "^(com\\.tokyo\\.commandcenter|command-center)$" },
     workspace = "special:center silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_radar",
     match = { class = "^(com\\.tokyo\\.radar)$" },
     workspace = "special:radar silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_display",
     match = { class = "^(com\\.tokyo\\.displaydeck)$" },
     workspace = "special:display silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_dev_ide",
     match = { class = "^(antigravity-ide)$" },
     workspace = "special:dev silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_dev_browser",
     match = { class = "^(vivaldi-localhost.*)$" },
     workspace = "special:dev silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_antigravity",
     match = { class = "^(antigravity)$" },
     workspace = "special:antigravity silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_cava",
     match = { class = "^(trv30-cava)$" },
     workspace = "special:cava silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_sysmon",
     match = { class = "^(trv30-btop)$" },
     workspace = "special:sysmon silent",
+    tile = true,
 })
 
 hl.window_rule({

@@ -25,7 +25,7 @@ function M.setup()
     hl.animation({ leaf = "windows", enabled = true, speed = 3.6, spring = "trvSpring" })
     hl.animation({ leaf = "windowsIn", enabled = true, speed = 3.2, spring = "trvSpring", style = "popin 85%" })
     hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.0, bezier = "trvEaseOut", style = "popin 85%" })
-    hl.animation({ leaf = "windowsMove", enabled = true, speed = 3.4, spring = "trvSpring" })
+    hl.animation({ leaf = "windowsMove", enabled = true, speed = 3.0, bezier = "trvEaseOut" })
 
     -- Fade: Clean phosphor fade
     hl.animation({ leaf = "fade", enabled = true, speed = 2.4, bezier = "trvEaseOut" })
