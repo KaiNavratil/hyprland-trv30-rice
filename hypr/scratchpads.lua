@@ -488,24 +488,20 @@ function M.toggle(target, is_stack)
         if current_fs_win then
             sp_win = current_fs_win
             M._fullscreen_state[target] = { address = current_fs_win.address, class = current_fs_win.class }
-        -- Priority 2: Restoring fullscreen for remembered fullscreen window in 0-gap deck
-        elseif matched_saved_fs_win and cfg.gaps_out == 0 then
-            sp_win = matched_saved_fs_win
-            hl.dispatch(hl.dsp.focus({ window = "address:" .. sp_win.address }))
-            hl.dispatch(hl.dsp.window.fullscreen())
-            M._fullscreen_state[target] = { address = sp_win.address, class = sp_win.class }
-            return
-        -- Priority 3: Notes term for notes hub
-        elseif target == "notes" and notes_term_win then
-            sp_win = notes_term_win
-        -- Priority 4: Last focused window in this scratchpad
-        elseif matched_saved_foc_win then
-            sp_win = matched_saved_foc_win
-        -- Priority 5: Most recently active window (lowest focus history)
-        elseif best_history_win then
-            sp_win = best_history_win
         else
-            sp_win = first_win
+            M._fullscreen_state[target] = { address = nil, class = nil }
+            -- Priority 2: Notes term for notes hub
+            if target == "notes" and notes_term_win then
+                sp_win = notes_term_win
+            -- Priority 3: Last focused window in this scratchpad
+            elseif matched_saved_foc_win then
+                sp_win = matched_saved_foc_win
+            -- Priority 4: Most recently active window (lowest focus history)
+            elseif best_history_win then
+                sp_win = best_history_win
+            else
+                sp_win = first_win
+            end
         end
 
         if sp_win then
