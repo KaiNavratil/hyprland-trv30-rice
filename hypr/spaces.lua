@@ -8,14 +8,7 @@ local HOME = os.getenv("HOME") or "/home/kaijnav"
 local SESSION_FILE = HOME .. "/.config/hypr/session.json"
 local WORKSPACES_FILE = HOME .. "/.cache/window_workspaces.json"
 
-local GENERIC_TITLES = {
-    ["vivaldi - vivaldi"] = true,
-    ["vivaldi"] = true,
-    ["settings - vivaldi"] = true,
-    ["start page - vivaldi"] = true,
-    ["new tab - vivaldi"] = true,
-    ["new tab"] = true,
-}
+local is_syncing = false
 
 --- Synchronizes persistent workspaces so empty spaces vanish from Waybar with 0 latency
 function M.sync_desktop_spaces()
@@ -58,7 +51,7 @@ function M.switch_desktop_space(space_num)
     local mons = hl.get_monitors() or {}
     if #mons == 0 then return end
 
-    -- Sort monitors left-to-right by X position
+    -- Sort monitors left-to-right by X position (HDMI-A-1 Left, eDP-1 Right)
     table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
 
     local focused_mon = hl.get_active_monitor()
@@ -76,6 +69,8 @@ function M.switch_desktop_space(space_num)
             f:close()
         end
     end
+
+    is_syncing = true
 
     -- Switch non-focused monitors first, focused monitor last (retaining input focus)
     for idx, m in ipairs(mons) do
@@ -97,6 +92,76 @@ function M.switch_desktop_space(space_num)
     end
 
     M.sync_desktop_spaces()
+    is_syncing = false
+end
+
+--- Automatically enforces bilateral synchronization across dual monitors
+function M.enforce_dual_monitor_sync(ws)
+    if is_syncing then return end
+    if not ws then return end
+
+    local ws_name = ws.name and tostring(ws.name) or ""
+    if not ws_name:match("^%d+$") then return end
+
+    local num = tonumber(ws_name)
+    if not num then return end
+
+    local space_num = ((num - 1) % 10) + 1
+    if space_num < 1 or space_num > 9 then return end
+
+    local mons = hl.get_monitors() or {}
+    if #mons <= 1 then
+        M.sync_desktop_spaces()
+        return
+    end
+
+    -- Sort monitors left-to-right by X position (HDMI-A-1 Left, eDP-1 Right)
+    table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
+    local main_mon = mons[1] -- Left: HDMI-A-1 (Spaces 1-9)
+    local comp_mon = mons[2] -- Right: eDP-1 (Spaces 11-19)
+
+    local target_main = tostring(space_num)
+    local target_comp = tostring(space_num + 10)
+
+    local cur_main = main_mon.active_workspace and tostring(main_mon.active_workspace.name) or ""
+    local cur_comp = comp_mon.active_workspace and tostring(comp_mon.active_workspace.name) or ""
+
+    if cur_main ~= target_main or cur_comp ~= target_comp then
+        is_syncing = true
+
+        local focused_mon = hl.get_active_monitor()
+        local focused_name = focused_mon and focused_mon.name or main_mon.name
+
+        -- Sync non-focused monitor first
+        for idx, m in ipairs(mons) do
+            if m.name ~= focused_name then
+                local t = (idx == 1) and target_main or target_comp
+                local cur = (idx == 1) and cur_main or cur_comp
+                if cur ~= t then
+                    hl.dispatch(hl.dsp.focus({ monitor = m.name }))
+                    hl.dispatch(hl.dsp.focus({ workspace = t }))
+                end
+            end
+        end
+
+        -- Sync focused monitor last (preserving focus)
+        for idx, m in ipairs(mons) do
+            if m.name == focused_name then
+                local t = (idx == 1) and target_main or target_comp
+                local cur = (idx == 1) and cur_main or cur_comp
+                if cur ~= t then
+                    hl.dispatch(hl.dsp.focus({ monitor = m.name }))
+                    hl.dispatch(hl.dsp.focus({ workspace = t }))
+                end
+                break
+            end
+        end
+
+        M.sync_desktop_spaces()
+        is_syncing = false
+    else
+        M.sync_desktop_spaces()
+    end
 end
 
 --- Moves active window to the correct Desktop Space (1-9 HDMI, 11-19 eDP)
@@ -111,37 +176,58 @@ function M.move_window_to_space(space_num)
     M.sync_desktop_spaces()
 end
 
---- Swaps all windows between current workspace and the one to its left/right
+--- Swaps all windows between current Desktop Space and the one to its left/right
 function M.swap_workspace(dir)
     local ws = hl.get_active_workspace()
     if not ws then return end
 
-    local cur_id = ws.id
-    local target_id
+    local cur_num = tonumber(ws.name)
+    if not cur_num then return end
+
+    local cur_space = ((cur_num - 1) % 10) + 1
+    local target_space
     if dir == "left" then
-        target_id = cur_id - 1
-        if target_id < 1 then target_id = 9 end
+        target_space = cur_space - 1
+        if target_space < 1 then target_space = 9 end
     else
-        target_id = cur_id + 1
-        if target_id > 9 then target_id = 1 end
+        target_space = cur_space + 1
+        if target_space > 9 then target_space = 1 end
     end
 
-    local cur_wins = hl.get_workspace_windows(cur_id) or {}
-    local tgt_wins = hl.get_workspace_windows(target_id) or {}
+    local mons = hl.get_monitors() or {}
     local temp_ws = "99"
 
-    for _, w in ipairs(tgt_wins) do
+    -- Swap on Left / Main Monitor (HDMI-A-1)
+    local cur_wins_1 = hl.get_workspace_windows(cur_space) or {}
+    local tgt_wins_1 = hl.get_workspace_windows(target_space) or {}
+    for _, w in ipairs(tgt_wins_1) do
         hl.dispatch(hl.dsp.window.move({ workspace = temp_ws, window = "address:" .. w.address, silent = true }))
     end
-    for _, w in ipairs(cur_wins) do
-        hl.dispatch(hl.dsp.window.move({ workspace = tostring(target_id), window = "address:" .. w.address, silent = true }))
+    for _, w in ipairs(cur_wins_1) do
+        hl.dispatch(hl.dsp.window.move({ workspace = tostring(target_space), window = "address:" .. w.address, silent = true }))
     end
-    for _, w in ipairs(tgt_wins) do
-        hl.dispatch(hl.dsp.window.move({ workspace = tostring(cur_id), window = "address:" .. w.address, silent = true }))
+    for _, w in ipairs(tgt_wins_1) do
+        hl.dispatch(hl.dsp.window.move({ workspace = tostring(cur_space), window = "address:" .. w.address, silent = true }))
     end
 
-    hl.dispatch(hl.dsp.focus({ workspace = tostring(target_id) }))
-    M.sync_desktop_spaces()
+    -- If dual monitors, swap synchronously on Right / Companion Monitor (eDP-1)
+    if #mons > 1 then
+        local cur_comp = cur_space + 10
+        local tgt_comp = target_space + 10
+        local cur_wins_2 = hl.get_workspace_windows(cur_comp) or {}
+        local tgt_wins_2 = hl.get_workspace_windows(tgt_comp) or {}
+        for _, w in ipairs(tgt_wins_2) do
+            hl.dispatch(hl.dsp.window.move({ workspace = temp_ws, window = "address:" .. w.address, silent = true }))
+        end
+        for _, w in ipairs(cur_wins_2) do
+            hl.dispatch(hl.dsp.window.move({ workspace = tostring(tgt_comp), window = "address:" .. w.address, silent = true }))
+        end
+        for _, w in ipairs(tgt_wins_2) do
+            hl.dispatch(hl.dsp.window.move({ workspace = tostring(cur_comp), window = "address:" .. w.address, silent = true }))
+        end
+    end
+
+    M.switch_desktop_space(target_space)
 end
 
 --- Persists current windows & workspaces atomically to session.json without subprocesses
@@ -171,16 +257,34 @@ end
 
 --- Sets up native event hooks and timers
 function M.setup()
-    -- Periodic in-memory space persistence & session state saving (every 4 seconds)
+    -- Periodic in-memory space persistence & auto-healing (every 4 seconds)
     hl.timer(function()
         M.sync_desktop_spaces()
         M.save_session()
+
+        -- Auto-heal any bilateral desync across dual monitors
+        local mons = hl.get_monitors() or {}
+        if #mons > 1 and not is_syncing then
+            table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
+            local m1_ws = mons[1].active_workspace and tonumber(mons[1].active_workspace.name)
+            local m2_ws = mons[2].active_workspace and tonumber(mons[2].active_workspace.name)
+            if m1_ws and m2_ws then
+                local sp1 = ((m1_ws - 1) % 10) + 1
+                local sp2 = ((m2_ws - 1) % 10) + 1
+                if sp1 ~= sp2 then
+                    local focused = hl.get_active_monitor()
+                    local heal_space = (focused and focused.name == mons[2].name) and sp2 or sp1
+                    M.switch_desktop_space(heal_space)
+                end
+            end
+        end
     end, { timeout = 4000, type = "repeat" })
 
-    -- Synchronize spaces on window/workspace events
-    hl.on("workspace.active", function()
-        M.sync_desktop_spaces()
+    -- Enforce automatic bilateral sync on ANY workspace activation
+    hl.on("workspace.active", function(ws)
+        M.enforce_dual_monitor_sync(ws)
     end)
+
     hl.on("window.close", function()
         M.sync_desktop_spaces()
     end)
