@@ -270,6 +270,7 @@ hl.bind(mod .. " + A", function() scratchpads.toggle("antigravity") end)
 hl.bind(mod .. " + SHIFT + left", function() spaces.swap_workspace("left") end)
 hl.bind(mod .. " + SHIFT + right", function() spaces.swap_workspace("right") end)
 hl.bind(mod .. " + Q", guards.kill_and_remember)
+hl.bind(mod .. " + SHIFT + Q", hl.dsp.window.kill())
 
 -- Neutralize Ctrl+Q (prevent accidental app exits in browsers/terminals)
 hl.bind("CTRL + Q", hl.dsp.exec_cmd("true"))

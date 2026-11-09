@@ -135,7 +135,7 @@ end
 function M.kill_and_remember()
     local win = hl.get_active_window()
     if not win then
-        hl.dispatch(hl.dsp.window.kill())
+        hl.dispatch(hl.dsp.window.close())
         return
     end
 
@@ -185,7 +185,7 @@ function M.kill_and_remember()
         end
     end
 
-    hl.dispatch(hl.dsp.window.kill())
+    hl.dispatch(hl.dsp.window.close({ window = "address:" .. win.address }))
 end
 
 --- Pops the most recently closed window and re-launches it in its original workspace

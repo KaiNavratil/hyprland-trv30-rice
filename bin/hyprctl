@@ -55,7 +55,20 @@ def translate_dispatch(subargs):
             win = f"address:{win}"
         return ["dispatch", f'hl.dsp.focus({{ window = "{win}" }})']
 
-    if d_cmd == "killactive":
+    if d_cmd in ("killactive", "closewindow"):
+        win = rest[0] if rest else None
+        if win:
+            if win.startswith("0x"):
+                win = f"address:{win}"
+            return ["dispatch", f'hl.dsp.window.close({{ window = "{win}" }})']
+        return ["dispatch", "hl.dsp.window.close()"]
+
+    if d_cmd in ("killwindow", "forcekill"):
+        win = rest[0] if rest else None
+        if win:
+            if win.startswith("0x"):
+                win = f"address:{win}"
+            return ["dispatch", f'hl.dsp.window.kill({{ window = "{win}" }})']
         return ["dispatch", "hl.dsp.window.kill()"]
 
     if d_cmd == "fullscreen":
