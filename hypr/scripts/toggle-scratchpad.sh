@@ -134,28 +134,28 @@ else
         hyprctl eval "hl.workspace_rule({ workspace = 'special:$TARGET', gaps_out = $GAP_OUT, gaps_in = $GAP_IN, no_border = $NO_BORDER, monitor = '$CURRENT_MON' })" >/dev/null 2>&1
     fi
 
-    # Only hide currently active scratchpad if explicit single/exclusive mode requested (allows overlapping by default!)
-    if [ ! -z "$ACTIVE" ] && [ "$ACTIVE" != "$TARGET" ]; then
-        if [ "$MODE" == "--exclusive" ] || [ "$MODE" == "--single" ]; then
-            rm -f "/tmp/scratchpad_anchored_$ACTIVE"
-
-            # Preserve any fullscreen window state on the active scratchpad before stowing it
-            FS_ADDR_ACTIVE=$(hyprctl clients -j | jq -r ".[] | select(.workspace.name == \"special:$ACTIVE\" and .fullscreen > 0) | .address" | head -n 1)
-            if [ -n "$FS_ADDR_ACTIVE" ] && [ "$FS_ADDR_ACTIVE" != "null" ]; then
-                echo "$FS_ADDR_ACTIVE" > "/tmp/scratchpad_fullscreen_$ACTIVE"
-            else
-                rm -f "/tmp/scratchpad_fullscreen_$ACTIVE"
-            fi
-
-            LAST_FOCUSED_ACTIVE=$(hyprctl activewindow -j | jq -r '.address')
-            if [ -n "$LAST_FOCUSED_ACTIVE" ] && [ "$LAST_FOCUSED_ACTIVE" != "null" ]; then
-                IS_IN_SP_ACTIVE=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$LAST_FOCUSED_ACTIVE\" and .workspace.name == \"special:$ACTIVE\") | .address")
-                if [ -n "$IS_IN_SP_ACTIVE" ] && [ "$IS_IN_SP_ACTIVE" != "null" ]; then
-                    echo "$LAST_FOCUSED_ACTIVE" > "/tmp/scratchpad_lastfocus_$ACTIVE"
+    # Stow any unanchored scratchpad on this monitor unless explicit stacking (--stack) is requested
+    if [ -n "$ACTIVE" ] && [ "$ACTIVE" != "$TARGET" ]; then
+        if [ "$MODE" != "--stack" ]; then
+            if [ ! -f "/tmp/scratchpad_anchored_$ACTIVE" ]; then
+                # Preserve any fullscreen window state on the active scratchpad before stowing it
+                FS_ADDR_ACTIVE=$(hyprctl clients -j | jq -r ".[] | select(.workspace.name == \"special:$ACTIVE\" and .fullscreen > 0) | .address" | head -n 1)
+                if [ -n "$FS_ADDR_ACTIVE" ] && [ "$FS_ADDR_ACTIVE" != "null" ]; then
+                    echo "$FS_ADDR_ACTIVE" > "/tmp/scratchpad_fullscreen_$ACTIVE"
+                else
+                    rm -f "/tmp/scratchpad_fullscreen_$ACTIVE"
                 fi
-            fi
 
-            hyprctl dispatch togglespecialworkspace "$ACTIVE"
+                LAST_FOCUSED_ACTIVE=$(hyprctl activewindow -j | jq -r '.address')
+                if [ -n "$LAST_FOCUSED_ACTIVE" ] && [ "$LAST_FOCUSED_ACTIVE" != "null" ]; then
+                    IS_IN_SP_ACTIVE=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$LAST_FOCUSED_ACTIVE\" and .workspace.name == \"special:$ACTIVE\") | .address")
+                    if [ -n "$IS_IN_SP_ACTIVE" ] && [ "$IS_IN_SP_ACTIVE" != "null" ]; then
+                        echo "$LAST_FOCUSED_ACTIVE" > "/tmp/scratchpad_lastfocus_$ACTIVE"
+                    fi
+                fi
+
+                hyprctl dispatch togglespecialworkspace "$ACTIVE"
+            fi
         fi
     fi
 

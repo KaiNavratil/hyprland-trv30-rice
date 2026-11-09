@@ -10,6 +10,13 @@
 -- └─────────────────────────────────────────────────────────────┘
 require("monitors")
 
+local spaces = require("spaces")
+local guards = require("guards")
+local scratchpads = require("scratchpads")
+
+spaces.setup()
+guards.setup()
+
 -- ┌─────────────────────────────────────────────────────────────┐
 -- │ 2. ENVIRONMENT VARIABLES (環境変数)                         │
 -- └─────────────────────────────────────────────────────────────┘
@@ -245,9 +252,9 @@ local mod = "SUPER"
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty"))
 hl.bind(mod .. " + Space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
 hl.bind(mod .. " + A", hl.dsp.exec_cmd("~/.config/hypr/scripts/launch-ag.sh"))
-hl.bind(mod .. " + SHIFT + left", hl.dsp.exec_cmd("~/.config/hypr/scripts/swap-workspace.sh left"))
-hl.bind(mod .. " + SHIFT + right", hl.dsp.exec_cmd("~/.config/hypr/scripts/swap-workspace.sh right"))
-hl.bind(mod .. " + Q", hl.dsp.exec_cmd("~/.config/hypr/scripts/kill-and-remember.sh"))
+hl.bind(mod .. " + SHIFT + left", function() spaces.swap_workspace("left") end)
+hl.bind(mod .. " + SHIFT + right", function() spaces.swap_workspace("right") end)
+hl.bind(mod .. " + Q", guards.kill_and_remember)
 
 -- Neutralize Ctrl+Q (prevent accidental app exits in browsers/terminals)
 hl.bind("CTRL + Q", hl.dsp.exec_cmd("true"))
@@ -262,16 +269,16 @@ hl.bind(mod .. " + B", hl.dsp.exec_cmd("~/.config/hypr/scripts/power-mode.sh"))
 hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd("bash ~/.config/waybar/scripts/restart-waybar.sh"))
 hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/toggle-vcr.sh"))
 hl.bind(mod .. " + O", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/toggle-insomnia.sh"))
-hl.bind(mod .. " + G", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh display"))
+hl.bind(mod .. " + G", function() scratchpads.toggle("display") end)
 
 -- Window Management
 hl.bind(mod .. " + left", hl.dsp.window.swap({ direction = "left" }))
 hl.bind(mod .. " + right", hl.dsp.window.swap({ direction = "right" }))
 hl.bind(mod .. " + up", hl.dsp.window.swap({ direction = "up" }))
 hl.bind(mod .. " + down", hl.dsp.window.swap({ direction = "down" }))
-hl.bind("ALT + Tab", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-radar.sh"))
+hl.bind("ALT + Tab", function() scratchpads.toggle("radar") end)
 hl.bind(mod .. " + Tab", hl.dsp.focus({ last = true }))
-hl.bind(mod .. " + W", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-radar.sh"))
+hl.bind(mod .. " + W", function() scratchpads.toggle("radar") end)
 hl.bind(mod .. " + H", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-bt-mic.sh"))
 hl.bind(mod .. " + ALT + H", hl.dsp.focus({ direction = "left" }))
 hl.bind(mod .. " + J", hl.dsp.focus({ direction = "down" }))
@@ -294,31 +301,31 @@ hl.bind(mod .. " + SHIFT + bracketright", hl.dsp.window.move({ monitor = "+1" })
 hl.bind(mod .. " + SHIFT + H", hl.dsp.layout("swapwithmaster master"))
 hl.bind(mod .. " + SHIFT + L", hl.dsp.layout("rollnext"))
 
--- Workspaces
+-- Workspaces (Native C++/Lua Desktop Space Engine)
 for i = 1, 9 do
-    hl.bind(mod .. " + " .. i, hl.dsp.exec_cmd("~/.config/hypr/scripts/switch-ws.sh " .. i))
-    hl.bind(mod .. " + SHIFT + " .. i, hl.dsp.exec_cmd("~/.config/hypr/scripts/move-to-space.sh " .. i))
+    hl.bind(mod .. " + " .. i, function() spaces.switch_desktop_space(i) end)
+    hl.bind(mod .. " + SHIFT + " .. i, function() spaces.move_window_to_space(i) end)
 end
 
--- Scratchpad Toggles & Multi-Deck Controls
-hl.bind(mod .. " + Escape", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh magic"))
+-- Scratchpad Toggles & Multi-Deck Controls (Native C++/Lua Engine)
+hl.bind(mod .. " + Escape", function() scratchpads.toggle("magic") end)
 hl.bind(mod .. " + SHIFT + Escape", hl.dsp.window.move({ workspace = "special:magic" }))
-hl.bind(mod .. " + grave", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh magic"))
+hl.bind(mod .. " + grave", function() scratchpads.toggle("magic") end)
 hl.bind(mod .. " + SHIFT + grave", hl.dsp.window.move({ workspace = "special:magic" }))
 
 -- Single-Monitor Scratchpads
-hl.bind(mod .. " + Z", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh music"))
-hl.bind(mod .. " + X", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh discord"))
-hl.bind(mod .. " + C", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh calendar"))
-hl.bind(mod .. " + D", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh dev"))
-hl.bind(mod .. " + V", hl.dsp.exec_cmd("~/.config/hypr/scripts/launch-notes.sh"))
+hl.bind(mod .. " + Z", function() scratchpads.toggle("music") end)
+hl.bind(mod .. " + X", function() scratchpads.toggle("discord") end)
+hl.bind(mod .. " + C", function() scratchpads.toggle("calendar") end)
+hl.bind(mod .. " + D", function() scratchpads.toggle("dev") end)
+hl.bind(mod .. " + V", function() scratchpads.toggle("notes") end)
 
 -- Bloat Escape (TRV30 Master Deck Command Center: Super + Plus / Equal)
-hl.bind(mod .. " + equal", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh center"))
-hl.bind(mod .. " + plus", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh center"))
-hl.bind(mod .. " + SHIFT + equal", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh center"))
-hl.bind(mod .. " + SHIFT + plus", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh center"))
-hl.bind(mod .. " + KP_Add", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh center"))
+hl.bind(mod .. " + equal", function() scratchpads.toggle("center") end)
+hl.bind(mod .. " + plus", function() scratchpads.toggle("center") end)
+hl.bind(mod .. " + SHIFT + equal", function() scratchpads.toggle("center") end)
+hl.bind(mod .. " + SHIFT + plus", function() scratchpads.toggle("center") end)
+hl.bind(mod .. " + KP_Add", function() scratchpads.toggle("center") end)
 
 -- Panoramic (Multi-Monitor Coordinated) Scratchpads
 hl.bind(mod .. " + SHIFT + Z", hl.dsp.exec_cmd("~/.config/hypr/scripts/panoramic-scratchpad.sh music"))
@@ -326,17 +333,17 @@ hl.bind(mod .. " + SHIFT + X", hl.dsp.exec_cmd("~/.config/hypr/scripts/panoramic
 hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd("~/.config/hypr/scripts/panoramic-scratchpad.sh research"))
 hl.bind(mod .. " + CTRL + equal", hl.dsp.exec_cmd("~/.config/hypr/scripts/panoramic-scratchpad.sh cockpit"))
 
--- Scratchpad Stacking & Concurrent Mode
-hl.bind(mod .. " + CTRL + Z", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh music --stack"))
-hl.bind(mod .. " + CTRL + X", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh discord --stack"))
-hl.bind(mod .. " + CTRL + C", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh calendar --stack"))
-hl.bind(mod .. " + CTRL + D", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh dev --stack"))
-hl.bind(mod .. " + CTRL + V", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh notes --stack"))
-hl.bind(mod .. " + CTRL + G", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-scratchpad.sh display --stack"))
+-- Scratchpad Stacking & Concurrent Mode (Native C++/Lua Engine)
+hl.bind(mod .. " + CTRL + Z", function() scratchpads.toggle("music", true) end)
+hl.bind(mod .. " + CTRL + X", function() scratchpads.toggle("discord", true) end)
+hl.bind(mod .. " + CTRL + C", function() scratchpads.toggle("calendar", true) end)
+hl.bind(mod .. " + CTRL + D", function() scratchpads.toggle("dev", true) end)
+hl.bind(mod .. " + CTRL + V", function() scratchpads.toggle("notes", true) end)
+hl.bind(mod .. " + CTRL + G", function() scratchpads.toggle("display", true) end)
 
 -- Scratchpad Anchor Lock & HUD Pin (Super+Y and Super+Shift+P)
-hl.bind(mod .. " + Y", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-anchor.sh"))
-hl.bind(mod .. " + SHIFT + P", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-anchor.sh"))
+hl.bind(mod .. " + Y", scratchpads.toggle_anchor)
+hl.bind(mod .. " + SHIFT + P", scratchpads.toggle_anchor)
 
 -- Media Controls
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("~/.config/hypr/scripts/osd.sh play"))
@@ -384,13 +391,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hypridle")
     hl.exec_cmd("bash ~/.config/hypr/scripts/toggle-vcr.sh")
 
-    -- Session Management daemons
-    hl.exec_cmd("python3 ~/.config/hypr/scripts/smart-split.py")
-    hl.exec_cmd("python3 ~/.config/hypr/scripts/window-router.py")
-    hl.exec_cmd("python3 ~/.config/hypr/scripts/scratchpad-guard.py")
+    -- Background utilities & daemons
     hl.exec_cmd("python3 ~/.config/hypr/scripts/audio-guard.py")
     hl.exec_cmd("python3 ~/.config/hypr/scripts/session-restorer.py")
-    hl.exec_cmd("python3 ~/.config/hypr/scripts/cinema-cursor.py")
     hl.exec_cmd("env WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 python3 ~/.config/hypr/desktop-radar/app.py")
 
     -- Auto-launch apps
