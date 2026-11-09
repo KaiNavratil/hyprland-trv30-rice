@@ -191,6 +191,10 @@ function M.setup()
         if win then
             local ws_name = win.workspace and win.workspace.name
             if ws_name and ws_name:find("^special:") and ws_name ~= "special:magic" then
+                if win.fullscreen and win.fullscreen > 0 then
+                    hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
+                    hl.dispatch(hl.dsp.window.fullscreen())
+                end
                 if win.floating then
                     hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
                     hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
@@ -213,6 +217,10 @@ function M.setup()
     hl.on("window.move_to_workspace", function(win, ws)
         if win and ws then
             if ws.name and ws.name:find("^special:") and ws.name ~= "special:magic" then
+                if win.fullscreen and win.fullscreen > 0 then
+                    hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
+                    hl.dispatch(hl.dsp.window.fullscreen())
+                end
                 if win.floating then
                     hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
                     hl.dispatch(hl.dsp.window.float({ action = "toggle" }))

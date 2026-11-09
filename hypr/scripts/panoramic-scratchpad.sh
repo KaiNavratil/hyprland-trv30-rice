@@ -231,11 +231,6 @@ batch.append(f"dispatch focusmonitor {focused_mon or main_name}")
 if batch:
     subprocess.run(["hyprctl", "--batch", " ; ".join(batch)], stdout=subprocess.DEVNULL)
 
-# Retile scratchpad windows cleanly
-if main_target_sp == "music":
-    subprocess.run(["hyprctl", "dispatch", "settiled", "class:Spotify"], stdout=subprocess.DEVNULL)
-subprocess.run(["hyprctl", "dispatch", "settiled", f"class:{deck['comp_class']}"], stdout=subprocess.DEVNULL)
-
 subprocess.run(["dunstify", "-a", "osd", "-r", "9997", "-u", "normal",
                 "[ ❖ PANORAMIC ENGAGED / パノラマ展開 ]",
                 f"{deck['name']} ONLINE ACROSS DUAL SCREENS"])

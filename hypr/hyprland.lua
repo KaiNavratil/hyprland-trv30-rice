@@ -265,7 +265,7 @@ local mod = "SUPER"
 -- Applications
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty"))
 hl.bind(mod .. " + Space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
-hl.bind(mod .. " + A", hl.dsp.exec_cmd("~/.config/hypr/scripts/launch-ag.sh"))
+hl.bind(mod .. " + A", function() scratchpads.toggle("antigravity") end)
 hl.bind(mod .. " + SHIFT + left", function() spaces.swap_workspace("left") end)
 hl.bind(mod .. " + SHIFT + right", function() spaces.swap_workspace("right") end)
 hl.bind(mod .. " + Q", guards.kill_and_remember)

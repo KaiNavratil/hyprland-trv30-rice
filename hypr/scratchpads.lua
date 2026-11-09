@@ -98,7 +98,7 @@ local SCRATCHPAD_CONFIG = {
     antigravity = {
         name = "antigravity",
         class_pattern = "antigravity",
-        cmd = nil,
+        cmd = "antigravity",
         gaps_out = 0,
         gaps_in = 0,
         no_border = true,
@@ -268,18 +268,26 @@ function M.toggle(target, is_stack)
 
     -- Ensure windows are tiled to respect gaps (immediate and async timer passes)
     local function enforce_tiled()
-        local cur_active = hl.get_active_window()
-        local cur_addr = cur_active and cur_active.address
+        local sp_win = nil
         for _, w in ipairs(hl.get_windows() or {}) do
-            if w.workspace and w.workspace.name == target_special and w.floating then
-                hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
-                hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+            if w.workspace and w.workspace.name == target_special then
+                if w.fullscreen and w.fullscreen > 0 then
+                    hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                    hl.dispatch(hl.dsp.window.fullscreen())
+                end
+                if w.floating then
+                    hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                    hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+                end
+                if target == "notes" and (w.class == "notes-term" or (w.title and w.title:lower():find("notes"))) then
+                    sp_win = w
+                elseif not sp_win then
+                    sp_win = w
+                end
             end
         end
-        if target == "notes" then
-            hl.dispatch(hl.dsp.focus({ window = "class:notes-term" }))
-        elseif cur_addr then
-            hl.dispatch(hl.dsp.focus({ window = "address:" .. cur_addr }))
+        if sp_win then
+            hl.dispatch(hl.dsp.focus({ window = "address:" .. sp_win.address }))
         end
     end
 
