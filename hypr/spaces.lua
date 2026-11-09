@@ -9,6 +9,107 @@ local SESSION_FILE = HOME .. "/.config/hypr/session.json"
 local WORKSPACES_FILE = HOME .. "/.cache/window_workspaces.json"
 
 local is_syncing = false
+M._ws_map = nil
+M._routed = {}
+M._newly_opened = {}
+
+local GENERIC_TITLES = {
+    ["vivaldi - vivaldi"] = true,
+    ["vivaldi"] = true,
+    ["settings - vivaldi"] = true,
+    ["start page - vivaldi"] = true,
+    ["new tab - vivaldi"] = true,
+    ["new tab"] = true,
+    ["kitty"] = true,
+    ["~"] = true,
+    [""] = true,
+}
+
+local function is_generic_title(t)
+    if not t or #t == 0 then return true end
+    local clean = t:lower():match("^%s*(.-)%s*$")
+    if not clean or #clean == 0 then return true end
+    if GENERIC_TITLES[clean] then return true end
+    if clean:find("^new tab") or clean == "vivaldi" then return true end
+    return false
+end
+
+--- Loads window title-to-workspace mapping from cache
+function M.load_workspaces_map()
+    M._ws_map = {}
+    local f = io.open(WORKSPACES_FILE, "r")
+    if not f then return end
+    local content = f:read("*a")
+    f:close()
+    for k, v in content:gmatch('"([^"]+)"%s*:%s*"([^"]+)"') do
+        M._ws_map[k] = v
+    end
+end
+
+--- Persists window title-to-workspace mapping atomically
+function M.save_workspaces_map()
+    if not M._ws_map then return end
+    local entries = {}
+    for k, v in pairs(M._ws_map) do
+        table.insert(entries, string.format('  %q: %q', k, v))
+    end
+    table.sort(entries)
+    local json_str = "{\n" .. table.concat(entries, ",\n") .. "\n}\n"
+    local tmp = WORKSPACES_FILE .. ".tmp"
+    local f = io.open(tmp, "w")
+    if f then
+        f:write(json_str)
+        f:close()
+        os.rename(tmp, WORKSPACES_FILE)
+    end
+end
+
+--- Automatically routes a window to its saved workspace based on title memory
+function M.route_window(win)
+    if not win or not win.address then return end
+    local addr = win.address
+
+    -- Never re-route a window that was already routed in this session
+    if M._routed[addr] then return end
+
+    local title = win.title
+    if is_generic_title(title) then return end
+
+    local cur_ws = win.workspace and win.workspace.name
+    if not cur_ws or cur_ws:find("^special:") then return end
+
+    if not M._ws_map then M.load_workspaces_map() end
+
+    local target_ws = M._ws_map[title]
+    if not target_ws or target_ws:find("^special:") then return end
+
+    if cur_ws ~= target_ws then
+        M._routed[addr] = true
+        hl.dispatch(hl.dsp.window.move({
+            workspace = target_ws,
+            window = "address:" .. addr,
+            silent = true,
+        }))
+        M.sync_desktop_spaces()
+    else
+        M._routed[addr] = true
+    end
+end
+
+--- Updates window workspace mapping in memory and on disk when a window moves
+function M.track_window(win)
+    if not win or not win.title or not win.workspace then return end
+    local ws = win.workspace.name
+    if not ws or ws:find("^special:") or not ws:match("^%d+$") then return end
+    local title = win.title
+    if is_generic_title(title) then return end
+
+    if not M._ws_map then M.load_workspaces_map() end
+    if M._ws_map[title] ~= ws then
+        M._ws_map[title] = ws
+        M.save_workspaces_map()
+    end
+end
 
 --- Synchronizes persistent workspaces so empty spaces vanish from Waybar with 0 latency
 function M.sync_desktop_spaces()
@@ -246,6 +347,7 @@ function M.save_session()
                 '  {"class": %q, "title": %q, "workspace": %q, "monitor": %d}',
                 c.class or "", c.title or "", ws, c.monitor and c.monitor.id or 0
             ))
+            M.track_window(c)
         end
     end
 
@@ -261,6 +363,14 @@ end
 
 --- Sets up native event hooks and timers
 function M.setup()
+    M.load_workspaces_map()
+
+    -- Initial scan of clients on startup
+    for _, c in ipairs(hl.get_windows() or {}) do
+        M.route_window(c)
+        M.track_window(c)
+    end
+
     -- Periodic in-memory space persistence & auto-healing (every 4 seconds)
     hl.timer(function()
         M.sync_desktop_spaces()
@@ -289,9 +399,42 @@ function M.setup()
         M.enforce_dual_monitor_sync(ws)
     end)
 
-    hl.on("window.close", function()
+    -- Automatic window routing & title learning hooks
+    hl.on("window.open", function(win)
+        if win and win.address then
+            M._newly_opened[win.address] = os.time()
+            M.route_window(win)
+        end
         M.sync_desktop_spaces()
     end)
+
+    hl.on("window.title", function(win)
+        if win and win.address then
+            if not M._routed[win.address] then
+                M.route_window(win)
+            else
+                M.track_window(win)
+            end
+        end
+    end)
+
+    hl.on("window.move_to_workspace", function(win, ws)
+        if win and ws then
+            M._routed[win.address] = true
+            local fake_win = { title = win.title, workspace = ws }
+            M.track_window(fake_win)
+        end
+        M.sync_desktop_spaces()
+    end)
+
+    hl.on("window.close", function(win)
+        if win and win.address then
+            M._routed[win.address] = nil
+            M._newly_opened[win.address] = nil
+        end
+        M.sync_desktop_spaces()
+    end)
+
     hl.on("monitor.layout_changed", function()
         M.sync_desktop_spaces()
     end)
