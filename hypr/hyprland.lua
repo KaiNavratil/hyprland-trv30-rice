@@ -13,9 +13,11 @@ require("monitors")
 local spaces = require("spaces")
 local guards = require("guards")
 local scratchpads = require("scratchpads")
+local animations = require("animations")
 
 spaces.setup()
 guards.setup()
+animations.setup()
 
 -- ┌─────────────────────────────────────────────────────────────┐
 -- │ 2. ENVIRONMENT VARIABLES (環境変数)                         │
