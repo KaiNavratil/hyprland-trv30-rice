@@ -10,8 +10,8 @@ fi
 CURRENT_PROFILE=$(pactl list cards | awk -v card="$CARD" '$0 ~ "Name: " card {flag=1} flag && /Active Profile:/ {print $3; exit}')
 
 if [[ "$CURRENT_PROFILE" =~ headset ]]; then
-    # Currently in Headset mode -> Switch to Music Mode (a2dp-sink)
-    pactl set-card-profile "$CARD" a2dp-sink
+    # Currently in Headset mode -> Switch to Music Mode (a2dp-sink-aac)
+    pactl set-card-profile "$CARD" a2dp-sink-aac || pactl set-card-profile "$CARD" a2dp-sink
     sleep 0.4
     BT_SINK=$(pactl list sinks short | grep bluez_output | awk '{print $2}' | head -n 1)
     if [ -n "$BT_SINK" ]; then
@@ -21,7 +21,7 @@ if [[ "$CURRENT_PROFILE" =~ headset ]]; then
     if [ -n "$LAPTOP_MIC" ]; then
         pactl set-default-source "$LAPTOP_MIC"
     fi
-    dunstify -a "osd" -r 9998 "🎧 MUSIC MODE" "EarFun aptX Hi-Fi Active (Mic Off)"
+    dunstify -a "osd" -r 9998 "🎧 MUSIC MODE" "EarFun AAC Hi-Fi Active (Low Latency)"
 else
     # Currently in A2DP mode -> Switch to Call Mode (headset-head-unit)
     pactl set-card-profile "$CARD" headset-head-unit

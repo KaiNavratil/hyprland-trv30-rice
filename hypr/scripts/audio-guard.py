@@ -69,10 +69,16 @@ def handle_device_connected(mac):
             sinks = get_sinks()
 
     # Route default sink to the connected Bluetooth headphones
+    card_name = f"bluez_card.{mac.replace(':', '_')}"
+    subprocess.run(["pactl", "set-card-profile", card_name, "a2dp-sink-aac"], stderr=subprocess.DEVNULL)
+
     for s in sinks:
         if "bluez" in s:
             subprocess.run(["pactl", "set-default-sink", s], stderr=subprocess.DEVNULL)
             break
+
+    # Keep laptop microphone active to prevent Bluetooth dropping to low-quality HFP mono mode
+    subprocess.run(["pactl", "set-default-source", "alsa_input.pci-0000_c3_00.6.HiFi__Mic1__source"], stderr=subprocess.DEVNULL)
             
     sync_mute_state()
 
