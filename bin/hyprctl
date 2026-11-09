@@ -69,13 +69,21 @@ def translate_dispatch(subargs):
             return ["dispatch", f'hl.dsp.window.float({{ action = "toggle", window = "{win}" }})']
         return ["dispatch", 'hl.dsp.window.float({ action = "toggle" })']
 
+    if d_cmd == "closewindow":
+        win = rest[0] if rest else None
+        if win:
+            if win.startswith("0x"):
+                win = f"address:{win}"
+            return ["dispatch", f'hl.dsp.window.close({{ window = "{win}" }})']
+        return ["dispatch", 'hl.dsp.window.close()']
+
     if d_cmd == "settiled":
         win = rest[0] if rest else None
         if win:
             if win.startswith("0x"):
                 win = f"address:{win}"
-            return ["dispatch", f'hl.dsp.window.float({{ action = "disable", window = "{win}" }})']
-        return ["dispatch", 'hl.dsp.window.float({ action = "disable" })']
+            return ["dispatch", f'hl.dsp.window.float({{ action = "settiled", window = "{win}" }})']
+        return ["dispatch", 'hl.dsp.window.float({ action = "settiled" })']
 
     if d_cmd == "pin":
         win = rest[0] if rest else None

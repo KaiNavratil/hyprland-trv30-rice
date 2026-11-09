@@ -168,12 +168,14 @@ hl.window_rule({
     name = "workspace_special_notes_term",
     match = { class = "^(notes-term)$" },
     workspace = "special:notes silent",
+    tile = true,
 })
 
 hl.window_rule({
     name = "workspace_special_notes_copyq",
-    match = { class = "^(com\\.github\\.hluk\\.copyq)$" },
+    match = { class = "^(com\\.github\\.hluk\\.copyq|copyq)$" },
     workspace = "special:notes silent",
+    tile = true,
 })
 
 hl.window_rule({

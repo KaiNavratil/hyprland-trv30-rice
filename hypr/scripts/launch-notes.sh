@@ -1,29 +1,36 @@
 #!/bin/bash
+# ══════════════════════════════════════════════════════════════════════════════
+#  TOKYO 80s TRV30 — Launch Notes & CopyQ Hub
+#  東京 80's デジタル // ノート＆クリップボードハブ起動
+# ══════════════════════════════════════════════════════════════════════════════
 
-# Ensure notes directory exists
+# Ensure notes directory and default scratchpad files exist
 mkdir -p ~/.config/notes
 touch ~/.config/notes/scratch.txt ~/.config/notes/todo.txt ~/.config/notes/ideas.txt
 
-# Launch Kitty with Neovim if not running
+# Start CopyQ server daemon if not running
+if ! pgrep -x "copyq" > /dev/null; then
+    copyq --start-server &
+    sleep 0.2
+fi
+
+# Show CopyQ GUI window
+copyq show &
+
+# Launch Kitty Neovim into special:notes silent if not already running
 if ! pgrep -f "kitty --class notes-term" > /dev/null; then
-    # Clean up stale swap files in case the scratchpad was forcefully closed previously
     rm -f ~/.local/state/nvim/swap/*scratch.txt.swp
     rm -f ~/.local/state/nvim/swap/*todo.txt.swp
     rm -f ~/.local/state/nvim/swap/*ideas.txt.swp
-    
-    kitty --class notes-term nvim -p ~/.config/notes/scratch.txt ~/.config/notes/todo.txt ~/.config/notes/ideas.txt &
-    sleep 0.5
+    hyprctl dispatch exec "[workspace special:notes silent] kitty --class notes-term nvim -p ~/.config/notes/scratch.txt ~/.config/notes/todo.txt ~/.config/notes/ideas.txt"
+    sleep 0.3
 fi
 
-# Launch CopyQ daemon if not running
-if ! pgrep -x "copyq" > /dev/null; then
-    copyq &
-    sleep 0.5
-fi
-
-# Ensure both windows are tiled in the scratchpad (matching 60px margins)
+# Ensure both windows are tiled in dwindle layout (matching 60px margins)
 hyprctl dispatch settiled class:notes-term >/dev/null 2>&1
 hyprctl dispatch settiled class:com.github.hluk.copyq >/dev/null 2>&1
 
-# Finally, toggle the workspace to show them
-~/.config/hypr/scripts/toggle-scratchpad.sh notes
+# If called with --toggle or explicitly, show the hub
+if [ "$1" == "--toggle" ]; then
+    hyprctl eval "require('scratchpads').toggle('notes')" >/dev/null 2>&1 || hyprctl dispatch togglespecialworkspace notes
+fi
