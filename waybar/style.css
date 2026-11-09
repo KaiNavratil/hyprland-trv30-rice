@@ -1,0 +1,156 @@
+/* ═══════════════════════════════════════════════════════════════
+ *  ウェイバースタイル (WAYBAR STYLESHEET)
+ *  Tokyo 80s TRV30 — Warm Vintage Palette
+ *
+ *  Palette:
+ *    Warm white:  #e8dfd4   (aged CRT phosphor text)
+ *    Amber:       #d4944c   (vintage amber — accents, timecode)
+ *    Faded blue:  #7b9db7   (subtle cool contrast)
+ *    Warm gray:   #8a7e72   (dim / inactive text)
+ *    Warm silver: #b8a998   (borders, dividers)
+ *    Warm red:    #c44444   (REC / critical)
+ * ═══════════════════════════════════════════════════════════════ */
+
+* {
+    font-family: 'VCR OSD Mono', 'DotGothic16', monospace;
+    font-size: 13px;
+    border-radius: 0px;
+    border: none;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+window#waybar {
+    background: transparent;
+    color: #e8dfd4;
+}
+
+/* ─── ワークスペース (Workspaces) ─── */
+#workspaces button {
+    padding: 0 6px;
+    background: transparent;
+    color: #8a7e72;
+}
+
+#workspaces button.active,
+#workspaces button.visible,
+#workspaces button.active label,
+#workspaces button.visible label {
+    background: #e8dfd4;
+    color: #0a0808;
+    text-shadow: none;
+}
+
+#workspaces button.urgent {
+    background: #c44444;
+    color: #e8dfd4;
+}
+
+#workspaces button:hover {
+    background: #1a1a1a;
+    color: #e8dfd4;
+}
+
+#custom-radar {
+    padding: 0 10px 0 8px;
+    color: #d4944c;
+    background: transparent;
+    font-size: 18px;
+    text-shadow: 0 0 4px rgba(212, 148, 76, 0.4);
+}
+
+#custom-radar:hover {
+    color: #ffba3b;
+    background: #181614;
+    text-shadow: 0 0 8px rgba(242, 165, 51, 0.6);
+}
+
+/* ─── 音声ビジュアライザー (Audio Visualizer) ─── */
+#custom-audio-l, #custom-audio-r {
+    color: #f2a533;
+    padding: 0px 6px;
+}
+
+/* ─── ネットワーク・音量・バッテリー・日付 (Modules) ─── */
+#network, #pulseaudio, #battery, #custom-battery, #custom-date-jp {
+    padding: 0 6px;
+    color: #e8dfd4;
+}
+
+/* バッテリー状態 (Battery States) */
+#custom-battery {
+    padding: 0px 6px;
+    margin-bottom: 1px; /* Push up 1px */
+}
+
+#battery.good, #custom-battery.good {
+    color: #e8dfd4;
+}
+
+#battery.warning, #custom-battery.warning {
+    color: #d4944c;
+}
+
+#battery.critical, #custom-battery.critical {
+    color: #c44444;
+}
+
+/* ─── タイムコード (Timecode Clock) ─── */
+#clock {
+    color: #d4944c;
+    padding: 0 6px;
+}
+
+/* ─── スポティファイ (Spotify / Cassette) ─── */
+#custom-spotify-cassette, #custom-spotify-playback {
+    color: #d4944c;
+    padding: 0px 6px;
+}
+
+.modules-center {
+    margin-top: 1px; /* Push center group down 1px */
+}
+
+#custom-spotify-cassette {
+    border: 1px solid #b8a998;
+    margin: 4px 8px;
+}
+
+/* ─── 録画インジケーター (REC Indicator) ─── */
+#custom-rec-indicator {
+    color: #c44444;
+    padding: 0 6px;
+    animation-name: blink;
+    animation-duration: 1s;
+    animation-timing-function: step-end;
+    animation-iteration-count: infinite;
+}
+
+/* ─── 省電力モード (Power Mode Indicator) ─── */
+#custom-power-mode {
+    color: #7b9db7;
+    padding: 0 6px;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+/* ─── スクラッチパッド (Scratchpad Tab) ─── */
+#custom-scratchpad {
+    min-width: 60px;
+    padding: 0 8px;
+    color: #8a7e72;
+    border-right: 1px solid #b8a998;
+}
+
+#custom-scratchpad.active {
+    color: #f2a533;
+}
+
+#custom-scratchpad:hover {
+    background: #2d2017;
+    color: #e8dfd4;
+}
+

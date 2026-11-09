@@ -1,0 +1,103 @@
+
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    disable-history: false;
+    sort: true;
+    sorting-method: "fzf";
+    display-drun: "アプリ";
+    display-run: "実行";
+    display-window: "窓";
+    drun-display-format: "{name}";
+    font: "VCR OSD Mono 13";
+}
+
+* {
+    /* グローバルカラー (Global Colors — Warm Vintage) */
+    bg: #0a0808;
+    bg-alt: #1a1614;
+    fg: #e8dfd4;
+    fg-alt: #8a7e72;
+    accent: #d4944c;
+    border-color: #b8a998;
+    urgent: #c44444;
+}
+
+window {
+    background-color: @bg;
+    border: 2px;
+    border-color: @border-color;
+    border-radius: 0px; /* SHARP CORNERS */
+    width: 600px;
+    height: 400px;
+}
+
+mainbox {
+    background-color: transparent;
+    children: [inputbar, listview];
+}
+
+inputbar {
+    background-color: @bg-alt;
+    text-color: @fg;
+    padding: 8px 12px;
+    children: [entry];
+    border: 0px 0px 2px 0px;
+    border-color: @border-color;
+}
+
+prompt {
+    text-color: @accent; /* Green accent for the prompt */
+    font: "VCR OSD Mono Bold 13";
+}
+
+entry {
+    text-color: @fg;
+    placeholder: ""; /* Search in Japanese */
+    placeholder-color: @fg-alt;
+}
+
+listview {
+    background-color: @bg;
+    columns: 1;
+    lines: 8;
+    scrollbar: false;
+    spacing: 0px;
+    fixed-height: true;
+}
+
+element {
+    background-color: transparent;
+    text-color: @fg;
+    padding: 8px 12px;
+    border: 0px 0px 1px 0px;
+    border-color: @bg-alt;
+}
+
+element.selected.normal {
+    background-color: @bg-alt;
+    text-color: @accent;
+    border: 0px 0px 0px 3px;
+    border-color: @accent;
+}
+
+element.selected.urgent {
+    background-color: @urgent;
+    text-color: @bg;
+}
+
+element.selected.active {
+    background-color: @bg-alt;
+    text-color: @accent;
+}
+
+element-text {
+    background-color: inherit;
+    text-color: inherit;
+}
+
+element-icon {
+    background-color: inherit;
+    size: 20px;
+    padding: 0px 8px 0px 0px;
+}

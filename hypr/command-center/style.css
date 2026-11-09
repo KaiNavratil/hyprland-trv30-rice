@@ -1,0 +1,2976 @@
+/* ═══════════════════════════════════════════════════════════════════
+ *  TOKYO 80S TRV30 MASTER DECK — WAYBAR MATCHED VINTAGE PALETTE
+ *  Matching ~/.config/waybar/style.css:
+ *    Warm white:  #e8dfd4   (aged CRT phosphor text)
+ *    Amber:       #d4944c   (vintage amber — accents, timecode)
+ *    Audio amber: #f2a533   (audio meters)
+ *    Faded blue:  #7b9db7   (subtle cool contrast)
+ *    Warm gray:   #8a7e72   (dim / inactive text)
+ *    Warm silver: #b8a998   (borders, dividers)
+ *    Warm red:    #c44444   (REC / critical)
+ *    Pure black:  #000000   (background)
+ * ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-black: #000000;
+  --bg-chassis: #0a0808;
+  --bg-panel: #11100f;
+  --bg-card: #181614;
+  --bg-subtle: #1f1c19;
+  
+  --border-metal: #3a352f;
+  --border-silver: #b8a998;
+  --border-dim: #22201d;
+  
+  --fg-main: #e8dfd4;
+  --fg-dim: #8a7e72;
+  --fg-bright: #ffffff;
+  
+  --accent-amber: #d4944c;
+  --accent-audio: #f2a533;
+  --accent-blue: #7b9db7;
+  --accent-red: #c44444;
+  --accent-green: #88aa88;
+  
+  --font-osd: 'VCR OSD Mono', 'DotGothic16', monospace;
+  --shadow-osd: 2px 2px 0px #000000;
+}
+
+/* ─── THEME VARIATIONS ─── */
+body.theme-cyber {
+  --accent-amber: #00e5ff;
+  --accent-audio: #00e5ff;
+  --accent-blue: #ff007f;
+  --border-silver: #00e5ff;
+  --border-metal: #003344;
+  --fg-main: #e0f8ff;
+}
+
+body.theme-pvm {
+  --accent-amber: #00ff41;
+  --accent-audio: #44ff44;
+  --accent-blue: #00aa33;
+  --border-silver: #00aa33;
+  --border-metal: #142814;
+  --fg-main: #aaffaa;
+}
+
+body.theme-nerv {
+  --accent-amber: #ff5500;
+  --accent-audio: #ff7700;
+  --accent-blue: #cc2200;
+  --border-silver: #ff5500;
+  --border-metal: #441a00;
+  --fg-main: #ffcc99;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  font-family: var(--font-osd);
+  font-size: 13px;
+  border-radius: 0px !important;
+  text-shadow: var(--shadow-osd);
+  -webkit-font-smoothing: none;
+}
+
+body {
+  background-color: var(--bg-black);
+  color: var(--fg-main);
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@keyframes deckFadeIn {
+  from { opacity: 0; transform: scale(0.995); }
+  to { opacity: 1; transform: scale(1.0); }
+}
+
+/* Screen Proportions: Full viewport with zero dead margins */
+.deck-container {
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-black);
+  border: none;
+  overflow: hidden;
+  animation: deckFadeIn 0.15s ease-out;
+}
+
+/* ─── MASTER DECK TOP STATUS BAR ─── */
+.deck-master-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-chassis);
+  border: 1px solid var(--border-silver);
+  padding: 3px 10px;
+  height: 28px;
+  min-height: 28px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+
+.master-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-sony-solid {
+  background: var(--border-silver);
+  color: #000000;
+  font-weight: 900;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  padding: 1px 6px;
+  text-shadow: none;
+}
+
+.master-deck-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--fg-main);
+  letter-spacing: 0.5px;
+}
+
+.master-session-tag {
+  font-size: 9.5px;
+  color: var(--accent-amber);
+  border-left: 1px solid var(--border-metal);
+  padding-left: 8px;
+}
+
+.master-bar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-switch-group {
+  display: flex;
+  border: 1px solid var(--border-silver);
+  background: var(--bg-black);
+}
+
+.mode-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 14px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.mode-toggle-btn:hover {
+  color: var(--fg-bright);
+  background: var(--bg-panel);
+}
+
+.mode-toggle-btn.active {
+  background: var(--accent-amber);
+  color: #000000;
+  font-weight: 900;
+  text-shadow: none;
+}
+
+.master-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hotkey-hint {
+  font-size: 9px;
+  color: var(--fg-dim);
+  border: 1px solid var(--border-metal);
+  padding: 1px 5px;
+  background: var(--bg-black);
+}
+
+.session-timecode-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+
+/* ─── 4-BAY MISSION CONTROL CONSOLE GRID ─── */
+.deck-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr 0.95fr 0.95fr;
+  gap: 8px;
+  height: calc(100% - 34px);
+  max-height: calc(100% - 34px);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Minimalist Mode (Zen Cockpit) */
+body.mode-minimal .pane-bay-2,
+body.mode-minimal .pane-bay-3 {
+  display: none !important;
+}
+
+body.mode-minimal .deck-main {
+  grid-template-columns: 1fr 1fr;
+  max-width: 1240px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 12px;
+}
+
+.console-pane {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 6px;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-metal);
+  padding-bottom: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--accent-amber);
+}
+
+.pane-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-sony {
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: var(--fg-bright);
+  border: 1px solid var(--border-silver);
+  padding: 1px 5px;
+  font-size: 10px;
+}
+
+.pane-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rec-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border-metal);
+  padding: 1px 6px;
+  background: var(--bg-black);
+}
+
+.rec-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--fg-dim);
+}
+
+.rec-indicator.recording .rec-dot {
+  background: var(--accent-red);
+  box-shadow: 0 0 6px var(--accent-red);
+  animation: blink-rec 1s infinite;
+}
+
+.rec-indicator.recording .rec-text {
+  color: var(--accent-red);
+}
+
+@keyframes blink-rec {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.session-timecode {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.dim-label {
+  color: var(--accent-amber);
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.tc-val {
+  color: var(--fg-main);
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.btn-esc-inline {
+  background: var(--bg-black);
+  border: 1px solid var(--border-silver);
+  color: var(--fg-main);
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.btn-esc-inline:hover {
+  background: var(--accent-red);
+  color: var(--fg-bright);
+  border-color: var(--accent-red);
+}
+
+/* ═══════════ LEFT PANE: ASCII VIEWFINDER ═══════════ */
+.crt-housing {
+  background: var(--bg-black);
+  border: 1px solid var(--border-silver);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  height: 200px;
+  min-height: 200px;
+  max-height: 200px;
+  overflow: hidden;
+}
+
+.crt-bezel {
+  position: relative;
+  background: var(--bg-black);
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.vf-osd {
+  padding: 3px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--fg-dim);
+  background: rgba(0, 0, 0, 0.85);
+  border-bottom: 1px solid var(--border-dim);
+  z-index: 10;
+}
+
+.vf-pill-stby {
+  color: var(--accent-amber);
+  border: 1px solid var(--accent-amber);
+  padding: 0 5px;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.vf-pill-rec {
+  color: var(--accent-red);
+  border: 1px solid var(--accent-red);
+  padding: 0 5px;
+  font-size: 9px;
+  font-weight: bold;
+  animation: blink-rec 1s infinite;
+}
+
+.vf-osd-bottom {
+  border-top: 1px solid var(--border-dim);
+  border-bottom: none;
+}
+
+.vf-screen-area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #050403;
+  overflow: hidden;
+  padding: 6px;
+}
+
+/* ASCII Canvas / Display */
+#ascii-output {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  font-family: 'VCR OSD Mono', monospace !important;
+  font-size: 11px;
+  line-height: 13.5px;
+  letter-spacing: 0px;
+  color: var(--fg-main);
+  white-space: pre;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: none;
+  contain: strict;
+  will-change: contents;
+}
+
+#ascii-output.mode-cam {
+  color: var(--fg-main);
+  text-shadow: none !important;
+}
+
+/* CRT Overlay Mesh */
+.crt-overlay-mesh {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 3px;
+  pointer-events: none;
+  z-index: 5;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Shutter Controls Bar */
+.shutter-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px 10px;
+  height: 42px;
+  min-height: 42px;
+}
+
+.btn-shutter {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  color: var(--fg-main);
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.1s;
+}
+
+.btn-shutter .shutter-icon {
+  color: var(--accent-red);
+}
+
+.btn-shutter:hover {
+  background: var(--bg-subtle);
+  border-color: var(--fg-bright);
+}
+
+.btn-shutter.active-rec {
+  background: #2a0808;
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.cam-style-toggles {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.style-label {
+  font-size: 10px;
+  color: var(--fg-dim);
+  margin-right: 4px;
+}
+
+.style-pill {
+  font-size: 10px;
+  padding: 4px 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  color: var(--fg-dim);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.style-pill:hover {
+  border-color: var(--border-silver);
+  color: var(--fg-main);
+}
+
+.style-pill.active {
+  background: var(--accent-amber);
+  border-color: var(--accent-amber);
+  color: #000000;
+  font-weight: bold;
+  text-shadow: none;
+}
+
+/* ═══════════ BTOP SYSTEM PERFORMANCE SUITE ═══════════ */
+.btop-suite-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.btop-card {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.btop-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.btop-label {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.btop-header-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btop-tag {
+  font-size: 9px;
+  color: var(--fg-dim);
+  border: 1px solid var(--border-metal);
+  padding: 0 4px;
+  background: #0f0d0c;
+}
+
+.btop-tag.tag-temp {
+  color: #d46b4c;
+}
+
+.btop-stat-highlight {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--fg-bright);
+}
+
+.btop-sub-label {
+  font-size: 8.5px;
+  color: var(--fg-dim);
+}
+
+/* CPU Sparkline */
+.cpu-sparkline-wrap {
+  width: 100%;
+  height: 30px;
+  background: #0b0908;
+  border: 1px solid var(--border-dim);
+  overflow: hidden;
+  position: relative;
+}
+
+#cpu-sparkline-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 16-Core Thread Matrix */
+.btop-cores-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.core-cell {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 8.5px;
+  background: #0f0d0c;
+  padding: 1px 3px;
+  border: 1px solid var(--border-dim);
+}
+
+.core-num {
+  color: var(--fg-dim);
+  font-size: 8px;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.core-bar-track {
+  flex: 1;
+  height: 5px;
+  background: #181614;
+  overflow: hidden;
+}
+
+.core-bar-fill {
+  height: 100%;
+  background: var(--accent-amber);
+  transition: width 0.3s ease;
+}
+
+.core-pct {
+  font-size: 8px;
+  color: var(--fg-main);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Memory & Storage Multi-Meter */
+.btop-dual-meters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.btop-meter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btop-meter-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+}
+
+.meter-name {
+  color: var(--fg-dim);
+  font-weight: bold;
+}
+
+.meter-detail {
+  color: var(--fg-main);
+  font-weight: bold;
+}
+
+.btop-bar-track {
+  height: 6px;
+  background: #141210;
+  border: 1px solid var(--border-dim);
+  overflow: hidden;
+}
+
+.btop-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.bar-ram  { background: var(--accent-amber); }
+.bar-zram { background: var(--accent-blue); }
+.bar-disk { background: var(--border-silver); }
+.bar-gpu  { background: var(--accent-audio); }
+
+/* Top Processes Table (btop-style) */
+.btop-procs-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.btop-procs-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  font-size: 9.5px;
+}
+
+.procs-header-row {
+  display: grid;
+  grid-template-columns: 46px 1fr 48px 48px 24px;
+  padding: 2px 4px;
+  background: #151311;
+  color: var(--fg-dim);
+  font-size: 8.5px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.procs-body {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.proc-row {
+  display: grid;
+  grid-template-columns: 46px 1fr 48px 48px 24px;
+  padding: 2px 4px;
+  align-items: center;
+  border-bottom: 1px solid #141210;
+  transition: background 0.1s;
+}
+
+.proc-row:hover {
+  background: #1f1b17;
+}
+
+.p-col {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p-pid {
+  color: var(--fg-dim);
+  font-size: 8.5px;
+}
+
+.p-name {
+  color: var(--fg-bright);
+  font-weight: bold;
+}
+
+.p-cpu {
+  color: var(--accent-amber);
+  font-weight: bold;
+}
+
+.p-mem {
+  color: var(--accent-blue);
+}
+
+.p-act {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-proc-kill {
+  background: transparent;
+  border: 1px solid #4a2222;
+  color: var(--accent-red);
+  font-size: 8px;
+  padding: 0 3px;
+  cursor: pointer;
+  line-height: 12px;
+  transition: all 0.1s;
+}
+
+.btn-proc-kill:hover {
+  background: var(--accent-red);
+  color: #ffffff;
+  border-color: var(--accent-red);
+}
+
+/* Tactical Communications Matrix */
+.comm-matrix-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 116px;
+  min-height: 116px;
+}
+
+.comm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.comm-status {
+  color: #88aa88;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.comm-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  flex: 1;
+  gap: 4px 10px;
+}
+
+.comm-data-col, .comm-traffic-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comm-data-row {
+  font-size: 10.5px;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+
+.comm-label {
+  color: var(--fg-dim);
+  margin-right: 4px;
+}
+
+.comm-val {
+  color: var(--fg-main);
+  font-weight: bold;
+}
+
+.comm-val.highlight {
+  color: var(--accent-amber);
+}
+
+.comm-controls-col {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.comm-toggle-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  width: 100%;
+}
+
+.comm-toggle-btn {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-silver);
+  color: var(--fg-bright);
+  font-size: 9px;
+  font-weight: bold;
+  padding: 3px 0;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.comm-toggle-btn:hover {
+  border-color: var(--border-silver);
+  color: var(--fg-bright);
+}
+
+.comm-toggle-btn.active {
+  background: var(--accent-amber);
+  color: #000;
+  border-color: var(--accent-amber);
+  text-shadow: none;
+}
+
+/* System Override Quick Actions Bar */
+.sys-override-bar {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  height: 32px;
+  min-height: 32px;
+}
+
+.sys-act-btn {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  color: var(--fg-dim);
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+}
+
+.sys-act-btn:hover {
+  background: var(--bg-panel);
+  border-color: var(--border-silver);
+  color: var(--fg-bright);
+}
+
+.sys-act-btn:active {
+  background: var(--accent-amber);
+  color: #000;
+  text-shadow: none;
+}
+
+
+/* ═══════════ BAY 02: VECTOR LAB & LISSAJOUS PARAMETRIC SCOPE ═══════════ */
+.vector-scope-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vector-box-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 3px;
+}
+
+.scope-title {
+  color: var(--accent-amber);
+}
+
+.scope-mode-toggles {
+  display: flex;
+  gap: 3px;
+}
+
+.btn-scope-mode {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  color: var(--fg-dim);
+  font-size: 8.5px;
+  padding: 1px 6px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.btn-scope-mode:hover {
+  border-color: var(--border-silver);
+  color: var(--fg-bright);
+}
+
+.btn-scope-mode.active {
+  background: var(--accent-amber);
+  color: #000;
+  border-color: var(--accent-amber);
+  font-weight: bold;
+  text-shadow: none;
+}
+
+.canvas-housing {
+  position: relative;
+  background: #040604;
+  border: 1px solid var(--border-metal);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 130px;
+  min-height: 130px;
+}
+
+.canvas-housing canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.scope-status-strip {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8.5px;
+  color: var(--fg-dim);
+  padding: 2px 4px;
+  background: #0c0a09;
+  border: 1px solid var(--border-dim);
+}
+
+/* 8-Channel Digital Logic Timing Analyzer (Pinterest Bottom-Left Timing Bus) */
+.logic-analyzer-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.logic-canvas-housing {
+  height: 110px;
+  min-height: 110px;
+}
+
+.logic-clock-badge {
+  background: #101810;
+  border: 1px solid #44aa44;
+  color: #88ff88;
+  font-size: 8px;
+  padding: 0 4px;
+  font-weight: bold;
+}
+
+/* RF Carrier & Packet Telemetry Terminal Stream */
+.hex-stream-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hex-stream-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.badge-tech {
+  background: #181512;
+  border: 1px solid var(--border-silver);
+  color: var(--fg-main);
+  font-size: 8px;
+  padding: 0 4px;
+  font-weight: bold;
+}
+
+.hex-terminal-body {
+  font-family: var(--font-osd);
+  font-size: 8.5px;
+  line-height: 1.45;
+  color: #7b9db7;
+  background: #06080a;
+  border: 1px solid #142028;
+  padding: 5px 8px;
+  height: 118px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.hex-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hex-line.highlight {
+  color: var(--accent-amber);
+  font-weight: bold;
+}
+
+/* Hardware Interconnect & Bus Topology (8-Tile 2-Row Dense Matrix) */
+.bus-matrix-box {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 6px;
+  height: 90px;
+  min-height: 90px;
+}
+
+.bus-tile {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
+.bus-label {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: var(--fg-dim);
+}
+
+.bus-val {
+  font-size: 10.5px;
+  font-weight: bold;
+  color: var(--fg-bright);
+}
+
+
+/* ═══════════ BAY 03: CELESTIAL ORBITAL TRACKER & 3D HORIZON ═══════════ */
+.orbital-radar-box, .horizon-vector-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.badge-orbit {
+  background: #142014;
+  border: 1px solid #44aa44;
+  color: #88ff88;
+  font-size: 8px;
+  padding: 0 4px;
+  font-weight: bold;
+}
+
+/* 3-Axis Inertial Guidance & Waypoint Navigation Matrix */
+.inertial-nav-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.nav-tile {
+  background: #090807;
+  border: 1px solid var(--border-dim);
+  padding: 3px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.nav-label {
+  font-size: 7.5px;
+  color: var(--fg-dim);
+}
+
+.nav-val {
+  font-size: 8.5px;
+  font-weight: bold;
+  color: var(--fg-main);
+  white-space: nowrap;
+}
+
+.nav-val.highlight {
+  color: var(--accent-amber);
+}
+
+.nav-waypoint-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8px;
+  color: var(--fg-dim);
+  padding: 2px 5px;
+  background: #050709;
+  border: 1px solid #142028;
+}
+
+.nav-ils {
+  color: #88aa88;
+  font-weight: bold;
+}
+
+/* System Kernel & Journal Stream (Full Height Fill) */
+.journal-terminal-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 160px;
+}
+
+.journal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.journal-tag {
+  color: #88aa88;
+  font-size: 8.5px;
+}
+
+.journal-stream {
+  font-family: var(--font-osd);
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--fg-main);
+  background: #080605;
+  border: 1px solid var(--border-dim);
+  padding: 5px 8px;
+  flex: 1;
+  min-height: 120px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.log-entry, .log-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.log-time, .log-ts {
+  color: var(--accent-amber);
+  margin-right: 4px;
+}
+
+.log-tag, .log-mod {
+  font-weight: bold;
+  margin-right: 4px;
+}
+
+.tag-sys { color: #7b9db7; }
+.tag-snd { color: #d4944c; }
+.tag-hypr { color: #88aa88; }
+.tag-net { color: #e8dfd4; }
+
+
+/* ═══════════ BAY 04: CASSETTE DECK & AUDIO SUITE ═══════════ */
+.pane-bay-4 .hifi-double-bay {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: auto;
+  min-height: 0;
+}
+
+.hifi-double-bay {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: auto;
+  min-height: 0;
+}
+
+/* Bay A: Compact Authentic Video/Audio Tape Deck */
+.cassette-housing-compact {
+  background: var(--bg-black);
+  border: 1px solid var(--border-silver);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+}
+
+.cassette-shell {
+  position: relative;
+  flex: 1;
+  background: #0d0c0b;
+  border: 1px solid var(--border-metal);
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  justify-content: space-between;
+}
+
+.screw {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50% !important;
+  background: var(--border-silver);
+  box-shadow: inset 1px 1px 0px #000;
+}
+.screw-tl { top: 5px; left: 5px; }
+.screw-tr { top: 5px; right: 5px; }
+.screw-bl { bottom: 5px; left: 5px; }
+.screw-br { bottom: 5px; right: 5px; }
+
+/* Cassette Header & Label */
+.cassette-top-row, .label-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--accent-amber);
+  padding-bottom: 2px;
+  color: var(--accent-amber);
+}
+
+.tape-badge-main { font-weight: bold; color: var(--accent-amber); font-size: 9px; }
+.tape-badge-sub { font-size: 8px; color: var(--fg-dim); }
+
+.tape-meta-box, .label-title-box {
+  background: #141210;
+  border: 1px solid var(--border-metal);
+  padding: 3px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tape-title, .track-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--fg-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tape-artist, .track-artist {
+  font-size: 9px;
+  color: var(--fg-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tape Window with BIGGER WINDS! */
+.cassette-window, .tape-window {
+  height: 98px;
+  background: #050403;
+  border: 1px solid var(--border-metal);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tape-ruler {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  font-size: 8.5px;
+  color: var(--fg-dim);
+}
+
+/* Bigger Spool Reel Containers ("winds") */
+.reel-container {
+  width: 84px;
+  height: 84px;
+  border-radius: 50% !important;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tape-ribbon-outer {
+  position: absolute;
+  border-radius: 50% !important;
+  background: radial-gradient(circle, #3d2a1d 0%, #1e130c 80%, #0a0604 100%);
+  border: 1px solid #22140a;
+  width: 80px;
+  height: 80px;
+  transition: width 0.5s ease, height 0.5s ease;
+}
+
+.reel-spool {
+  width: 44px;
+  height: 44px;
+  border-radius: 50% !important;
+  background: radial-gradient(circle, #221d18 0%, #110e0c 100%);
+  border: 2px solid var(--border-silver);
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.8);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.reel-spool.spinning {
+  animation: spin-reel 1.6s linear infinite;
+}
+
+@keyframes spin-reel {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spool-teeth {
+  width: 28px;
+  height: 28px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spool-teeth .spoke {
+  position: absolute;
+  width: 3.5px;
+  height: 28px;
+  background: var(--fg-main);
+  border-radius: 1px;
+}
+
+.spool-teeth .spoke.s1 { transform: rotate(0deg); }
+.spool-teeth .spoke.s2 { transform: rotate(60deg); }
+.spool-teeth .spoke.s3 { transform: rotate(120deg); }
+
+.spool-center-hole {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #080706;
+  border: 2px solid var(--border-silver);
+  border-radius: 50% !important;
+  z-index: 4;
+}
+
+.tape-bridge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 2;
+}
+
+.tape-roller {
+  width: 8px; height: 8px; border-radius: 50% !important; background: var(--border-silver); box-shadow: 0 0 2px #000;
+}
+
+.tape-head-sensor {
+  width: 14px; height: 7px; background: var(--fg-dim); border: 1px solid var(--border-metal);
+}
+
+.cassette-bottom-trap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.tape-counter-widget {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  padding: 1px 5px;
+}
+
+.counter-label {
+  font-size: 8.5px;
+  color: var(--fg-dim);
+}
+
+.counter-digits {
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  letter-spacing: 1.5px;
+}
+
+.counter-btn {
+  background: transparent;
+  border: 1px solid var(--border-metal);
+  color: var(--fg-dim);
+  font-size: 8.5px;
+  padding: 0 3px;
+  cursor: pointer;
+}
+
+.counter-btn:hover {
+  color: var(--fg-bright);
+  border-color: var(--border-silver);
+}
+
+.counter-btn.active {
+  background: var(--accent-red);
+  color: #fff;
+  border-color: var(--accent-red);
+}
+
+.time-readout {
+  font-size: 10px;
+  color: var(--accent-amber);
+  font-weight: bold;
+}
+
+/* Transport Buttons */
+.transport-bar {
+  display: flex;
+  gap: 6px;
+  height: 30px;
+  min-height: 30px;
+}
+
+.btn-transport {
+  flex: 1;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-silver);
+  color: var(--fg-main);
+  padding: 0;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+}
+
+.btn-transport:hover {
+  background: var(--bg-subtle);
+  color: var(--fg-bright);
+}
+
+.btn-play-pause {
+  background: #1a1608;
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+}
+
+/* Bay B: 16-Band Graphic Spectrum Analyzer & Master Audio Suite */
+.spectrum-visualizer-bay {
+  background: var(--bg-black);
+  border: 1px solid var(--border-silver);
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: auto;
+}
+
+.spectrum-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.spectrum-tag {
+  font-size: 7.5px;
+  color: var(--accent-green);
+  border: 1px solid var(--accent-green);
+  padding: 0 4px;
+}
+
+.spectrum-rack {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 52px;
+  padding: 2px 0;
+  gap: 2px;
+}
+
+.spec-band-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.spec-bar-track {
+  width: 100%;
+  max-width: 16px;
+  height: 44px;
+  background: #080706;
+  border: 1px solid #1a1714;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.spec-bar-fill {
+  width: 100%;
+  background: linear-gradient(to top, var(--accent-green) 0%, #a0b860 45%, var(--accent-audio) 75%, var(--accent-red) 95%);
+  transition: height 0.08s ease;
+}
+
+.spec-peak-tick {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 3px #ffffff;
+  transition: bottom 0.12s ease;
+}
+
+.spec-freq {
+  font-size: 7px;
+  color: var(--fg-dim);
+}
+
+.master-ppm-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 2px 0;
+}
+
+.ppm-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ppm-chan {
+  font-size: 8.5px;
+  font-weight: bold;
+  color: var(--fg-dim);
+  width: 26px;
+}
+
+.ppm-meter-track {
+  flex: 1;
+  height: 9px;
+  background: #141210;
+  border: 1px solid #282420;
+  position: relative;
+  overflow: hidden;
+}
+
+.ppm-meter-fill {
+  height: 100%;
+  background: linear-gradient(to right, #88aa88 0%, #d4944c 75%, #c44444 95%);
+  transition: width 0.1s ease;
+}
+
+.ppm-peak-tick {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: 0 0 3px #ffffff;
+  transition: left 0.15s ease;
+}
+
+.ppm-val {
+  font-size: 8px;
+  color: var(--accent-amber);
+  font-weight: bold;
+  width: 48px;
+  text-align: right;
+}
+
+.spectrum-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-dim);
+  padding-top: 3px;
+  font-size: 8px;
+}
+
+.audio-telemetry {
+  display: flex;
+  gap: 6px;
+  color: var(--fg-dim);
+}
+
+.audio-telemetry b {
+  color: var(--fg-main);
+}
+
+.sink-badge {
+  font-size: 8px;
+  color: var(--accent-amber);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+
+/* TIER 2: STUDIO HARDWARE MIXING CONSOLE */
+.mixing-console-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px 8px;
+  display: flex;
+  gap: 8px;
+  height: 130px;
+  min-height: 130px;
+}
+
+.faders-rack {
+  display: flex;
+  gap: 5px;
+}
+
+.fader-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 32px;
+}
+
+.fader-label {
+  font-size: 8px;
+  font-weight: bold;
+  color: var(--fg-dim);
+}
+
+.fader-channel {
+  height: 78px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.fader-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 16px;
+  height: 74px;
+  background: transparent;
+  cursor: ns-resize;
+}
+
+.fader-slider::-webkit-slider-runnable-track {
+  width: 4px;
+  background: #0d0c0a;
+  border: 1px solid var(--border-metal);
+}
+
+.fader-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 10px;
+  background: linear-gradient(180deg, #777 0%, #2a2825 45%, var(--accent-amber) 50%, #2a2825 55%, #151310 100%);
+  border: 1px solid var(--border-silver);
+  border-radius: 0px;
+  cursor: ns-resize;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.9);
+}
+
+.vu-meter-ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 74px;
+  justify-content: space-between;
+}
+
+.vu-led {
+  width: 4px;
+  height: 4px;
+  background: #181512;
+  border: 1px solid #24201c;
+}
+
+.vu-led.on {
+  background: var(--fg-main);
+  box-shadow: 0 0 2px var(--fg-main);
+}
+
+.vu-led.amber.on {
+  background: var(--accent-audio);
+  box-shadow: 0 0 3px var(--accent-audio);
+}
+
+.vu-led.red.on {
+  background: var(--accent-red);
+  box-shadow: 0 0 4px var(--accent-red);
+}
+
+.fader-readout, .fader-val {
+  font-size: 8px;
+  color: var(--accent-amber);
+  font-weight: bold;
+}
+
+.studio-toggles-col, .toggles-rack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-dim);
+}
+
+.toggle-control-block, .toggle-unit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-header, .switch-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+  font-weight: bold;
+  color: var(--fg-dim);
+}
+
+.toggle-label {
+  font-size: 8px;
+  font-weight: bold;
+  color: var(--fg-dim);
+}
+
+.btn-mic-toggle {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  color: var(--accent-green);
+  font-size: 7.5px;
+  font-weight: bold;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.btn-mic-toggle:hover {
+  border-color: var(--border-silver);
+  color: #fff;
+}
+
+.switch-dual-horizontal {
+  display: flex;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  padding: 1px;
+}
+
+.switch-opt {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 8px;
+  font-weight: bold;
+  padding: 2px 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.1s;
+}
+
+.switch-opt:hover {
+  color: var(--fg-bright);
+}
+
+.switch-opt.active {
+  background: var(--accent-amber);
+  color: #000;
+  text-shadow: none;
+}
+
+.switch-tri-state {
+  display: flex;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  padding: 1px;
+  gap: 1px;
+}
+
+.tri-btn {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--fg-dim);
+  padding: 2px 3px;
+  font-size: 7.5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.tri-btn:hover {
+  color: var(--fg-bright);
+}
+
+.tri-btn.active {
+  background: var(--accent-amber);
+  color: #000;
+  font-weight: bold;
+  text-shadow: none;
+}
+
+
+/* TIER 3: AUDIO MASTERING STUDIO & STEREO GONIOMETER VECTORSCOPE */
+.mastering-studio-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 205px;
+  min-height: 205px;
+}
+
+.mastering-head-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.goniometer-housing {
+  position: relative;
+  width: 100%;
+  height: 125px;
+  min-height: 125px;
+  background: #050505;
+  border: 1px solid var(--border-dim);
+  overflow: hidden;
+}
+
+#goniometer-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.mastering-ctrl-strip {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 2px;
+}
+
+.mastering-param-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.m-label {
+  font-size: 7.5px;
+  font-weight: bold;
+  color: var(--fg-dim);
+  letter-spacing: 0.5px;
+}
+
+.m-toggle-btn {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  color: var(--accent-amber);
+  font-size: 8px;
+  font-weight: bold;
+  padding: 2px 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.1s;
+}
+
+.m-toggle-btn.active {
+  background: var(--accent-amber);
+  color: #000;
+  border-color: var(--accent-amber);
+  text-shadow: none;
+}
+
+.m-btn-group {
+  display: flex;
+  gap: 2px;
+}
+
+.m-mini-btn {
+  flex: 1;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-metal);
+  color: var(--fg-dim);
+  font-size: 7.5px;
+  font-weight: bold;
+  padding: 2px 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.1s;
+}
+
+.m-mini-btn:hover {
+  color: var(--fg-bright);
+}
+
+.m-mini-btn.active {
+  background: var(--accent-amber);
+  color: #000;
+  border-color: var(--accent-amber);
+  text-shadow: none;
+}
+
+
+/* TIER 4: TACTILE CASSETTE THEME RACK (2x2 Dense Grid) */
+.tape-library-box {
+  background: var(--bg-black);
+  border: 1px solid var(--border-metal);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-height: 145px;
+  box-sizing: border-box;
+}
+
+.library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  color: var(--accent-amber);
+  font-weight: bold;
+}
+
+.library-sub {
+  color: var(--fg-dim);
+  font-size: 8px;
+}
+
+.tapes-rack-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  flex: 1;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.tape-cartridge {
+  position: relative;
+  background: #110e0b;
+  border: 1px solid var(--border-metal);
+  padding: 6px 7px;
+  cursor: pointer;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  transition: all 0.15s;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.7);
+  box-sizing: border-box;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.tape-corner-screw {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #443c32;
+  border-radius: 50%;
+}
+
+.tape-corner-screw.top-left { top: 3px; left: 3px; }
+.tape-corner-screw.top-right { top: 3px; right: 3px; }
+
+.tape-cartridge:hover {
+  border-color: var(--border-silver);
+  background: #1a1612;
+}
+
+.tape-cartridge.active {
+  border-color: var(--accent-amber);
+  background: #1e160e;
+  box-shadow: inset 0 0 8px rgba(212, 148, 76, 0.25);
+}
+
+.tape-spine {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--accent-amber);
+  font-family: 'VCR OSD Mono', monospace;
+  padding-right: 6px;
+  border-right: 1px solid var(--border-dim);
+  flex-shrink: 0;
+}
+
+.tape-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.tape-name {
+  font-size: 8.5px;
+  font-weight: bold;
+  color: var(--fg-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.5px;
+}
+
+.tape-desc {
+  font-size: 7.5px;
+  color: var(--fg-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tape-status-led {
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: #241d16;
+  border: 1px solid #3a2e22;
+  flex-shrink: 0;
+}
+
+.tape-cartridge.active .tape-status-led {
+  background: var(--accent-amber);
+  border-color: #ffd080;
+  box-shadow: 0 0 5px var(--accent-amber);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ *  NEW SETTINGS HANGERS & TACTILE LATCH CONTROLS
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* Universal Tactile Latch LED */
+.latch-led {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: #241d16;
+  border: 1px solid #3a2e22;
+  margin-right: 5px;
+  vertical-align: middle;
+  transition: all 0.15s ease;
+}
+
+.latch-led.on,
+.active > .latch-led,
+.active .latch-led {
+  background: var(--accent-amber);
+  border-color: #ffd080;
+  box-shadow: 0 0 5px var(--accent-amber);
+}
+
+.latch-led.flash {
+  background: #88ff88 !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 8px #88ff88 !important;
+  transform: scale(1.3);
+}
+
+.latch-led.big-led {
+  width: 8px;
+  height: 8px;
+}
+
+/* Color Temperature Spectrum Card (Bay 1) */
+.hanger-card.color-temp-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.hanger-card .hanger-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.hanger-card .hanger-title {
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  letter-spacing: 0.5px;
+}
+
+.kelvin-bar-wrap {
+  width: 100%;
+  height: 6px;
+  background: #000;
+  border: 1px solid #3a2e22;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+  padding: 1px;
+}
+
+.kelvin-spectrum-gradient {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, #99c7ff 0%, #ffffff 30%, #ffd494 65%, #ff8833 100%);
+}
+
+.kelvin-btn-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.kelvin-btn {
+  background: #14100c;
+  border: 1px solid #3a2e22;
+  color: var(--fg-main);
+  font-family: inherit;
+  font-size: 8px;
+  padding: 4px 2px;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.kelvin-btn:hover {
+  border-color: var(--border-silver);
+  color: var(--fg-bright);
+}
+
+.kelvin-btn.active {
+  background: var(--accent-amber);
+  border-color: var(--accent-amber);
+  color: #000000;
+  font-weight: bold;
+  text-shadow: none;
+}
+
+/* Bandwidth Scope Box (Bay 2) */
+.bandwidth-scope-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.bandwidth-canvas-housing {
+  height: 100px !important;
+  background: #050505;
+  border: 1px solid #2a221a;
+  position: relative;
+  overflow: hidden;
+}
+
+.bandwidth-canvas-housing canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Touchpad Hanger Box (Bay 3) */
+.touchpad-hanger-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  box-sizing: border-box;
+}
+
+.touchpad-canvas-housing {
+  height: 105px !important;
+  background: #060504;
+  border: 1px solid #2a221a;
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.touchpad-canvas-housing canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.touchpad-ctrl-strip {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.touch-latch-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.latch-toggle-btn {
+  background: #14100c;
+  border: 1px solid #3a2e22;
+  color: var(--fg-main);
+  font-family: inherit;
+  font-size: 8px;
+  padding: 4px 2px;
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+}
+
+.latch-toggle-btn:hover {
+  border-color: var(--border-silver);
+  color: var(--fg-bright);
+}
+
+.latch-toggle-btn.active {
+  background: #241a10;
+  border-color: var(--accent-amber);
+  color: var(--accent-amber);
+  font-weight: bold;
+}
+
+.cursor-timeout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.hanger-sub-label {
+  font-size: 8px;
+  color: var(--fg-dim);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.tri-btn-group {
+  display: flex;
+  gap: 2px;
+}
+
+.tri-opt-btn {
+  background: #14100c;
+  border: 1px solid #3a2e22;
+  color: var(--fg-main);
+  font-family: inherit;
+  font-size: 8px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.tri-opt-btn:hover {
+  border-color: var(--border-silver);
+}
+
+.tri-opt-btn.active {
+  background: var(--accent-amber);
+  color: #000;
+  font-weight: bold;
+  border-color: var(--accent-amber);
+  text-shadow: none;
+}
+
+/* Power Governor & Caffeine Box (Bay 3) */
+.power-caffeine-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.power-caffeine-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  margin-bottom: 6px;
+}
+
+.power-caffeine-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.caffeine-latch-btn {
+  width: 100%;
+  background: #14100c;
+  border: 1px solid #3a2e22;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: all 0.15s;
+}
+
+.caffeine-latch-btn:hover {
+  border-color: var(--border-silver);
+  background: #1a1510;
+}
+
+.caffeine-latch-btn.active {
+  background: #281408;
+  border-color: #ff8800;
+  box-shadow: inset 0 0 10px rgba(255, 136, 0, 0.25);
+}
+
+.caffeine-hazard-icon {
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.caffeine-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  flex: 1;
+}
+
+.caffeine-title {
+  font-size: 8.5px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.caffeine-latch-btn.active .caffeine-title {
+  color: #ffaa33;
+}
+
+.caffeine-desc {
+  font-size: 7.5px;
+  color: var(--fg-dim);
+}
+
+.gov-profile-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.switch-tri-state.full-width {
+  flex: 1;
+}
+
+/* Compositor FX Hanger Box (Bay 3) */
+.compositor-hanger-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.compositor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.comp-setting-item {
+  background: #100e0b;
+  border: 1px solid #2a221a;
+  padding: 4px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comp-label {
+  font-size: 8px;
+  color: var(--fg-main);
+  font-weight: bold;
+}
+
+.comp-btn-group {
+  display: flex;
+  gap: 2px;
+}
+
+.comp-opt-btn {
+  background: #181410;
+  border: 1px solid #3a2e22;
+  color: var(--fg-dim);
+  font-family: inherit;
+  font-size: 7.5px;
+  padding: 2px 5px;
+  cursor: pointer;
+}
+
+.comp-opt-btn:hover {
+  color: #fff;
+  border-color: var(--border-silver);
+}
+
+.comp-opt-btn.active {
+  background: var(--accent-amber);
+  color: #000;
+  border-color: var(--accent-amber);
+  font-weight: bold;
+  text-shadow: none;
+}
+
+/* ═══════════ BAY 02: BENTO COMPARTMENTS 5 & 6 ═══════════ */
+
+/* Compartment 5: RF Spectrum & Wi-Fi 6 Link Diagnostics */
+.rf-diagnostics-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-sizing: border-box;
+}
+
+.rf-diag-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.rf-rssi-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rf-rssi-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+}
+
+.rf-rssi-label {
+  color: var(--fg-dim);
+  font-weight: bold;
+}
+
+.rf-rssi-val {
+  color: var(--fg-bright);
+  font-weight: bold;
+}
+
+.rf-bar-track {
+  height: 5px;
+  background: #14100c;
+  border: 1px solid var(--border-dim);
+  overflow: hidden;
+}
+
+.rf-bar-fill {
+  height: 100%;
+  background: var(--accent-amber);
+  transition: width 0.3s ease;
+}
+
+.rf-grid-matrix {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.rf-tile {
+  background: #100d0a;
+  border: 1px solid #2a221a;
+  padding: 3px 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+}
+
+.rf-k {
+  color: var(--fg-dim);
+  font-weight: bold;
+}
+
+.rf-v {
+  color: var(--fg-main);
+  font-weight: bold;
+}
+
+/* Compartment 6: Active Sockets & Port Telemetry (Flex: 1 to fill baseline) */
+.socket-monitor-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.socket-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.socket-table-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.socket-header-row {
+  display: grid;
+  grid-template-columns: 38px 46px 1fr 48px;
+  padding: 2px 4px;
+  background: #151311;
+  color: var(--fg-dim);
+  font-size: 8px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.socket-body {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.socket-row {
+  display: grid;
+  grid-template-columns: 38px 46px 1fr 48px;
+  padding: 2.5px 4px;
+  align-items: center;
+  border-bottom: 1px solid #141210;
+  font-size: 8.5px;
+  transition: background 0.1s;
+}
+
+.socket-row:hover {
+  background: #1f1b17;
+}
+
+.s-col {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s-proto {
+  color: var(--accent-amber);
+  font-weight: bold;
+}
+
+.s-port {
+  color: var(--fg-bright);
+}
+
+.s-svc {
+  color: var(--fg-main);
+}
+
+.s-st {
+  font-size: 7.5px;
+  font-weight: bold;
+  text-align: right;
+}
+
+.st-estab { color: #88ff88; }
+.st-listen { color: #88ccff; }
+.st-unconn { color: var(--fg-dim); }
+
+.socket-action-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.sock-act-btn {
+  background: #14100c;
+  border: 1px solid #3a2e22;
+  color: var(--fg-main);
+  font-family: inherit;
+  font-size: 8px;
+  padding: 3px 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.1s;
+}
+
+.sock-act-btn:hover {
+  background: #241a10;
+  border-color: var(--border-silver);
+  color: #fff;
+}
+
+/* ═══════════ BAY 03: BENTO COMPARTMENTS 4, 5 & 6 ═══════════ */
+
+/* Compartment 4: Recovery Actions */
+.recovery-matrix-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.recovery-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  margin-bottom: 4px;
+}
+
+.recovery-btn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.recov-btn {
+  background: #16120e;
+  border: 1px solid #3a2e22;
+  color: var(--fg-main);
+  font-family: inherit;
+  font-size: 8px;
+  padding: 4px 4px;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  transition: all 0.1s;
+}
+
+.recov-btn:hover {
+  background: #241a10;
+  border-color: var(--border-silver);
+  color: #fff;
+}
+
+.recov-btn:active {
+  background: var(--accent-red);
+  color: #fff;
+  border-color: var(--accent-red);
+}
+
+/* Compartment 5: Hardware Power & Thermal Bus */
+.hardware-power-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+}
+
+.hw-power-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.bat-meter-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bat-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+}
+
+.bat-main-txt {
+  color: var(--fg-bright);
+  font-weight: bold;
+}
+
+.bat-detail-txt {
+  color: var(--fg-dim);
+  font-size: 8px;
+}
+
+.bat-bar-track {
+  height: 5px;
+  background: #14100c;
+  border: 1px solid var(--border-dim);
+  overflow: hidden;
+}
+
+.bat-bar-fill {
+  height: 100%;
+  background: var(--accent-amber);
+  transition: width 0.3s ease;
+}
+
+.thermal-grid-matrix {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.therm-tile {
+  background: #100d0a;
+  border: 1px solid #2a221a;
+  padding: 3px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.therm-k {
+  color: var(--fg-dim);
+  font-size: 7.5px;
+  letter-spacing: 0.5px;
+}
+
+.therm-v {
+  color: var(--fg-bright);
+  font-size: 9px;
+  font-weight: bold;
+}
+
+/* Compartment 6: Live Systemd & Kernel Journal Stream (Flex: 1 to fill baseline) */
+.journal-terminal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-silver);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.journal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: var(--accent-amber);
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 2px;
+}
+
+.journal-head-tags {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.journal-tag {
+  color: var(--fg-dim);
+  font-size: 8px;
+}
+
+.journal-stream {
+  font-family: var(--font-osd);
+  font-size: 8.5px;
+  line-height: 1.4;
+  color: var(--fg-main);
+  background: #060504;
+  border: 1px solid #221c16;
+  padding: 4px 6px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+}
+
+.log-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.log-ts {
+  color: var(--accent-amber);
+  margin-right: 4px;
+  font-weight: bold;
+}
+
+.log-mod {
+  color: #88ccff;
+  font-weight: bold;
+  margin-right: 4px;
+}

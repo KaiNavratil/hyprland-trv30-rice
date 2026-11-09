@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRV30 Display & Power Deck</title>
+  <style>
+    @font-face {
+      font-family: 'VCR OSD Mono';
+      src: local('VCR OSD Mono'), local('DotGothic16'), monospace;
+    }
+
+    :root {
+      --bg: #0a0b0e;
+      --card-bg: #12141a;
+      --panel-border: #222630;
+      --amber: #d4944c;
+      --amber-bright: #ff9d00;
+      --amber-dim: rgba(212, 148, 76, 0.18);
+      --amber-glow: rgba(212, 148, 76, 0.45);
+      --green: #00ff41;
+      --green-dim: rgba(0, 255, 65, 0.15);
+      --orange: #ff8c00;
+      --orange-dim: rgba(255, 140, 0, 0.18);
+      --red: #c44444;
+      --red-dim: rgba(196, 68, 68, 0.2);
+      --purple: #bf5af2;
+      --silver: #b8a998;
+      --dim: #8a7e72;
+      --fg: #e8dfd4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: 'VCR OSD Mono', 'DotGothic16', monospace;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border: 2px solid var(--amber);
+      text-shadow: 2px 2px 0px #000000;
+    }
+
+    /* CRT scanline simulation */
+    body::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    /* TOP OSD HEADER */
+    header {
+      background: #000000;
+      border-bottom: 2px solid var(--panel-border);
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .rec-badge {
+      color: var(--red);
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .rec-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: blink 1.2s infinite ease-in-out;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px var(--red)); }
+      50% { opacity: 0.2; }
+    }
+
+    .osd-title {
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      color: var(--amber);
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .osd-title .chip {
+      background: var(--amber-dim);
+      border: 1px solid var(--amber);
+      color: var(--amber);
+      font-size: 11px;
+      padding: 2px 6px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .timecode {
+      color: var(--green);
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    .close-btn {
+      background: #1a1c22;
+      border: 1px solid #333945;
+      color: var(--dim);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .close-btn:hover {
+      background: var(--red);
+      color: #ffffff;
+      border-color: var(--red);
+    }
+
+    /* MAIN SPLIT DECK */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 46% 54%;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    /* LEFT BAY: POWER & SLEEP */
+    .bay-power {
+      border-right: 2px solid var(--panel-border);
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: rgba(14, 16, 22, 0.7);
+      overflow-y: auto;
+    }
+
+    .section-tag {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1a1e28;
+      padding-bottom: 6px;
+    }
+
+    .section-tag span {
+      color: var(--amber);
+    }
+
+    /* BIG SLEEP / ACTION BUTTON (PRIMARY POSITION) */
+    .big-button-container {
+      margin: 4px 0 8px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .big-action-button {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(180deg, #1f2430 0%, #12151d 100%);
+      border: 3px solid var(--mode-color, var(--amber));
+      border-radius: 4px;
+      color: #ffffff;
+      font-family: inherit;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 10px 0 #08090c, 0 14px 20px rgba(0, 0, 0, 0.7);
+      transition: all 0.1s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px;
+      outline: none;
+    }
+
+    .big-action-button:hover {
+      background: linear-gradient(180deg, #272d3d 0%, #171b26 100%);
+      border-color: #ffffff;
+      box-shadow: 0 10px 0 #08090c, 0 0 25px var(--mode-color, var(--amber));
+    }
+
+    .big-action-button:active, .big-action-button.pressed {
+      transform: translateY(6px);
+      box-shadow: 0 4px 0 #08090c, 0 0 15px var(--mode-color, var(--amber));
+    }
+
+    .big-btn-icon {
+      font-size: 44px;
+      filter: drop-shadow(0 0 10px var(--mode-color, var(--amber)));
+      transition: transform 0.2s ease;
+    }
+
+    .big-action-button:hover .big-btn-icon {
+      transform: scale(1.1);
+    }
+
+    .big-btn-title {
+      font-size: 20px;
+      letter-spacing: 2px;
+      font-weight: bold;
+      color: var(--mode-color, var(--amber));
+    }
+
+    .big-btn-sub {
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--dim);
+    }
+
+    .confirmation-banner {
+      width: 100%;
+      background: var(--red);
+      color: #ffffff;
+      font-size: 12px;
+      padding: 6px;
+      text-align: center;
+      margin-top: 8px;
+      display: none;
+      animation: pulse 0.8s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.8; }
+      to { opacity: 1; }
+    }
+
+    /* ACTION ASSIGNER BOX */
+    .action-assigner-box {
+      background: #10121a;
+      border: 1px solid #1f2533;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .assigner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 1px;
+    }
+
+    .action-chips-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .action-chip {
+      background: #141722;
+      border: 1px solid #282f40;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      justify-content: flex-start;
+    }
+
+    .action-chip .chip-icon {
+      font-size: 14px;
+    }
+
+    .action-chip:hover {
+      background: #1c2130;
+      border-color: var(--silver);
+    }
+
+    .action-chip.active {
+      border: 1px solid var(--amber);
+      background: #181d28;
+      color: var(--amber);
+      font-weight: bold;
+    }
+
+    /* QUICK POWER STRIP */
+    .quick-power-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .quick-btn {
+      background: #12141c;
+      border: 1px solid #232835;
+      color: var(--dim);
+      font-family: inherit;
+      font-size: 10px;
+      padding: 8px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .quick-btn:hover {
+      background: #202636;
+      border-color: var(--silver);
+      color: #ffffff;
+    }
+
+    /* TELEMETRY CARDS */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .telemetry-card {
+      background: #11131a;
+      border: 1px solid #1f2430;
+      padding: 10px 12px;
+    }
+
+    .telemetry-label {
+      font-size: 10px;
+      color: var(--dim);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .telemetry-val {
+      font-size: 15px;
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    /* RIGHT BAY: DISPLAYS */
+    .bay-display {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: rgba(10, 11, 14, 0.9);
+      overflow-y: auto;
+    }
+
+    /* MONITOR TOPOLOGY CANVAS */
+    .monitor-canvas {
+      width: 100%;
+      height: 200px;
+      background: #08090c;
+      border: 1px solid #1c212c;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 16px;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+    }
+
+    .monitor-box {
+      flex: 1;
+      height: 100%;
+      background: #13161f;
+      border: 2px solid #2e3547;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .monitor-box:hover {
+      border-color: var(--amber);
+      box-shadow: 0 0 15px var(--amber-dim);
+    }
+
+    .monitor-box.focused {
+      border-color: var(--amber-bright);
+      box-shadow: 0 0 18px var(--amber-glow);
+    }
+
+    .mon-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #232938;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .mon-name {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--amber);
+    }
+
+    .monitor-box.focused .mon-name {
+      color: var(--amber-bright);
+    }
+
+    .mon-tag {
+      font-size: 9px;
+      background: #1e2433;
+      padding: 2px 5px;
+      color: var(--dim);
+    }
+
+    .mon-badge-active {
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    .mon-specs {
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--fg);
+    }
+
+    .mon-specs .highlight {
+      color: var(--green);
+    }
+
+    .mon-click-hint {
+      margin-top: auto;
+      font-size: 9px;
+      color: var(--dim);
+      letter-spacing: 1px;
+      text-align: right;
+    }
+
+    /* TOPOLOGY PRESETS */
+    .preset-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .preset-btn {
+      background: #131620;
+      border: 1px solid #242a3a;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 8px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-btn:hover {
+      background: #1e2436;
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    /* BRIGHTNESS CONTROL BUS */
+    .brightness-bus {
+      background: #11141c;
+      border: 1px solid #1f2533;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .brightness-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    .brightness-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-btn {
+      background: #1a1e2a;
+      border: 1px solid #31394c;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 13px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-btn:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .slider-track {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #232a3b;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--amber);
+      cursor: pointer;
+      border-radius: 0;
+      box-shadow: 0 0 8px var(--amber);
+    }
+
+    /* OPEN DISPLAY SETTINGS MASTER BUTTON */
+    .open-settings-btn {
+      background: linear-gradient(180deg, #1b212e 0%, #11151e 100%);
+      border: 2px solid var(--amber);
+      color: var(--amber);
+      font-family: inherit;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 0 15px var(--amber-dim);
+      transition: all 0.15s ease;
+      margin-top: auto;
+    }
+
+    .open-settings-btn:hover {
+      background: var(--amber);
+      color: #000000;
+      box-shadow: 0 0 25px var(--amber-glow);
+      text-shadow: none;
+    }
+
+    /* MODAL OVERLAY FOR DISPLAY SETTINGS */
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      width: 900px;
+      max-width: 95%;
+      max-height: 92%;
+      background: #0f1118;
+      border: 2px solid var(--amber);
+      box-shadow: 0 0 30px var(--amber-glow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: #08090d;
+      border-bottom: 2px solid var(--panel-border);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      color: var(--amber);
+      font-weight: bold;
+    }
+
+    .modal-content {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* MONITOR TABS IN MODAL */
+    .modal-mon-tabs {
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid #202635;
+      padding-bottom: 12px;
+    }
+
+    .modal-mon-tab {
+      background: #161a25;
+      border: 1px solid #2a3348;
+      color: var(--dim);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 8px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-mon-tab.active {
+      border-color: var(--amber);
+      background: var(--amber-dim);
+      color: var(--amber);
+      font-weight: bold;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      color: var(--amber);
+      letter-spacing: 1px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .form-select, .form-input {
+      background: #141722;
+      border: 1px solid #2a344a;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 8px 12px;
+      outline: none;
+    }
+
+    .form-select:focus, .form-input:focus {
+      border-color: var(--amber);
+      box-shadow: 0 0 8px var(--amber-glow);
+    }
+
+    .chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      background: #151822;
+      border: 1px solid #262e40;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    .chip-btn:hover {
+      border-color: var(--silver);
+    }
+
+    .chip-btn.active {
+      background: var(--amber-dim);
+      border-color: var(--amber);
+      color: var(--amber);
+      font-weight: bold;
+    }
+
+    .modal-footer {
+      background: #08090d;
+      border-top: 1px solid var(--panel-border);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-apply {
+      background: var(--green);
+      border: none;
+      color: #000000;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      padding: 10px 20px;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+    }
+
+    .btn-apply:hover {
+      box-shadow: 0 0 15px var(--green);
+    }
+
+    .btn-reset {
+      background: #1b1e28;
+      border: 1px solid #333a4c;
+      color: var(--dim);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    .btn-reset:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    /* REVERT COUNTDOWN TOAST */
+    .revert-toast {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1c2130;
+      border: 2px solid var(--amber);
+      box-shadow: 0 0 25px var(--amber-glow);
+      padding: 12px 24px;
+      display: none;
+      align-items: center;
+      gap: 18px;
+      z-index: 300;
+      font-size: 13px;
+    }
+
+    .revert-toast.visible {
+      display: flex;
+    }
+
+    .revert-toast .sec {
+      color: var(--red);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .btn-confirm-keep {
+      background: var(--green);
+      border: none;
+      color: #000000;
+      font-family: inherit;
+      padding: 6px 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-confirm-revert {
+      background: var(--red);
+      border: none;
+      color: #ffffff;
+      font-family: inherit;
+      padding: 6px 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP OSD STATUS -->
+  <header>
+    <div class="rec-badge">
+      <div class="rec-dot"></div>
+      <span>REC SP</span>
+      <span style="color:var(--dim)">DCR-TRV30</span>
+    </div>
+    <div class="osd-title">
+      <span>SONY TRV30 // POWER & MULTI-DISPLAY MATRIX</span>
+      <div class="chip">SYS.V2.4</div>
+    </div>
+    <div class="header-right">
+      <div class="timecode" id="clock">00:00:00</div>
+      <button class="close-btn" onclick="closeDeck()">[ESC] CLOSE</button>
+    </div>
+  </header>
+
+  <!-- MAIN DUAL BAY -->
+  <main>
+    <!-- LEFT BAY: POWER & SUSPEND CONTROLLER -->
+    <div class="bay-power">
+      <div class="section-tag">
+        <span>BAY 01 // POWER SUBSYSTEM</span>
+        <div id="uptimeDisplay">UPTIME: --</div>
+      </div>
+
+      <!-- BIG TACTILE BUTTON (PRIMARY SLEEP / ACTION TRIGGER) -->
+      <div class="big-button-container">
+        <button class="big-action-button" id="bigButton" onclick="handleBigButtonClick()">
+          <div class="big-btn-icon" id="bigBtnIcon">💤</div>
+          <div class="big-btn-title" id="bigBtnTitle">SYSTEM STANDBY // SLEEP</div>
+          <div class="big-btn-sub" id="bigBtnSub">CLICK TO ENGAGE ACPI S3 SUSPEND-TO-RAM</div>
+        </button>
+        <div class="confirmation-banner" id="confirmBanner">⚠️ CLICK AGAIN TO CONFIRM SHUTDOWN (3s)</div>
+      </div>
+
+      <!-- CHANGE MAIN BUTTON ACTION SELECTOR -->
+      <div class="action-assigner-box">
+        <div class="assigner-header">
+          <span>CHANGE MAIN BUTTON ACTION:</span>
+          <span id="currentActionLabel" style="color:var(--amber); font-weight:bold;">💤 SLEEP</span>
+        </div>
+        <div class="action-chips-grid">
+          <button class="action-chip active" data-mode="sleep" onclick="selectMode('sleep')">
+            <span class="chip-icon">💤</span>
+            <span>Sleep</span>
+          </button>
+          <button class="action-chip" data-mode="screen" onclick="selectMode('screen')">
+            <span class="chip-icon">🖥️</span>
+            <span>Screen Off</span>
+          </button>
+          <button class="action-chip" data-mode="lock" onclick="selectMode('lock')">
+            <span class="chip-icon">🔒</span>
+            <span>Lock</span>
+          </button>
+          <button class="action-chip" data-mode="poweroff" onclick="selectMode('poweroff')">
+            <span class="chip-icon" style="color:var(--red)">⚡</span>
+            <span>Power Off</span>
+          </button>
+          <button class="action-chip" data-mode="reboot" onclick="selectMode('reboot')">
+            <span class="chip-icon" style="color:var(--orange)">🔄</span>
+            <span>Reboot</span>
+          </button>
+          <button class="action-chip" data-mode="hibernate" onclick="selectMode('hibernate')">
+            <span class="chip-icon" style="color:var(--purple)">🌙</span>
+            <span>Hibernate</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- DIRECT ONE-CLICK TRIGGERS -->
+      <div class="section-tag">
+        <span>DIRECT ONE-CLICK TRIGGERS</span>
+        <div>IMMEDIATE EXECUTION</div>
+      </div>
+      <div class="quick-power-strip">
+        <button class="quick-btn" onclick="executePower('sleep')">
+          <span>💤</span>
+          <span>SLEEP</span>
+        </button>
+        <button class="quick-btn" onclick="executePower('screen')">
+          <span>🖥️</span>
+          <span>DPMS</span>
+        </button>
+        <button class="quick-btn" onclick="executePower('lock')">
+          <span>🔒</span>
+          <span>LOCK</span>
+        </button>
+        <button class="quick-btn" onclick="executePower('poweroff')">
+          <span style="color:var(--red)">⚡</span>
+          <span>POWER</span>
+        </button>
+        <button class="quick-btn" onclick="executePower('reboot')">
+          <span style="color:var(--orange)">🔄</span>
+          <span>REBOOT</span>
+        </button>
+      </div>
+
+      <!-- ACPI TELEMETRY -->
+      <div class="telemetry-grid">
+        <div class="telemetry-card">
+          <div class="telemetry-label">
+            <span>ACPI BATTERY (BAT0)</span>
+            <span id="batStatus">AC</span>
+          </div>
+          <div class="telemetry-val" id="batPercent">--%</div>
+        </div>
+        <div class="telemetry-card">
+          <div class="telemetry-label">
+            <span>POWER SUBSYSTEM</span>
+            <span>ACPI 6.0</span>
+          </div>
+          <div class="telemetry-val" style="color:var(--green)">ONLINE & NORMAL</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT BAY: MULTI-DISPLAY CANVAS & OPTIONS -->
+    <div class="bay-display">
+      <div class="section-tag">
+        <span>BAY 02 // MULTI-DISPLAY TOPOLOGY</span>
+        <div id="monCountDisplay">2 MONITORS ONLINE</div>
+      </div>
+
+      <!-- VISUAL CANVAS -->
+      <div class="monitor-canvas" id="monitorCanvas">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- TOPOLOGY PRESETS -->
+      <div class="section-tag">
+        <span>QUICK DISPLAY PROFILES</span>
+        <div>INSTANT TOPOLOGY</div>
+      </div>
+      <div class="preset-strip">
+        <button class="preset-btn" onclick="applyPreset('extend_default')">↔️ EXTEND (DEFAULT)</button>
+        <button class="preset-btn" onclick="applyPreset('extend_reverse')">🔀 REVERSE EXTEND</button>
+        <button class="preset-btn" onclick="applyPreset('mirror')">🪞 MIRROR / CLONE</button>
+        <button class="preset-btn" onclick="applyPreset('laptop_only')">💻 LAPTOP ONLY</button>
+        <button class="preset-btn" onclick="applyPreset('external_only')">🖥️ EXTERNAL ONLY</button>
+        <button class="preset-btn" onclick="openDisplaySettings()">⚙️ CUSTOM...</button>
+      </div>
+
+      <!-- BRIGHTNESS BUS -->
+      <div class="brightness-bus">
+        <div class="brightness-header">
+          <span>HARDWARE BACKLIGHT BUS (<span id="brightDevice">amdgpu_bl1</span>)</span>
+          <span id="brightValue" style="color:var(--amber); font-weight:bold;">81%</span>
+        </div>
+        <div class="brightness-controls">
+          <button class="step-btn" onclick="stepBrightness(-5)">-5%</button>
+          <div class="slider-track">
+            <input type="range" id="brightSlider" min="5" max="100" value="81" oninput="onBrightnessInput(this.value)">
+          </div>
+          <button class="step-btn" onclick="stepBrightness(5)">+5%</button>
+        </div>
+      </div>
+
+      <!-- OPEN DISPLAY SETTINGS BUTTON -->
+      <button class="open-settings-btn" onclick="openDisplaySettings()">
+        <span>⚙️</span>
+        <span>CONFIGURE DISPLAY SETTINGS // 画面設定</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- DISPLAY SETTINGS MODAL DIALOG -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ SONY TRV30 // DISPLAY SETTINGS CALIBRATION [DISP.CFG]</div>
+        <button class="close-btn" onclick="closeDisplaySettings()">[✖] CLOSE</button>
+      </div>
+
+      <div class="modal-content">
+        <!-- MONITOR SELECTOR TABS -->
+        <div class="modal-mon-tabs" id="modalMonTabs">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- 1. RESOLUTION & REFRESH RATE -->
+        <div class="form-group">
+          <div class="form-label">
+            <span>1. RESOLUTION & SCAN RATE (解像度・走査周波数)</span>
+            <span id="curResLabel">1920x1080 @ 60Hz</span>
+          </div>
+          <select class="form-select" id="modeSelect">
+            <!-- Dynamically populated from availableModes -->
+          </select>
+        </div>
+
+        <!-- 2. SCALING FACTOR -->
+        <div class="form-group">
+          <div class="form-label">
+            <span>2. DISPLAY SCALING FACTOR (表示倍率)</span>
+            <span id="scaleLabel">1.00x</span>
+          </div>
+          <div class="chips-row" id="scaleChips">
+            <button class="chip-btn" data-scale="1.00" onclick="setScale(1.00)">1.00x (100% Crisp)</button>
+            <button class="chip-btn" data-scale="1.20" onclick="setScale(1.20)">1.20x</button>
+            <button class="chip-btn" data-scale="1.25" onclick="setScale(1.25)">1.25x</button>
+            <button class="chip-btn" data-scale="1.30" onclick="setScale(1.30)">1.30x (Recom Laptop)</button>
+            <button class="chip-btn" data-scale="1.50" onclick="setScale(1.50)">1.50x</button>
+            <button class="chip-btn" data-scale="2.00" onclick="setScale(2.00)">2.00x</button>
+          </div>
+        </div>
+
+        <!-- 3. ORIENTATION / TRANSFORM -->
+        <div class="form-group">
+          <div class="form-label">
+            <span>3. ORIENTATION / ROTATION (画面の向き)</span>
+          </div>
+          <div class="chips-row" id="transformChips">
+            <button class="chip-btn active" data-transform="0" onclick="setTransform(0)">0: Normal (0°)</button>
+            <button class="chip-btn" data-transform="1" onclick="setTransform(1)">1: Portrait (90°)</button>
+            <button class="chip-btn" data-transform="2" onclick="setTransform(2)">2: Inverted (180°)</button>
+            <button class="chip-btn" data-transform="3" onclick="setTransform(3)">3: Portrait Left (270°)</button>
+          </div>
+        </div>
+
+        <!-- 4. POSITIONING -->
+        <div class="form-group">
+          <div class="form-label">
+            <span>4. SPATIAL POSITION (X, Y)</span>
+          </div>
+          <div style="display:flex; gap:12px;">
+            <input type="number" class="form-input" id="posXInput" placeholder="X Coordinate (px)" value="0" style="flex:1;">
+            <input type="number" class="form-input" id="posYInput" placeholder="Y Coordinate (px)" value="0" style="flex:1;">
+          </div>
+        </div>
+
+        <!-- 5. POWER & HARDWARE -->
+        <div class="form-group">
+          <div class="form-label">
+            <span>5. POWER & ADAPTIVE SYNC</span>
+          </div>
+          <div style="display:flex; gap:16px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+              <input type="checkbox" id="monEnabledCheck" checked>
+              <span>MONITOR ENABLED</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+              <input type="checkbox" id="vrrCheck">
+              <span>VARIABLE REFRESH RATE (VRR)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-reset" onclick="resetToDefaults()">↺ RESET TO VERIFIED DEFAULTS</button>
+        <div style="display:flex; gap:10px;">
+          <button class="close-btn" onclick="closeDisplaySettings()">CANCEL</button>
+          <button class="btn-apply" onclick="applyDisplayConfig()">✔️ APPLY & SAVE CONFIG</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVERT COUNTDOWN TOAST -->
+  <div class="revert-toast" id="revertToast">
+    <div>⚠️ Configuration applied! Keeping changes in <span class="sec" id="revertSec">10</span>s...</div>
+    <button class="btn-confirm-keep" onclick="keepChanges()">KEEP CHANGES</button>
+    <button class="btn-confirm-revert" onclick="revertChanges()">REVERT NOW</button>
+  </div>
+
+  <script>
+    let currentState = null;
+    let selectedMode = 'sleep';
+    let confirmTimer = null;
+    let revertCountdown = null;
+    let activeSettingsMon = null;
+
+    // Modes definition
+    const MODES = {
+      sleep: {
+        icon: '💤',
+        title: 'SYSTEM STANDBY // SLEEP',
+        sub: 'EXECUTE ACPI S3 SUSPEND-TO-RAM',
+        color: 'var(--amber)',
+        bg: 'var(--amber-dim)'
+      },
+      screen: {
+        icon: '🖥️',
+        title: 'TURN OFF SCREENS // DPMS',
+        sub: 'BLANK ALL MONITORS • LOCK SESSION',
+        color: 'var(--orange)',
+        bg: 'var(--orange-dim)'
+      },
+      lock: {
+        icon: '🔒',
+        title: 'ENGAGE HYPRLOCK SESSION',
+        sub: 'SECURE DISPLAY WITH VCR LOCKSCREEN',
+        color: 'var(--green)',
+        bg: 'var(--green-dim)'
+      },
+      poweroff: {
+        icon: '⚡',
+        title: 'POWER OFF SYSTEM // SHUTDOWN',
+        sub: 'HALT ALL PROCESSES & POWER DOWN',
+        color: 'var(--red)',
+        bg: 'var(--red-dim)'
+      },
+      reboot: {
+        icon: '🔄',
+        title: 'REBOOT SYSTEM // WARM RESET',
+        sub: 'RESTART KERNEL & RELOAD COMPOSITOR',
+        color: 'var(--orange)',
+        bg: 'rgba(255,119,0,0.15)'
+      },
+      hibernate: {
+        icon: '🌙',
+        title: 'HIBERNATE // SUSPEND TO DISK',
+        sub: 'STORE RAM STATE TO SWAP & HALT',
+        color: 'var(--purple)',
+        bg: 'rgba(191,90,242,0.15)'
+      }
+    };
+
+    // Synthesize 80s tactical beep sound
+    function playBeep(freq = 440, duration = 0.05) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+
+    // Live clock
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Mode selection
+    function selectMode(mode) {
+      playBeep(520, 0.04);
+      selectedMode = mode;
+      document.querySelectorAll('.action-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.mode === mode);
+      });
+
+      const info = MODES[mode];
+      const bigBtn = document.getElementById('bigButton');
+      bigBtn.style.setProperty('--mode-color', info.color);
+      bigBtn.style.setProperty('--mode-bg', info.bg);
+      document.getElementById('bigBtnIcon').textContent = info.icon;
+      document.getElementById('bigBtnTitle').textContent = info.title;
+      document.getElementById('bigBtnSub').textContent = info.sub;
+
+      const actionLabel = document.getElementById('currentActionLabel');
+      if (actionLabel) {
+        actionLabel.textContent = `${info.icon} ${mode.toUpperCase()}`;
+        actionLabel.style.color = info.color;
+      }
+
+      // Reset any active confirm banner
+      cancelConfirm();
+    }
+
+    function handleBigButtonClick() {
+      playBeep(660, 0.08);
+      const bigBtn = document.getElementById('bigButton');
+      bigBtn.classList.add('pressed');
+      setTimeout(() => bigBtn.classList.remove('pressed'), 150);
+
+      if (selectedMode === 'poweroff' || selectedMode === 'reboot') {
+        // Requires 2-step confirmation
+        if (confirmTimer) {
+          // Confirmed!
+          clearTimeout(confirmTimer);
+          confirmTimer = null;
+          document.getElementById('confirmBanner').style.display = 'none';
+          executePower(selectedMode);
+        } else {
+          // Arm confirmation
+          const banner = document.getElementById('confirmBanner');
+          banner.style.display = 'block';
+          banner.textContent = `⚠️ CLICK AGAIN TO CONFIRM ${selectedMode.toUpperCase()} (3s)`;
+          confirmTimer = setTimeout(cancelConfirm, 3000);
+        }
+      } else {
+        executePower(selectedMode);
+      }
+    }
+
+    function cancelConfirm() {
+      if (confirmTimer) {
+        clearTimeout(confirmTimer);
+        confirmTimer = null;
+      }
+      document.getElementById('confirmBanner').style.display = 'none';
+    }
+
+    function executePower(mode) {
+      playBeep(880, 0.1);
+      postIPC({ action: 'power', mode: mode });
+    }
+
+    function closeDeck() {
+      playBeep(350, 0.05);
+      postIPC({ action: 'close' });
+    }
+
+    function postIPC(msg) {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.deck) {
+        window.webkit.messageHandlers.deck.postMessage(JSON.stringify(msg));
+      }
+    }
+
+    // Brightness input
+    function onBrightnessInput(val) {
+      document.getElementById('brightValue').textContent = `${val}%`;
+      postIPC({ action: 'set_brightness', percent: parseInt(val) });
+    }
+
+    function stepBrightness(delta) {
+      playBeep(480, 0.03);
+      const slider = document.getElementById('brightSlider');
+      let val = parseInt(slider.value) + delta;
+      val = Math.max(5, Math.min(100, val));
+      slider.value = val;
+      onBrightnessInput(val);
+    }
+
+    // Preset topologies
+    function applyPreset(preset) {
+      playBeep(700, 0.06);
+      postIPC({ action: 'apply_preset', preset: preset });
+      startRevertCountdown();
+    }
+
+    // Live state updates from Python
+    window.updateDisplayDeck = function(state) {
+      currentState = state;
+
+      // Update Uptime
+      if (state.uptime) {
+        document.getElementById('uptimeDisplay').textContent = `UPTIME: ${state.uptime}`;
+      }
+
+      // Update Battery
+      if (state.battery) {
+        document.getElementById('batPercent').textContent = `${state.battery.percent}%`;
+        document.getElementById('batStatus').textContent = state.battery.status.toUpperCase();
+        if (state.battery.percent <= 20) {
+          document.getElementById('batPercent').style.color = 'var(--red)';
+        } else {
+          document.getElementById('batPercent').style.color = 'var(--green)';
+        }
+      }
+
+      // Update Brightness
+      if (state.brightness !== undefined) {
+        document.getElementById('brightValue').textContent = `${state.brightness}%`;
+        document.getElementById('brightSlider').value = state.brightness;
+      }
+      if (state.brightness_device) {
+        document.getElementById('brightDevice').textContent = state.brightness_device;
+      }
+
+      // Render Monitors on Canvas
+      renderMonitors(state.monitors || []);
+    };
+
+    function renderMonitors(monitors) {
+      const canvas = document.getElementById('monitorCanvas');
+      canvas.innerHTML = '';
+      document.getElementById('monCountDisplay').textContent = `${monitors.length} MONITORS DETECTED`;
+
+      monitors.forEach(mon => {
+        const box = document.createElement('div');
+        box.className = `monitor-box ${mon.focused ? 'focused' : ''}`;
+        box.onclick = () => {
+          openDisplaySettings(mon.name);
+        };
+
+        const isHDMI = mon.name.includes('HDMI');
+        const make = mon.description || (isHDMI ? 'External Monitor' : 'Internal Display');
+        const resStr = `${mon.width}x${mon.height} @ ${Math.round(mon.refreshRate)}Hz`;
+        const scaleStr = `${parseFloat(mon.scale).toFixed(2)}x`;
+        const posStr = `(${mon.x}, ${mon.y})`;
+
+        box.innerHTML = `
+          <div class="mon-header">
+            <span class="mon-name">${mon.name}</span>
+            <div style="display:flex; gap:4px;">
+              ${mon.focused ? '<span class="mon-tag mon-badge-active">FOCUSED</span>' : ''}
+              <span class="mon-tag">${mon.dpmsStatus ? 'DPMS: ON' : 'DPMS: OFF'}</span>
+            </div>
+          </div>
+          <div class="mon-specs">
+            <div><span style="color:var(--dim)">MODEL:</span> ${make}</div>
+            <div><span style="color:var(--dim)">MODE:</span> <span class="highlight">${resStr}</span></div>
+            <div><span style="color:var(--dim)">SCALE:</span> ${scaleStr} | <span style="color:var(--dim)">POS:</span> ${posStr}</div>
+            <div><span style="color:var(--dim)">ROTATION:</span> ${mon.transform}° | <span style="color:var(--dim)">WORKSPACE:</span> WS ${mon.activeWorkspace ? mon.activeWorkspace.name : '--'}</div>
+          </div>
+          <div class="mon-click-hint">[CLICK TO CONFIGURE]</div>
+        `;
+        canvas.appendChild(box);
+      });
+    }
+
+    // DISPLAY SETTINGS MODAL
+    function openDisplaySettings(targetMonName) {
+      playBeep(600, 0.05);
+      const overlay = document.getElementById('modalOverlay');
+      overlay.classList.add('open');
+
+      if (!currentState || !currentState.monitors) return;
+      const mons = currentState.monitors;
+      if (!mons.length) return;
+
+      activeSettingsMon = targetMonName || (mons.find(m => m.focused) || mons[0]).name;
+
+      // Populate Tabs
+      const tabsContainer = document.getElementById('modalMonTabs');
+      tabsContainer.innerHTML = '';
+      mons.forEach(m => {
+        const tab = document.createElement('button');
+        tab.className = `modal-mon-tab ${m.name === activeSettingsMon ? 'active' : ''}`;
+        tab.textContent = `${m.name} (${m.name.includes('HDMI') ? 'ASUS External' : 'ThinkPad Internal'})`;
+        tab.onclick = () => {
+          activeSettingsMon = m.name;
+          document.querySelectorAll('.modal-mon-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          loadMonitorIntoForm(m.name);
+        };
+        tabsContainer.appendChild(tab);
+      });
+
+      loadMonitorIntoForm(activeSettingsMon);
+    }
+
+    function closeDisplaySettings() {
+      playBeep(350, 0.04);
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    function loadMonitorIntoForm(monName) {
+      if (!currentState || !currentState.monitors) return;
+      const mon = currentState.monitors.find(m => m.name === monName);
+      if (!mon) return;
+
+      // 1. Available Modes
+      const select = document.getElementById('modeSelect');
+      select.innerHTML = '';
+      const modes = mon.availableModes || [`${mon.width}x${mon.height}@${Math.round(mon.refreshRate)}.00Hz`];
+      
+      const currentModePrefix = `${mon.width}x${mon.height}`;
+      modes.forEach(mode => {
+        const opt = document.createElement('option');
+        opt.value = mode;
+        opt.textContent = mode;
+        if (mode.startsWith(currentModePrefix)) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+
+      document.getElementById('curResLabel').textContent = `${mon.width}x${mon.height} @ ${Math.round(mon.refreshRate)}Hz`;
+
+      // 2. Scale
+      const scaleVal = parseFloat(mon.scale).toFixed(2);
+      document.getElementById('scaleLabel').textContent = `${scaleVal}x`;
+      document.querySelectorAll('#scaleChips .chip-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.scale === scaleVal);
+      });
+
+      // 3. Transform
+      document.querySelectorAll('#transformChips .chip-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.transform) === mon.transform);
+      });
+
+      // 4. Position
+      document.getElementById('posXInput').value = mon.x || 0;
+      document.getElementById('posYInput').value = mon.y || 0;
+
+      // 5. Toggles
+      document.getElementById('monEnabledCheck').checked = !mon.disabled;
+      document.getElementById('vrrCheck').checked = !!mon.vrr;
+    }
+
+    function setScale(scale) {
+      playBeep(500, 0.03);
+      document.getElementById('scaleLabel').textContent = `${scale.toFixed(2)}x`;
+      document.querySelectorAll('#scaleChips .chip-btn').forEach(btn => {
+        btn.classList.toggle('active', parseFloat(btn.dataset.scale) === scale);
+      });
+    }
+
+    function setTransform(tf) {
+      playBeep(500, 0.03);
+      document.querySelectorAll('#transformChips .chip-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.transform) === tf);
+      });
+    }
+
+    function applyDisplayConfig() {
+      playBeep(750, 0.08);
+      if (!currentState || !currentState.monitors) return;
+
+      const monName = activeSettingsMon;
+      const mode = document.getElementById('modeSelect').value;
+      
+      let scale = 1.0;
+      const activeScaleBtn = document.querySelector('#scaleChips .chip-btn.active');
+      if (activeScaleBtn) scale = parseFloat(activeScaleBtn.dataset.scale);
+
+      let transform = 0;
+      const activeTfBtn = document.querySelector('#transformChips .chip-btn.active');
+      if (activeTfBtn) transform = parseInt(activeTfBtn.dataset.transform);
+
+      const posX = parseInt(document.getElementById('posXInput').value) || 0;
+      const posY = parseInt(document.getElementById('posYInput').value) || 0;
+      const enabled = document.getElementById('monEnabledCheck').checked;
+      const vrr = document.getElementById('vrrCheck').checked;
+
+      // Build updated list of monitor objects
+      const configs = currentState.monitors.map(m => {
+        if (m.name === monName) {
+          return {
+            name: m.name,
+            mode: mode,
+            x: posX,
+            y: posY,
+            scale: scale,
+            transform: transform,
+            disabled: !enabled,
+            vrr: vrr
+          };
+        } else {
+          return {
+            name: m.name,
+            mode: `${m.width}x${m.height}@${Math.round(m.refreshRate)}.00Hz`,
+            x: m.x,
+            y: m.y,
+            scale: m.scale,
+            transform: m.transform,
+            disabled: m.disabled,
+            vrr: m.vrr
+          };
+        }
+      });
+
+      postIPC({ action: 'apply_display_config', monitors: configs });
+      closeDisplaySettings();
+      startRevertCountdown();
+    }
+
+    function resetToDefaults() {
+      if (confirm("Restore verified Tokyo dual-monitor defaults?")) {
+        playBeep(440, 0.1);
+        postIPC({ action: 'reset_defaults' });
+        closeDisplaySettings();
+      }
+    }
+
+    // Safety Countdown Revert System
+    function startRevertCountdown() {
+      if (revertCountdown) clearInterval(revertCountdown);
+      let secondsLeft = 10;
+      const toast = document.getElementById('revertToast');
+      const secEl = document.getElementById('revertSec');
+      toast.classList.add('visible');
+      secEl.textContent = secondsLeft;
+
+      revertCountdown = setInterval(() => {
+        secondsLeft--;
+        secEl.textContent = secondsLeft;
+        if (secondsLeft <= 0) {
+          clearInterval(revertCountdown);
+          revertCountdown = null;
+          revertChanges();
+        }
+      }, 1000);
+    }
+
+    window.handleEscape = function() {
+      const modal = document.getElementById('modalOverlay');
+      if (modal && modal.classList.contains('open')) {
+        closeDisplaySettings();
+        return true;
+      }
+      return false;
+    };
+
+    function keepChanges() {
+      playBeep(880, 0.05);
+      if (revertCountdown) clearInterval(revertCountdown);
+      revertCountdown = null;
+      document.getElementById('revertToast').classList.remove('visible');
+    }
+
+    function revertChanges() {
+      playBeep(300, 0.15);
+      if (revertCountdown) clearInterval(revertCountdown);
+      revertCountdown = null;
+      document.getElementById('revertToast').classList.remove('visible');
+      postIPC({ action: 'revert_config' });
+    }
+
+    // Keyboard Navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('modalOverlay');
+        if (modal.classList.contains('open')) {
+          closeDisplaySettings();
+          e.stopPropagation();
+        } else {
+          closeDeck();
+        }
+      } else if (e.key === '1') selectMode('sleep');
+      else if (e.key === '2') selectMode('screen');
+      else if (e.key === '3') selectMode('lock');
+      else if (e.key === '4') selectMode('poweroff');
+      else if (e.key === '5') selectMode('reboot');
+      else if (e.key === '6') selectMode('hibernate');
+      else if (e.key === ' ' || e.key === 'Enter') {
+        const modal = document.getElementById('modalOverlay');
+        if (!modal.classList.contains('open')) {
+          handleBigButtonClick();
+        }
+      } else if (e.key === 's' || e.key === 'S' || e.key === 'd' || e.key === 'D') {
+        const modal = document.getElementById('modalOverlay');
+        if (!modal.classList.contains('open')) {
+          openDisplaySettings();
+        }
+      }
+    });
+
+    // Ask for initial state on load
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.location.hash === '#settings') { setTimeout(() => openDisplaySettings(), 300); }
+      postIPC({ action: 'get_state' });
+    });
+  </script>
+</body>
+</html>

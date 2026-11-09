@@ -1,0 +1,11 @@
+{
+    "layer": "background",
+    "position": "top",
+    "mode": "dock",
+    "exclusive": false,
+    "pass-through": true,
+    "height": 4000,
+    "modules-left": [],
+    "modules-center": [],
+    "modules-right": []
+}

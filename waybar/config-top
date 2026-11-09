@@ -1,0 +1,106 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 30,
+    "margin-top": 0,
+    "margin-left": 0,
+    "margin-right": 0,
+    "spacing": 0,
+    "modules-left": [
+        "custom/radar",
+        "custom/scratchpad",
+        "hyprland/workspaces"
+    ],
+    "modules-center": ["custom/audio-l", "custom/spotify-playback", "custom/audio-r"],
+    "modules-right": ["network", "pulseaudio", "custom/battery", "custom/date-jp", "clock"],
+    "custom/scratchpad": {
+        "exec": "/home/kaijnav/.config/waybar/scripts/sp-cycler.sh status",
+        "return-type": "json",
+        "interval": 1,
+        "format": "{}",
+        "on-click": "/home/kaijnav/.config/waybar/scripts/sp-cycler.sh toggle",
+        "on-click-right": "/home/kaijnav/.config/waybar/scripts/sp-cycler.sh next",
+        "on-click-middle": "/home/kaijnav/.config/waybar/scripts/sp-cycler.sh prev",
+        "on-scroll-up": "/home/kaijnav/.config/waybar/scripts/sp-cycler.sh next",
+        "on-scroll-down": "/home/kaijnav/.config/waybar/scripts/sp-cycler.sh prev",
+        "signal": 1
+    },
+    "custom/radar": {
+        "format": "⊞",
+        "tooltip-format": "Dual-Monitor Desktop Space Radar (Super+W)",
+        "on-click": "/home/kaijnav/.config/hypr/scripts/toggle-radar.sh"
+    },
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "all-outputs": false,
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "10",
+            "11": "1",
+            "12": "2",
+            "13": "3",
+            "14": "4",
+            "15": "5",
+            "16": "6",
+            "17": "7",
+            "18": "8",
+            "19": "9"
+        }
+    },
+    "custom/audio-l": {
+        "exec": "~/.config/waybar/scripts/cava-stereo.sh left",
+        "format": "{}",
+        "tooltip": false
+    },
+    "custom/audio-r": {
+        "exec": "~/.config/waybar/scripts/cava-stereo.sh right",
+        "format": "{}",
+        "tooltip": false
+    },
+    "network": {
+        "format-wifi": "直 {essid}",
+        "format-ethernet": "直 {ipaddr}",
+        "format-disconnected": "睊 OFFLINE",
+        "tooltip-format": "{ifname} via {gwaddr}"
+    },
+    "pulseaudio": {
+        "format": "墳 {volume}%",
+        "format-muted": "墳 MUTE",
+        "scroll-step": 5,
+        "on-click": "pavucontrol"
+    },
+    "custom/battery": {
+        "exec": "~/.config/waybar/scripts/battery.sh",
+        "return-type": "json",
+        "interval": 1,
+        "format": "{}"
+    },
+    "custom/date-jp": {
+        "exec": "date '+%m月%d日 (%a)'",
+        "interval": 60,
+        "format": "{}"
+    },
+    "clock": {
+        "interval": 1,
+        "format": "{:%I:%M:%S %p}",
+        "tooltip-format": "{:%Y-%m-%d}"
+    },
+    "custom/spotify-playback": {
+        "exec": "~/.config/waybar/scripts/spotify.sh playback",
+        "return-type": "json",
+        "interval": 1,
+        "format": "{}",
+        "on-click": "playerctl play-pause",
+        "on-click-right": "playerctl next",
+        "on-click-middle": "playerctl previous",
+        "tooltip": true
+    }
+}

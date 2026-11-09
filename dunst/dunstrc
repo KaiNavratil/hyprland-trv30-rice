@@ -1,0 +1,140 @@
+# ==============================================================================
+# 通知設定 (DUNST NOTIFICATION CONFIGURATION)
+# Theme: Tokyo 80s TRV30 Camcorder / VCR Popups
+# ==============================================================================
+
+[global]
+# モニターと位置 (Monitor & Position)
+monitor = 0
+follow = mouse
+width = (0, 320)
+height = (0, 120)
+origin = top-right
+offset = (12, 45)
+
+# 動作 (Behavior)
+notification_limit = 5
+indicate_hidden = yes
+transparency = 0
+show_age_threshold = 30
+
+# 見た目 (Appearance) - SHARP CORNERS, VCR STYLE
+padding = 12
+horizontal_padding = 12
+text_icon_padding = 12
+frame_width = 1
+frame_color = "#b8a998" # Warm silver border
+corner_radius = 0 # Sharp, boxy aesthetic
+separator_height = 1
+separator_color = "#b8a998" # Warm silver divider line
+
+# テキスト (Text)
+font = "VCR OSD Mono 11"
+line_height = 0
+markup = full
+format = "<b>%s</b>\n%b"
+alignment = left
+vertical_alignment = center
+word_wrap = yes
+
+# プログレスバー (Progress Bar)
+progress_bar = true
+
+# アイコン (Icons)
+icon_position = left
+max_icon_size = 48
+default_icon = dialog-information
+icon_corner_radius = 0
+
+# マウス操作 (Mouse Interactions)
+mouse_left_click = do_action, close_current
+mouse_right_click = close_current
+mouse_middle_click = close_all
+
+# ==============================================================================
+# 緊急度レベル (URGENCY LEVELS — Warm Vintage)
+# ==============================================================================
+
+[urgency_low]
+# 低 (Low) - Dimmed warm gray
+background = "#0a0808"
+foreground = "#8a7e72"
+frame_color = "#8a7e72"
+timeout = 2
+
+[urgency_normal]
+# 通常 (Normal) - Warm off-white text, warm silver border
+background = "#0a0808"
+foreground = "#e8dfd4"
+frame_color = "#b8a998"
+timeout = 3
+
+[urgency_critical]
+# 重大 (Critical) - Red border accent, readable phosphor text
+background = "#0a0808"
+foreground = "#e8dfd4"
+frame_color = "#c44444"
+timeout = 6
+
+[cap_long_timeouts_normal]
+# Cap apps that request overly long timeouts to 3 seconds
+msg_urgency = normal
+override_dbus_timeout = 3
+
+[cap_long_timeouts_low]
+msg_urgency = low
+override_dbus_timeout = 2
+
+[browser_notifications]
+appname = "*[Vv]ivaldi*"
+frame_color = "#b8a998"
+foreground = "#e8dfd4"
+timeout = 3
+override_dbus_timeout = 3
+
+[osd]
+appname = "osd"
+background = "#00000000"
+foreground = "#ffffff"
+frame_color = "#00000000"
+format = "<b>%s</b>"
+timeout = 2
+
+# ==============================================================================
+# メッセージングアプリ (MESSAGING & CHAT APPS — Extended 8s Timeout)
+# ==============================================================================
+
+[messaging_discord]
+appname = "*[Dd]iscord*"
+timeout = 8
+override_dbus_timeout = 8
+
+[messaging_vesktop]
+appname = "*[Vv]esktop*"
+timeout = 8
+override_dbus_timeout = 8
+
+[messaging_telegram]
+appname = "*[Tt]elegram*"
+timeout = 8
+override_dbus_timeout = 8
+
+[messaging_slack]
+appname = "*[Ss]lack*"
+timeout = 8
+override_dbus_timeout = 8
+
+[messaging_signal]
+appname = "*[Ss]ignal*"
+timeout = 8
+override_dbus_timeout = 8
+
+[messaging_whatsapp]
+appname = "*[Ww]hats[Aa]pp*"
+timeout = 8
+override_dbus_timeout = 8
+
+[messaging_category_im]
+category = "im*"
+timeout = 8
+override_dbus_timeout = 8

@@ -1,0 +1,29 @@
+{
+    "layer": "top",
+    "position": "bottom",
+    "height": 38,
+    "margin-bottom": 4,
+    "margin-left": 8,
+    "margin-right": 8,
+    "spacing": 0,
+    "start_hidden": true,
+    "modules-left": ["custom/spotify-cassette"],
+    "modules-center": ["custom/spotify-playback"],
+    "modules-right": ["custom/rec-indicator"],
+    "custom/spotify-cassette": {
+        "exec": "~/.config/waybar/scripts/spotify.sh cassette",
+        "interval": 1,
+        "format": "{}"
+    },
+    "custom/spotify-playback": {
+        "exec": "~/.config/waybar/scripts/spotify.sh playback",
+        "interval": 1,
+        "format": "{}",
+        "on-click": "playerctl play-pause"
+    },
+    "custom/rec-indicator": {
+        "exec": "if [ $(( $(date +%s) % 2 )) -eq 0 ]; then echo '● REC'; else echo ''; fi",
+        "interval": 1,
+        "format": "{}"
+    }
+}

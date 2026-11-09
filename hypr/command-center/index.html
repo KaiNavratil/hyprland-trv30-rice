@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tokyo 80s TRV30 Master Deck — Mission Control Workstation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-trv30 mode-overload">
+  <div class="deck-container">
+
+    <!-- MASTER MISSION-CONTROL TOP STATUS BAR -->
+    <header class="deck-master-bar">
+      <div class="master-bar-left">
+        <span class="badge-sony-solid">SONY</span>
+        <span class="master-deck-title">東京 80s TRV30 // MISSION CONTROL WORKSTATION</span>
+        <span class="master-session-tag">SYSTEM ID: TRV30-DECK-01</span>
+      </div>
+
+      <div class="master-bar-center">
+        <div class="mode-switch-group">
+          <button class="mode-toggle-btn active" id="btn-mode-overload" title="Full 4-Bay Mission Control Overload (Press Tab or M)">⚡ OVERLOAD DECK</button>
+          <button class="mode-toggle-btn" id="btn-mode-minimal" title="Clean Distraction-Free Minimalist Cockpit (Press Tab or M)">✦ MINIMALIST</button>
+        </div>
+      </div>
+
+      <div class="master-bar-right">
+        <span class="hotkey-hint">[TAB / M] TOGGLE VIEW</span>
+        <div class="session-timecode-top">
+          <span class="dim-label">SP</span>
+          <span class="tc-val" id="sp-timecode">00:00:00</span>
+        </div>
+        <button class="btn-esc-inline" id="btn-master-close" title="Close Command Center (Esc)">✕ ESC</button>
+      </div>
+    </header>
+
+
+    <!-- ═════════ MAIN QUAD CONSOLE (4 COHESIVE MISSION BAYS) ═════════ -->
+    <main class="deck-main" id="deck-main">
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           BAY 01: OPTICAL VIEW-FINDER & SENSOR SUITE
+           ═══════════════════════════════════════════════════════════════ -->
+      <section class="console-pane pane-bay pane-bay-1">
+        <div class="pane-header">
+          <div class="pane-title-group">
+            <span class="pane-title">光学ファインダー // OPTICAL VIEWFINDER & ASCII HUD</span>
+          </div>
+          <div class="pane-header-actions">
+            <div class="rec-indicator" id="rec-indicator">
+              <span class="rec-dot"></span>
+              <span class="rec-text" id="rec-status-text">STBY</span>
+            </div>
+            <span class="pane-id">BAY-01</span>
+          </div>
+        </div>
+
+        <!-- CRT Screen Housing -->
+        <div class="crt-housing">
+          <div class="crt-bezel">
+            <!-- Viewfinder OSD Header -->
+            <div class="vf-osd vf-osd-top">
+              <span>LENS: 35mm F/1.8</span>
+              <span>SHUTTER: 1/60</span>
+              <span>GAIN: +3dB</span>
+              <span>WB: AUTO</span>
+              <span id="vf-status-tag" class="vf-pill-stby">TAPE: SP</span>
+            </div>
+
+            <!-- Viewfinder Display Area (Pure ASCII Screen) -->
+            <div class="vf-screen-area" id="vf-screen-area">
+              <pre id="ascii-output"></pre>
+              <!-- Live video element kept in-viewport for hardware decoding without compositor scaling -->
+              <video id="raw-video" autoplay playsinline muted style="position: absolute; width: 2px; height: 2px; opacity: 0; pointer-events: none; z-index: -1;"></video>
+              <!-- Retro CRT Scanline Overlay -->
+              <div class="crt-overlay-mesh"></div>
+            </div>
+
+            <!-- Viewfinder OSD Footer (Authentic Camcorder Optical Telemetry) -->
+            <div class="vf-osd vf-osd-bottom">
+              <span id="optic-telemetry">OPTICAL ZOOM: 12x (35-420mm)  MACRO: 10mm [LOCK]</span>
+              <span>SENSOR: 1/4.7" 3CCD  NTSC 60i 4:2:2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Camera Shutter & Style Selectors -->
+        <div class="shutter-control-bar">
+          <button class="btn-shutter" id="btn-shutter-toggle">
+            <span class="shutter-icon">●</span>
+            <span class="shutter-label" id="shutter-label">ENGAGE CAMERA (REC)</span>
+          </button>
+          <div class="cam-style-toggles">
+            <span class="style-label">STYLE:</span>
+            <button class="style-pill active" data-style="classic">OSD</button>
+            <button class="style-pill" data-style="blocks">BLOCKS</button>
+            <button class="style-pill" data-style="contour">EDGE</button>
+            <button class="style-pill" data-style="matrix">MATRIX</button>
+          </div>
+        </div>
+
+        <!-- Night Light & Color Temperature Spectrum Hanger -->
+        <div class="hanger-card color-temp-card">
+          <div class="hanger-head">
+            <span class="hanger-title">色温度・ナイトライト // COLOR TEMP & NIGHT LIGHT</span>
+            <span class="badge-tech" id="kelvin-readout">6500K [DAY]</span>
+          </div>
+          <div class="kelvin-bar-wrap">
+            <div class="kelvin-spectrum-gradient"></div>
+          </div>
+          <div class="kelvin-btn-grid">
+            <button class="kelvin-btn active" data-kelvin="6500" data-shader="off"><span class="latch-led on"></span>6500K DAY</button>
+            <button class="kelvin-btn" data-kelvin="4500" data-shader="scanlines"><span class="latch-led"></span>4500K CRT</button>
+            <button class="kelvin-btn" data-kelvin="3500" data-shader="warm-3500"><span class="latch-led"></span>3500K WARM</button>
+            <button class="kelvin-btn" data-kelvin="2400" data-shader="warm-2400"><span class="latch-led"></span>2400K CANDLE</button>
+          </div>
+        </div>
+
+        <!-- ═════════ BTOP SYSTEM PERFORMANCE TELEMETRY SUITE ═════════ -->
+        <div class="btop-suite-container">
+          <!-- CPU & Cores Header -->
+          <div class="btop-card btop-cpu-card">
+            <div class="btop-card-header">
+              <span class="btop-label">CPU // AMD RYZEN 7 7840HS</span>
+              <div class="btop-header-tags">
+                <span class="btop-tag" id="cpu-clock-tag">4.8 GHz</span>
+                <span class="btop-tag tag-temp" id="temp-val">48°C</span>
+                <span class="btop-stat-highlight" id="cpu-val">0%</span>
+              </div>
+            </div>
+
+            <!-- CPU History Sparkline Canvas -->
+            <div class="cpu-sparkline-wrap">
+              <canvas id="cpu-sparkline-canvas" width="460" height="34"></canvas>
+            </div>
+
+            <!-- 16-Core Thread Matrix -->
+            <div class="btop-cores-grid" id="btop-cores-grid">
+              <!-- Dynamically populated 16 cores T00-T15 -->
+            </div>
+          </div>
+
+          <!-- Memory, ZRAM & Storage Multi-Meter -->
+          <div class="btop-card btop-mem-card">
+            <div class="btop-card-header">
+              <span class="btop-label">メモリ & ストレージ // RAM, ZRAM, NVMe</span>
+              <span class="btop-stat-highlight" id="ram-pct-badge">0%</span>
+            </div>
+
+            <div class="btop-dual-meters">
+              <!-- SYS RAM -->
+              <div class="btop-meter-row">
+                <div class="btop-meter-meta">
+                  <span class="meter-name">SYS RAM</span>
+                  <span class="meter-detail" id="ram-val">0.0G / 14.3G</span>
+                </div>
+                <div class="btop-bar-track">
+                  <div class="btop-bar-fill bar-ram" id="ram-bar" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- ZRAM -->
+              <div class="btop-meter-row">
+                <div class="btop-meter-meta">
+                  <span class="meter-name">ZRAM SWAP</span>
+                  <span class="meter-detail" id="zram-val">0.7G / 14.3G (3.3x)</span>
+                </div>
+                <div class="btop-bar-track">
+                  <div class="btop-bar-fill bar-zram" id="zram-bar" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- NVMe DISK -->
+              <div class="btop-meter-row">
+                <div class="btop-meter-meta">
+                  <span class="meter-name">NVMe DISK (/)</span>
+                  <span class="meter-detail" id="disk-val">380 GB FREE</span>
+                </div>
+                <div class="btop-bar-track">
+                  <div class="btop-bar-fill bar-disk" id="disk-bar" style="width: 25%"></div>
+                </div>
+              </div>
+
+              <!-- RADEON GPU & TEMP -->
+              <div class="btop-meter-row">
+                <div class="btop-meter-meta">
+                  <span class="meter-name">RADEON GPU</span>
+                  <span class="meter-detail" id="gpu-detail">0% LOAD</span>
+                </div>
+                <div class="btop-bar-track">
+                  <div class="btop-bar-fill bar-gpu" id="gpu-bar" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Processes Inspector Table (btop-style) -->
+          <div class="btop-card btop-procs-card">
+            <div class="btop-card-header">
+              <span class="btop-label">プロセス監視 // TOP PROCESSES (ACTIVE)</span>
+              <span class="btop-sub-label">AUTO-SORT: CPU%</span>
+            </div>
+            <div class="btop-procs-table">
+              <div class="procs-header-row">
+                <span class="p-col p-pid">PID</span>
+                <span class="p-col p-name">PROCESS</span>
+                <span class="p-col p-cpu">CPU%</span>
+                <span class="p-col p-mem">MEM%</span>
+                <span class="p-col p-act">KILL</span>
+              </div>
+              <div class="procs-body" id="btop-procs-list">
+                <div class="proc-row">
+                  <span class="p-col p-pid">18294</span>
+                  <span class="p-col p-name">vivaldi</span>
+                  <span class="p-col p-cpu">4.2%</span>
+                  <span class="p-col p-mem">11.8%</span>
+                  <button class="p-col p-act btn-proc-kill" data-pid="18294">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Override Quick Actions Bar -->
+        <div class="sys-override-bar">
+          <button class="sys-act-btn" data-act="screenshot" title="Capture Area Screenshot">CAPTURE</button>
+          <button class="sys-act-btn" data-act="lock" title="Lock Screen (hyprlock)">LOCK</button>
+          <button class="sys-act-btn" data-act="suspend" title="Suspend System">SLEEP</button>
+          <button class="sys-act-btn" data-act="drop_caches" title="Flush Dirty RAM Caches">CACHE</button>
+          <button class="sys-act-btn" data-act="reload_hypr" title="Reload Hyprland">RELOAD</button>
+          <button class="sys-act-btn" data-act="reboot" title="Reboot System">REBOOT</button>
+        </div>
+      </section>
+
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           BAY 02: VECTOR LAB, BANDWIDTH SCOPE & RADIO SWITCHBOARD
+           ═══════════════════════════════════════════════════════════════ -->
+      <section class="console-pane pane-bay pane-bay-2">
+        <div class="pane-header">
+          <div class="pane-title-group">
+            <span class="pane-title">信号 & 通信マトリックス // SIGNAL & COMM-MATRIX</span>
+          </div>
+          <div class="pane-header-actions">
+            <span class="badge-tech">100MS/s ADC</span>
+            <span class="pane-id">BAY-02</span>
+          </div>
+        </div>
+
+        <!-- 3D Lissajous Parametric Vector Oscilloscope -->
+        <div class="vector-scope-box">
+          <div class="vector-box-head">
+            <span class="scope-title">リサジュー波形 // LISSAJOUS PARAMETRIC SCOPE</span>
+            <div class="scope-mode-toggles">
+              <button class="btn-scope-mode active" data-mode="lissajous">XY-KNOT</button>
+              <button class="btn-scope-mode" data-mode="harmonic">HARMONIC</button>
+              <button class="btn-scope-mode" data-mode="pulse">PULSE</button>
+            </div>
+          </div>
+          <div class="canvas-housing">
+            <canvas id="lissajous-canvas"></canvas>
+            <div class="crt-overlay-mesh"></div>
+          </div>
+          <div class="scope-status-strip">
+            <span>CH-1: 3.58MHz CARRIER</span>
+            <span>POLARITY: DUAL-XY</span>
+            <span>PHOSPHOR: P31 GREEN</span>
+          </div>
+        </div>
+
+        <!-- Live Network Bandwidth Dual-Trace Phosphor Scope -->
+        <div class="bandwidth-scope-box">
+          <div class="vector-box-head">
+            <span class="scope-title">帯域オシロスコープ // LIVE BANDWIDTH SCOPE</span>
+            <div class="logic-clock-badge">AUTO-RANGE: 10MS/s</div>
+          </div>
+          <div class="canvas-housing bandwidth-canvas-housing">
+            <canvas id="bandwidth-canvas"></canvas>
+            <div class="crt-overlay-mesh"></div>
+          </div>
+          <div class="scope-status-strip">
+            <span>CH-1: RX INBOUND [GREEN]</span>
+            <span>CH-2: TX OUTBOUND [AMBER]</span>
+            <span>TIMEBASE: 1s/DIV</span>
+          </div>
+        </div>
+
+        <!-- Tactical Communications & Radio Switchboard -->
+        <div class="comm-matrix-box">
+          <div class="comm-header">
+            <span>通信マトリックス // COMM-LINK & RADIO SWITCHBOARD</span>
+            <span class="comm-status" id="net-status-badge">● ONLINE</span>
+          </div>
+          <div class="comm-body">
+            <div class="comm-data-col">
+              <div class="comm-data-row"><span class="comm-label">NET ESSID:</span> <span class="comm-val highlight" id="net-ssid">ONLINE</span></div>
+              <div class="comm-data-row"><span class="comm-label">LOCAL IP:</span> <span class="comm-val" id="net-ip">127.0.0.1</span></div>
+              <div class="comm-data-row"><span class="comm-label">LATENCY:</span> <span class="comm-val" id="net-ping">9 ms</span></div>
+            </div>
+            <div class="comm-traffic-col">
+              <div class="comm-data-row"><span class="comm-label">▲ TX RATE:</span> <span class="comm-val" id="net-tx">0 KB/s</span></div>
+              <div class="comm-data-row"><span class="comm-label">▼ RX RATE:</span> <span class="comm-val" id="net-rx">0 KB/s</span></div>
+              <div class="comm-data-row"><span class="comm-label">RADIO:</span> <span class="comm-val highlight" id="radio-mode-tag">DUAL-ACTIVE</span></div>
+            </div>
+            <div class="comm-controls-col">
+              <div class="comm-toggle-row">
+                <button class="comm-toggle-btn active" id="btn-toggle-wifi" title="Toggle Wi-Fi Radio"><span class="latch-led on"></span>WI-FI</button>
+                <button class="comm-toggle-btn active" id="btn-toggle-bt" title="Toggle Bluetooth Radio"><span class="latch-led on"></span>BT</button>
+                <button class="comm-toggle-btn" id="btn-toggle-airplane" title="Toggle Airplane Mode (Kill RF)"><span class="latch-led"></span>AIRPLANE</button>
+                <button class="comm-toggle-btn" id="btn-toggle-dnd" title="Toggle Notification Silence (DND)"><span class="latch-led"></span>DND</button>
+                <button class="comm-toggle-btn" id="btn-ping-probe" title="Dispatch 3-Packet ICMP Probe">PING</button>
+                <button class="comm-toggle-btn" id="btn-flush-dns" title="Flush Local DNS Cache">FLUSH</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Network Routing & Interconnect Topology -->
+        <div class="bus-matrix-box">
+          <div class="bus-tile"><span class="bus-label">INTERFACE</span><span class="bus-val" id="tile-iface">wlan0</span></div>
+          <div class="bus-tile"><span class="bus-label">GATEWAY</span><span class="bus-val" id="tile-gw">10.0.0.1</span></div>
+          <div class="bus-tile"><span class="bus-label">DNS SRV</span><span class="bus-val">1.1.1.1</span></div>
+          <div class="bus-tile"><span class="bus-label">PROTOCOL</span><span class="bus-val">802.11ax</span></div>
+          <div class="bus-tile"><span class="bus-label">CIPHER</span><span class="bus-val">WPA3-SAE</span></div>
+          <div class="bus-tile"><span class="bus-label">LINK SPEED</span><span class="bus-val">1201 Mbps</span></div>
+          <div class="bus-tile"><span class="bus-label">SYS CLOCK</span><span class="bus-val">4.80 GHz</span></div>
+          <div class="bus-tile"><span class="bus-label">FAN TACH</span><span class="bus-val">1850 RPM</span></div>
+        </div>
+
+        <!-- RF Spectrum & Wi-Fi 6 Link Diagnostics (Bento Compartment 5) -->
+        <div class="rf-diagnostics-box">
+          <div class="rf-diag-head">
+            <span class="rf-diag-title">無線リンク診断 // RF LINK & 802.11ax PHY</span>
+            <span class="badge-tech" id="rf-status-badge">WLAN0 [5GHz]</span>
+          </div>
+          <div class="rf-rssi-strip">
+            <div class="rf-rssi-meta">
+              <span class="rf-rssi-label">SIGNAL RSSI</span>
+              <span class="rf-rssi-val" id="rf-rssi-val">-42 dBm [98% EXCELLENT]</span>
+            </div>
+            <div class="rf-bar-track">
+              <div class="rf-bar-fill" id="rf-rssi-bar" style="width: 98%"></div>
+            </div>
+          </div>
+          <div class="rf-grid-matrix">
+            <div class="rf-tile"><span class="rf-k">BSSID</span><span class="rf-v" id="rf-bssid">9C:8C:D8:47:D6:F1</span></div>
+            <div class="rf-tile"><span class="rf-k">FREQ / CH</span><span class="rf-v" id="rf-freq">5280 MHz (CH 56)</span></div>
+            <div class="rf-tile"><span class="rf-k">PHY BITRATE</span><span class="rf-v" id="rf-rate">1170 Mbit/s</span></div>
+            <div class="rf-tile"><span class="rf-k">IPV4 CIDR</span><span class="rf-v" id="rf-cidr">10.45.113.12/21</span></div>
+          </div>
+        </div>
+
+        <!-- Active Sockets & Port Telemetry (Bento Compartment 6 - Flex: 1 to fill baseline) -->
+        <div class="socket-monitor-box">
+          <div class="socket-head">
+            <span class="socket-title">ソケット監視 // ACTIVE SOCKETS & PORTS</span>
+            <span class="badge-orbit" id="socket-count-tag">AUTO-REFRESH</span>
+          </div>
+          <div class="socket-table-wrap">
+            <div class="socket-header-row">
+              <span class="s-col s-proto">PROTO</span>
+              <span class="s-col s-port">PORT</span>
+              <span class="s-col s-svc">SERVICE / DAEMON</span>
+              <span class="s-col s-st">STATE</span>
+            </div>
+            <div class="socket-body" id="socket-list-body">
+              <div class="socket-row">
+                <span class="s-col s-proto">TCP</span>
+                <span class="s-col s-port">443</span>
+                <span class="s-col s-svc">HTTPS / TLS Secure</span>
+                <span class="s-col s-st st-estab">ESTAB</span>
+              </div>
+              <div class="socket-row">
+                <span class="s-col s-proto">UDP</span>
+                <span class="s-col s-port">5353</span>
+                <span class="s-col s-svc">mDNS / Avahi Daemon</span>
+                <span class="s-col s-st st-unconn">UNCONN</span>
+              </div>
+              <div class="socket-row">
+                <span class="s-col s-proto">TCP</span>
+                <span class="s-col s-port">80</span>
+                <span class="s-col s-svc">HTTP / Local Web</span>
+                <span class="s-col s-st st-listen">LISTEN</span>
+              </div>
+              <div class="socket-row">
+                <span class="s-col s-proto">UDP</span>
+                <span class="s-col s-port">546</span>
+                <span class="s-col s-svc">DHCPv6 Client</span>
+                <span class="s-col s-st st-unconn">UNCONN</span>
+              </div>
+              <div class="socket-row">
+                <span class="s-col s-proto">TCP</span>
+                <span class="s-col s-port">3000</span>
+                <span class="s-col s-svc">Dev / Node Server</span>
+                <span class="s-col s-st st-listen">LISTEN</span>
+              </div>
+            </div>
+          </div>
+          <div class="socket-action-strip">
+            <button class="sock-act-btn" id="btn-quick-ping">ICMP 1.1.1.1</button>
+            <button class="sock-act-btn" id="btn-quick-dns">FLUSH DNS</button>
+            <button class="sock-act-btn" id="btn-quick-rescan">WIFI SCAN</button>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           BAY 03: INPUT HARDWARE, POWER REGULATOR & COMPOSITOR ENGINE
+           ═══════════════════════════════════════════════════════════════ -->
+      <section class="console-pane pane-bay pane-bay-3">
+        <div class="pane-header">
+          <div class="pane-title-group">
+            <span class="pane-title">入力 & 電源制御 // INPUT & POWER REGULATOR</span>
+          </div>
+          <div class="pane-header-actions">
+            <span class="badge-tech">HARDWARE-LOCK</span>
+            <span class="pane-id">BAY-03</span>
+          </div>
+        </div>
+
+        <!-- TIER 1: TOUCHPAD & INPUT HARDWARE MATRIX -->
+        <div class="touchpad-hanger-box">
+          <div class="vector-box-head">
+            <span class="scope-title">タッチパッド解析 // TOUCHPAD VECTOR CALIBRATION</span>
+            <div class="logic-clock-badge" id="touchpad-status-badge">ELAN SENSOR [ARMED]</div>
+          </div>
+          <div class="canvas-housing touchpad-canvas-housing">
+            <canvas id="touchpad-canvas"></canvas>
+            <div class="crt-overlay-mesh"></div>
+          </div>
+          <!-- Tactile Touchpad Latch Switches -->
+          <div class="touchpad-ctrl-strip">
+            <div class="touch-latch-row">
+              <button class="latch-toggle-btn active" id="btn-touch-tap" data-touch="tap_to_click" title="Toggle 1-Finger Tap to Click"><span class="latch-led on"></span>TAP-CLICK</button>
+              <button class="latch-toggle-btn active" id="btn-touch-drag" data-touch="tap_and_drag" title="Toggle Double-Tap to Drag (Hold second tap)"><span class="latch-led on"></span>TAP-DRAG</button>
+              <button class="latch-toggle-btn" id="btn-touch-lock" data-touch="drag_lock" title="Toggle Drag Lock (Keeps dragging after brief lift)"><span class="latch-led"></span>DRAG LOCK</button>
+              <button class="latch-toggle-btn active" id="btn-touch-scroll" data-touch="natural_scroll" title="Toggle 2-Finger Natural Scrolling"><span class="latch-led on"></span>NAT-SCROLL</button>
+            </div>
+            <div class="cursor-timeout-row">
+              <span class="hanger-sub-label">CURSOR HIDE:</span>
+              <div class="tri-btn-group" id="cursor-timeout-group">
+                <button class="tri-opt-btn active" data-timeout="auto" title="Auto-hide cursor after 3s only when watching movies / fullscreen video">CINEMA (AUTO)</button>
+                <button class="tri-opt-btn" data-timeout="3" title="Always hide cursor after 3s">3s</button>
+                <button class="tri-opt-btn" data-timeout="0" title="Never hide cursor">NEVER</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIER 2: POWER GOVERNOR & CAFFEINE IDLE INHIBITOR -->
+        <div class="power-caffeine-box">
+          <div class="power-caffeine-head">
+            <span>電源 & アイドル防止 // POWER GOVERNOR & CAFFEINE</span>
+            <span class="badge-orbit" id="caffeine-status-badge">IDLE: ARMED</span>
+          </div>
+          <div class="power-caffeine-body">
+            <!-- Caffeine Sleep Inhibitor Button -->
+            <button class="caffeine-latch-btn" id="btn-caffeine-toggle" title="Prevent screen turn-off, idle dimming and sleep">
+              <span class="caffeine-hazard-icon">☕</span>
+              <div class="caffeine-meta">
+                <span class="caffeine-title">CLAMSHELL / INSOMNIA [SUPER+O]</span>
+                <span class="caffeine-desc" id="caffeine-desc">PREVENTS LOCK & SLEEP EVEN IF CLOSED</span>
+              </div>
+              <span class="latch-led big-led" id="caffeine-led"></span>
+            </button>
+            
+            <!-- Quick Governor Selector -->
+            <div class="gov-profile-strip">
+              <span class="hanger-sub-label">GOVERNOR:</span>
+              <div class="switch-tri-state full-width" id="gov-profile-group">
+                <button class="tri-btn" data-pwr="power-saver">ECO [SAVER]</button>
+                <button class="tri-btn active" data-pwr="balanced">BALANCED</button>
+                <button class="tri-btn" data-pwr="performance">PERFORMANCE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIER 3: HYPRLAND COMPOSITOR GRAPHICS ENGINE HANGER -->
+        <div class="compositor-hanger-box">
+          <div class="vector-box-head">
+            <span class="scope-title">コンポジター制御 // COMPOSITOR GRAPHICS FX</span>
+            <span class="badge-tech">HYPRLAND</span>
+          </div>
+          <div class="compositor-grid">
+            <div class="comp-setting-item">
+              <span class="comp-label">ANIMATIONS</span>
+              <div class="comp-btn-group" id="fx-anim-group">
+                <button class="comp-opt-btn active" data-anim="1">SNAP</button>
+                <button class="comp-opt-btn" data-anim="0">OFF</button>
+              </div>
+            </div>
+            <div class="comp-setting-item">
+              <span class="comp-label">WINDOW BLUR</span>
+              <div class="comp-btn-group" id="fx-blur-group">
+                <button class="comp-opt-btn active" data-blur="0">SHARP</button>
+                <button class="comp-opt-btn" data-blur="1">BLUR</button>
+              </div>
+            </div>
+            <div class="comp-setting-item">
+              <span class="comp-label">GAPS IN/OUT</span>
+              <div class="comp-btn-group" id="fx-gaps-group">
+                <button class="comp-opt-btn" data-gaps="0">0px</button>
+                <button class="comp-opt-btn active" data-gaps="2">2px</button>
+                <button class="comp-opt-btn" data-gaps="6">6px</button>
+              </div>
+            </div>
+            <div class="comp-setting-item">
+              <span class="comp-label">ROUNDING</span>
+              <div class="comp-btn-group" id="fx-round-group">
+                <button class="comp-opt-btn active" data-round="0">0px</button>
+                <button class="comp-opt-btn" data-round="4">4px</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIER 4: RECOVERY & RUNAWAY PURGE MATRIX (Bento Compartment 4) -->
+        <div class="recovery-matrix-box">
+          <div class="recovery-head">
+            <span>ゾンビパージ & 復旧 // RUNAWAY PURGE & RECOVERY</span>
+            <span class="badge-orbit">OS-RECOVERY</span>
+          </div>
+          <div class="recovery-btn-grid">
+            <button class="recov-btn" id="btn-purge-browser" title="Purge High-CPU Vivaldi background processes">⚡ KILL BROWSER TABS</button>
+            <button class="recov-btn" id="btn-restart-waybar" title="Kill & relaunch Top Waybar HUD">♻️ RESTART WAYBAR</button>
+            <button class="recov-btn" id="btn-reload-hypr" title="Instant compositor rules reload">⚡ RELOAD HYPRLAND</button>
+            <button class="recov-btn" id="btn-flush-buffers" title="Sync memory buffers to disk">🧹 DROP CACHES</button>
+          </div>
+        </div>
+
+        <!-- Hardware Power & Thermal Bus (Bento Compartment 5) -->
+        <div class="hardware-power-box">
+          <div class="hw-power-head">
+            <span class="hw-power-title">電源 & 熱管理 // BATTERY SUBSYSTEM & THERMALS</span>
+            <span class="badge-tech" id="bat-status-badge">ACPI BAT0 [FULL]</span>
+          </div>
+          <div class="bat-meter-strip">
+            <div class="bat-meta-row">
+              <span class="bat-main-txt" id="bat-main-txt">BAT0: 100% [FULL]</span>
+              <span class="bat-detail-txt" id="bat-detail-txt">DRAW: 0.0W // 13.1V // HEALTH: 93%</span>
+            </div>
+            <div class="bat-bar-track">
+              <div class="bat-bar-fill" id="bat-bar-fill" style="width: 100%"></div>
+            </div>
+          </div>
+          <div class="thermal-grid-matrix">
+            <div class="therm-tile"><span class="therm-k">CPU TCTL</span><span class="therm-v" id="th-cpu">54°C</span></div>
+            <div class="therm-tile"><span class="therm-k">GPU SOC</span><span class="therm-v" id="th-gpu">51°C</span></div>
+            <div class="therm-tile"><span class="therm-k">NVMe DRIVE</span><span class="therm-v" id="th-nvme">46°C</span></div>
+            <div class="therm-tile"><span class="therm-k">FAN SPEED</span><span class="therm-v" id="th-fan">1850 RPM</span></div>
+          </div>
+        </div>
+
+        <!-- Live Systemd & Kernel Journal Stream (Bento Compartment 6 - Flex: 1 to fill baseline) -->
+        <div class="journal-terminal-box">
+          <div class="journal-header">
+            <span>システム復旧ログ // LIVE SYSTEMD & KERNEL JOURNAL</span>
+            <div class="journal-head-tags">
+              <span class="journal-tag">MONOTONIC</span>
+              <span class="badge-orbit">JOURNAL: LIVE</span>
+            </div>
+          </div>
+          <div class="journal-stream" id="journal-log-stream">
+            <div class="log-line"><span class="log-ts">[121573.083385]</span> <span class="log-mod">NetworkManager:</span> dhcp4 lease acquired: 10.45.113.0</div>
+            <div class="log-line"><span class="log-ts">[121573.110550]</span> <span class="log-mod">systemd[1]:</span> Started Network Manager Script Dispatcher.</div>
+            <div class="log-line"><span class="log-ts">[122023.187587]</span> <span class="log-mod">wpa_supplicant:</span> 802.11ax link authenticated</div>
+            <div class="log-line"><span class="log-ts">[122033.221899]</span> <span class="log-mod">hyprland:</span> Compositor rules latched successfully</div>
+            <div class="log-line"><span class="log-ts">[122035.410214]</span> <span class="log-mod">pipewire:</span> 48kHz audio master sink synchronized</div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           BAY 04: CASSETTE DECK, 16-BAND EQUALIZER & AUDIO SUITE
+           ═══════════════════════════════════════════════════════════════ -->
+      <section class="console-pane pane-bay pane-bay-4">
+        <div class="pane-header">
+          <div class="pane-title-group">
+            <span class="pane-title">磁気テープデッキ & 音響 // CASSETTE DECK & AUDIO SUITE</span>
+          </div>
+          <div class="pane-header-actions">
+            <span class="badge-tech">48kHz Hi-Fi</span>
+            <span class="pane-id">BAY-04</span>
+          </div>
+        </div>
+
+        <!-- TIER 1: DUAL-BAY HI-FI AUDIO & COMPACT TAPE SUITE (Half-Width Tape + 16-Band Spectrum) -->
+        <div class="hifi-double-bay">
+          
+          <!-- Bay A: Compact Authentic Video/Audio Tape Deck -->
+          <div class="cassette-housing-compact">
+            <div class="cassette-top-row">
+              <span class="tape-badge-main">TRV-30 MASTER TAPE</span>
+              <span class="tape-badge-sub">TYPE II / CrO2</span>
+            </div>
+
+            <!-- Track Info Marquee -->
+            <div class="tape-meta-box">
+              <div class="tape-title" id="track-title">Insert Tape / Start Music</div>
+              <div class="tape-artist" id="track-artist">Cassette Idle</div>
+            </div>
+
+            <!-- Tape Window with Big Mechanical Reels ("Winds") -->
+            <div class="cassette-window">
+              <div class="tape-ruler">
+                <span>100</span><span>50</span><span>0</span><span>50</span><span>100</span>
+              </div>
+
+              <!-- Left Reel (Bigger Winding Spool with 6-point hub) -->
+              <div class="reel-container reel-left">
+                <div class="tape-ribbon-outer" id="tape-ribbon-left"></div>
+                <div class="reel-spool" id="spool-left">
+                  <div class="spool-teeth">
+                    <span class="spoke s1"></span>
+                    <span class="spoke s2"></span>
+                    <span class="spoke s3"></span>
+                    <div class="spool-center-hole"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Center Tape Guide & Sensors -->
+              <div class="tape-bridge">
+                <div class="tape-roller roller-l"></div>
+                <div class="tape-head-sensor"></div>
+                <div class="tape-roller roller-r"></div>
+              </div>
+
+              <!-- Right Reel (Bigger Winding Spool with 6-point hub) -->
+              <div class="reel-container reel-right">
+                <div class="tape-ribbon-outer" id="tape-ribbon-right"></div>
+                <div class="reel-spool" id="spool-right">
+                  <div class="spool-teeth">
+                    <span class="spoke s1"></span>
+                    <span class="spoke s2"></span>
+                    <span class="spoke s3"></span>
+                    <div class="spool-center-hole"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Tape Meter & Pomodoro Index Widget -->
+            <div class="cassette-bottom-trap">
+              <div class="tape-counter-widget">
+                <span class="counter-label">INDEX</span>
+                <span class="counter-digits" id="tape-counter">0000</span>
+                <button class="counter-btn" id="btn-counter-reset" title="Reset Tape Counter">RESET</button>
+                <button class="counter-btn" id="btn-pomo-toggle" title="Pomodoro Focus Tape Cycle">● POMO</button>
+              </div>
+              <div class="time-readout" id="tape-timecode">00:00 [TAPE]</div>
+            </div>
+
+            <!-- Transport Control Buttons Bar -->
+            <div class="transport-bar">
+              <button class="btn-transport" id="btn-prev" title="Previous Track (Rewind)">◄◄ PREV</button>
+              <button class="btn-transport btn-play-pause" id="btn-play-pause" title="Play / Pause Tape">► PLAY</button>
+              <button class="btn-transport" id="btn-next" title="Next Track (Fast Forward)">►► NEXT</button>
+            </div>
+          </div>
+
+          <!-- Bay B: 16-Band Graphic Spectrum Analyzer & Master Audio Suite -->
+          <div class="spectrum-visualizer-bay">
+            <div class="spectrum-header">
+              <span>周波数スペクトル // 16-BAND EQ</span>
+              <span class="spectrum-tag">DSP 48kHz</span>
+            </div>
+
+            <!-- 16 Realtime Frequency Equalizer Bands -->
+            <div class="spectrum-rack" id="spectrum-rack">
+              <!-- Band 0: 31 Hz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b0" style="height: 35%"></div><div class="spec-peak-tick" id="spec-peak-0" style="bottom: 35%"></div></div><span class="spec-freq">31</span></div>
+              <!-- Band 1: 63 Hz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b1" style="height: 55%"></div><div class="spec-peak-tick" id="spec-peak-1" style="bottom: 55%"></div></div><span class="spec-freq">63</span></div>
+              <!-- Band 2: 125 Hz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b2" style="height: 75%"></div><div class="spec-peak-tick" id="spec-peak-2" style="bottom: 75%"></div></div><span class="spec-freq">125</span></div>
+              <!-- Band 3: 250 Hz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b3" style="height: 60%"></div><div class="spec-peak-tick" id="spec-peak-3" style="bottom: 60%"></div></div><span class="spec-freq">250</span></div>
+              <!-- Band 4: 500 Hz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b4" style="height: 85%"></div><div class="spec-peak-tick" id="spec-peak-4" style="bottom: 85%"></div></div><span class="spec-freq">500</span></div>
+              <!-- Band 5: 1 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b5" style="height: 90%"></div><div class="spec-peak-tick" id="spec-peak-5" style="bottom: 90%"></div></div><span class="spec-freq">1k</span></div>
+              <!-- Band 6: 1.6 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b6" style="height: 80%"></div><div class="spec-peak-tick" id="spec-peak-6" style="bottom: 80%"></div></div><span class="spec-freq">1.6k</span></div>
+              <!-- Band 7: 2.5 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b7" style="height: 70%"></div><div class="spec-peak-tick" id="spec-peak-7" style="bottom: 70%"></div></div><span class="spec-freq">2.5k</span></div>
+              <!-- Band 8: 4 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b8" style="height: 65%"></div><div class="spec-peak-tick" id="spec-peak-8" style="bottom: 65%"></div></div><span class="spec-freq">4k</span></div>
+              <!-- Band 9: 6.3 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b9" style="height: 58%"></div><div class="spec-peak-tick" id="spec-peak-9" style="bottom: 58%"></div></div><span class="spec-freq">6.3k</span></div>
+              <!-- Band 10: 8 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b10" style="height: 50%"></div><div class="spec-peak-tick" id="spec-peak-10" style="bottom: 50%"></div></div><span class="spec-freq">8k</span></div>
+              <!-- Band 11: 10 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b11" style="height: 44%"></div><div class="spec-peak-tick" id="spec-peak-11" style="bottom: 44%"></div></div><span class="spec-freq">10k</span></div>
+              <!-- Band 12: 12 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b12" style="height: 38%"></div><div class="spec-peak-tick" id="spec-peak-12" style="bottom: 38%"></div></div><span class="spec-freq">12k</span></div>
+              <!-- Band 13: 14 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b13" style="height: 30%"></div><div class="spec-peak-tick" id="spec-peak-13" style="bottom: 30%"></div></div><span class="spec-freq">14k</span></div>
+              <!-- Band 14: 16 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b14" style="height: 25%"></div><div class="spec-peak-tick" id="spec-peak-14" style="bottom: 25%"></div></div><span class="spec-freq">16k</span></div>
+              <!-- Band 15: 20 kHz -->
+              <div class="spec-band-col"><div class="spec-bar-track"><div class="spec-bar-fill" id="spec-b15" style="height: 20%"></div><div class="spec-peak-tick" id="spec-peak-15" style="bottom: 20%"></div></div><span class="spec-freq">20k</span></div>
+            </div>
+
+            <!-- Stereo Master Bus PPM Peak Program Meters -->
+            <div class="master-ppm-container">
+              <div class="ppm-row">
+                <span class="ppm-chan">CH-L</span>
+                <div class="ppm-meter-track">
+                  <div class="ppm-meter-fill" id="ppm-meter-l" style="width: 72%"></div>
+                  <div class="ppm-peak-tick" id="ppm-peak-l" style="left: 72%"></div>
+                </div>
+                <span class="ppm-val" id="ppm-val-l">-3.2 dBFS</span>
+              </div>
+              <div class="ppm-row">
+                <span class="ppm-chan">CH-R</span>
+                <div class="ppm-meter-track">
+                  <div class="ppm-meter-fill" id="ppm-meter-r" style="width: 65%"></div>
+                  <div class="ppm-peak-tick" id="ppm-peak-r" style="left: 65%"></div>
+                </div>
+                <span class="ppm-val" id="ppm-val-r">-5.8 dBFS</span>
+              </div>
+            </div>
+
+            <!-- Mastering Audio Telemetry & Output Sink Badge -->
+            <div class="spectrum-footer">
+              <div class="audio-telemetry">
+                <span>LUFS: <b id="aud-lufs">-14.2</b></span>
+                <span>PHASE: <b id="aud-phase">+0.94</b></span>
+                <span>HEADROOM: <b id="aud-headroom">+3dB</b></span>
+              </div>
+              <div class="sink-badge" id="audio-sink-badge">🎧 Master Audio Out</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIER 2: STUDIO HARDWARE MIXING CONSOLE -->
+        <div class="mixing-console-box">
+          <div class="faders-rack">
+            <!-- Master Volume Fader -->
+            <div class="fader-group">
+              <span class="fader-label">VOL</span>
+              <div class="fader-channel">
+                <input type="range" class="fader-slider" id="slider-vol" min="0" max="150" value="70" orient="vertical">
+                <div class="vu-meter-ladder" id="vu-vol">
+                  <div class="vu-led red"></div>
+                  <div class="vu-led red"></div>
+                  <div class="vu-led amber"></div>
+                  <div class="vu-led amber"></div>
+                  <div class="vu-led"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                </div>
+              </div>
+              <span class="fader-readout" id="val-vol">70%</span>
+            </div>
+
+            <!-- Display Brightness Fader -->
+            <div class="fader-group">
+              <span class="fader-label">BRIGHT</span>
+              <div class="fader-channel">
+                <input type="range" class="fader-slider" id="slider-bright" min="5" max="100" value="80" orient="vertical">
+                <div class="vu-meter-ladder" id="vu-bright">
+                  <div class="vu-led red"></div>
+                  <div class="vu-led red"></div>
+                  <div class="vu-led amber"></div>
+                  <div class="vu-led amber"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                </div>
+              </div>
+              <span class="fader-readout" id="val-bright">80%</span>
+            </div>
+
+            <!-- Bass Tone EQ Fader -->
+            <div class="fader-group">
+              <span class="fader-label">BASS</span>
+              <div class="fader-channel">
+                <input type="range" class="fader-slider" id="slider-bass" min="-12" max="12" value="2" orient="vertical">
+                <div class="vu-meter-ladder" id="vu-bass">
+                  <div class="vu-led red"></div>
+                  <div class="vu-led amber"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led"></div>
+                  <div class="vu-led"></div>
+                  <div class="vu-led"></div>
+                </div>
+              </div>
+              <span class="fader-readout" id="val-bass">+2dB</span>
+            </div>
+
+            <!-- Treble Tone EQ Fader -->
+            <div class="fader-group">
+              <span class="fader-label">TREB</span>
+              <div class="fader-channel">
+                <input type="range" class="fader-slider" id="slider-treb" min="-12" max="12" value="4" orient="vertical">
+                <div class="vu-meter-ladder" id="vu-treb">
+                  <div class="vu-led red"></div>
+                  <div class="vu-led amber on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led on"></div>
+                  <div class="vu-led"></div>
+                  <div class="vu-led"></div>
+                </div>
+              </div>
+              <span class="fader-readout" id="val-treb">+4dB</span>
+            </div>
+          </div>
+
+          <!-- Studio Mode Physical Toggles Column -->
+          <div class="studio-toggles-col">
+            <!-- Bluetooth Profile Mode -->
+            <div class="toggle-control-block">
+              <div class="toggle-header">
+                <span>BT AUDIO</span>
+                <button class="btn-mic-toggle" id="btn-toggle-mic" title="Toggle Bluetooth Microphone Profile">MIC: ON</button>
+              </div>
+              <div class="switch-dual-horizontal">
+                <button class="switch-opt active" id="sw-bt-music">HI-FI</button>
+                <button class="switch-opt" id="sw-bt-call">CALL</button>
+              </div>
+            </div>
+
+            <!-- CRT Hardware Shader Toggle -->
+            <div class="toggle-control-block">
+              <span class="toggle-label">CRT SHADER</span>
+              <div class="switch-tri-state">
+                <button class="tri-btn active" data-mode="off">OFF</button>
+                <button class="tri-btn" data-mode="scanlines">SCAN</button>
+                <button class="tri-btn" data-mode="heavy">HEAVY</button>
+              </div>
+            </div>
+
+            <!-- Hardware Power Governor -->
+            <div class="toggle-control-block">
+              <span class="toggle-label">POWER</span>
+              <div class="switch-tri-state">
+                <button class="tri-btn" data-pwr="power-saver">ECO</button>
+                <button class="tri-btn active" data-pwr="balanced">BAL</button>
+                <button class="tri-btn" data-pwr="performance">PERF</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIER 3: AUDIO MASTERING STUDIO & STEREO GONIOMETER VECTORSCOPE -->
+        <div class="mastering-studio-box">
+          <div class="vector-box-head">
+            <span class="scope-title">音響マスタリング // STEREO GONIOMETER</span>
+            <div class="mastering-head-tags">
+              <span class="badge-tech">M/S</span>
+              <span class="badge-orbit" id="phase-badge">PHASE: +0.94</span>
+            </div>
+          </div>
+          <div class="goniometer-housing">
+            <canvas id="goniometer-canvas"></canvas>
+            <div class="crt-overlay-mesh"></div>
+          </div>
+          <!-- Mastering Processor Control Strip -->
+          <div class="mastering-ctrl-strip">
+            <div class="mastering-param-tile">
+              <span class="m-label">TAPE SATURATION</span>
+              <button class="m-toggle-btn active" id="btn-tape-warmth">+2.4dB WARMTH</button>
+            </div>
+            <div class="mastering-param-tile">
+              <span class="m-label">STEREO FIELD</span>
+              <div class="m-btn-group">
+                <button class="m-mini-btn" id="btn-width-mono" data-width="mono">MONO</button>
+                <button class="m-mini-btn active" id="btn-width-norm" data-width="normal">100%</button>
+                <button class="m-mini-btn" id="btn-width-wide" data-width="wide">140%</button>
+              </div>
+            </div>
+            <div class="mastering-param-tile">
+              <span class="m-label">PEAK LIMITER</span>
+              <div class="m-btn-group">
+                <button class="m-mini-btn active" id="btn-limit-soft" data-limit="soft">SOFT</button>
+                <button class="m-mini-btn" id="btn-limit-opt" data-limit="opt">OPT</button>
+                <button class="m-mini-btn" id="btn-limit-off" data-limit="off">OFF</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIER 4: TACTILE CASSETTE THEME RACK (2x2 GRID) -->
+        <div class="tape-library-box">
+          <div class="library-header">
+            <span>テープラック // THEME CASSETTES</span>
+            <span class="library-sub">4 CASSETTES LOADED</span>
+          </div>
+          <div class="tapes-rack-grid">
+            <div class="tape-cartridge active" data-theme="trv30" id="tape-trv30">
+              <div class="tape-corner-screw top-left"></div>
+              <div class="tape-corner-screw top-right"></div>
+              <div class="tape-spine">01</div>
+              <div class="tape-meta">
+                <div class="tape-name">TOKYO 80S TRV30</div>
+                <div class="tape-desc">Chrome Silver // Warm Amber OSD</div>
+              </div>
+              <div class="tape-status-led on"></div>
+            </div>
+
+            <div class="tape-cartridge" data-theme="cyber" id="tape-cyber">
+              <div class="tape-corner-screw top-left"></div>
+              <div class="tape-corner-screw top-right"></div>
+              <div class="tape-spine">02</div>
+              <div class="tape-meta">
+                <div class="tape-name">AKIHABARA CYBER</div>
+                <div class="tape-desc">Neon Cyan // Synth Magenta</div>
+              </div>
+              <div class="tape-status-led"></div>
+            </div>
+
+            <div class="tape-cartridge" data-theme="pvm" id="tape-pvm">
+              <div class="tape-corner-screw top-left"></div>
+              <div class="tape-corner-screw top-right"></div>
+              <div class="tape-spine">03</div>
+              <div class="tape-meta">
+                <div class="tape-name">SONY PVM MONITOR</div>
+                <div class="tape-desc">P31 Green Phosphor // CRT</div>
+              </div>
+              <div class="tape-status-led"></div>
+            </div>
+
+            <div class="tape-cartridge" data-theme="nerv" id="tape-nerv">
+              <div class="tape-corner-screw top-left"></div>
+              <div class="tape-corner-screw top-right"></div>
+              <div class="tape-spine">04</div>
+              <div class="tape-meta">
+                <div class="tape-name">NERV TACTICAL</div>
+                <div class="tape-desc">Industrial Orange // Alert Red</div>
+              </div>
+              <div class="tape-status-led"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="ascii-engine.js"></script>
+  <script src="vector-lab.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
