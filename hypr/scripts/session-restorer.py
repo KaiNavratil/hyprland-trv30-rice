@@ -23,7 +23,7 @@ def main():
     # Keep track of which windows we have already moved by their address
     moved_addresses = set()
     
-    # We will poll for up to 60 seconds after boot to catch all restoring windows
+    # Poll for up to 60 seconds after boot to catch all restoring windows
     for _ in range(30):
         clients = get_clients()
         
@@ -34,25 +34,27 @@ def main():
                 
             c_class = c.get("class", "")
             c_title = c.get("title", "")
+            curr_ws = c.get("workspace", {}).get("name", "")
             
             # Find a matching target state
             best_match = None
             for t in target_state:
-                if t["class"] == c_class:
+                if t.get("class") == c_class:
                     best_match = t
-                    if t["title"] == c_title:
-                        break # Perfect match!
+                    if t.get("title") == c_title:
+                        break # Exact match
             
             if best_match:
-                # Move it!
-                ws = best_match["workspace"]
-                try:
-                    subprocess.run(["hyprctl", "dispatch", "movetoworkspacesilent", f"{ws},address:{addr}"])
+                ws = str(best_match.get("workspace", ""))
+                if ws and not ws.startswith("special:"):
+                    if curr_ws != ws:
+                        try:
+                            target_addr = addr if addr.startswith("0x") else f"0x{addr}"
+                            subprocess.run(["hyprctl", "dispatch", "movetoworkspacesilent", f"{ws},address:{target_addr}"], stdout=subprocess.DEVNULL)
+                        except Exception:
+                            pass
                     moved_addresses.add(addr)
-                    # Remove it from targets so we don't map multiple identical windows to the same slot
                     target_state.remove(best_match)
-                except:
-                    pass
                     
         if len(target_state) == 0:
             break

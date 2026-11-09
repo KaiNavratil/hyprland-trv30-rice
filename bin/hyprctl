@@ -6,7 +6,7 @@ Hyprland 0.57 Lua dispatchers and evaluation calls.
 """
 import sys
 import subprocess
-import re
+import json
 import shlex
 
 HYPRCTL_BIN = "/usr/bin/hyprctl"
@@ -92,13 +92,8 @@ def translate_dispatch(subargs):
 
     if d_cmd == "exec":
         exec_str = " ".join(rest)
-        m = re.match(r'^\[(.*?)\]\s*(.*)$', exec_str)
-        if m:
-            cmd_to_run = m.group(2)
-            subprocess.Popen(cmd_to_run, shell=True)
-            return ["eval", "-- exec bypassed"]
-        else:
-            return ["dispatch", f'hl.dsp.exec_cmd("{exec_str}")']
+        lua_str = json.dumps(exec_str)
+        return ["dispatch", f'hl.dsp.exec_raw({lua_str})']
 
     return ["dispatch"] + subargs
 
@@ -175,7 +170,6 @@ def translate_single_command(tokens):
     return tokens
 
 def handle_batch(args):
-    # args could be ['--batch', 'dispatch a ; dispatch b'] or ['dispatch a ; dispatch b']
     batch_str = " ".join([a for a in args if a != "--batch"])
     subcmds = [s.strip() for s in batch_str.split(";") if s.strip()]
     translated_cmds = []
@@ -186,8 +180,7 @@ def handle_batch(args):
         except Exception:
             tokens = sc.split()
         trans = translate_single_command(tokens)
-        if trans and trans[0] != "-- exec bypassed":
-            # format as command
+        if trans:
             translated_cmds.append(" ".join(trans))
 
     if not translated_cmds:
@@ -209,8 +202,6 @@ def main():
 
     if cmd == "dispatch":
         trans = translate_dispatch(subargs)
-        if trans[0] == "eval" and "-- exec bypassed" in trans[1]:
-            sys.exit(0)
         sys.exit(subprocess.call([HYPRCTL_BIN] + trans))
 
     if cmd == "keyword":
