@@ -368,9 +368,10 @@ hl.bind(mod .. " + N", hl.dsp.exec_cmd("dunstctl close"))
 hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd("dunstctl close-all"))
 
 -- Screenshot
+hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh"))
 hl.bind(mod .. " + P", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh"))
+hl.bind(mod .. " + ALT + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot-ocr.sh"))
 hl.bind(mod .. " + ALT + P", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot-ocr.sh"))
-hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot-ocr.sh"))
 
 -- Mouse binds
 hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
@@ -391,6 +392,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
     hl.exec_cmd("dunst")
     hl.exec_cmd("hypridle")
+    hl.exec_cmd("copyq --start-server")
     hl.exec_cmd("bash ~/.config/hypr/scripts/toggle-vcr.sh")
 
     -- Background utilities & daemons

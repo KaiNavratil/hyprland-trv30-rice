@@ -4,6 +4,7 @@
   {"class": "vivaldi-stable", "title": "View Submission | Gradescope - Vivaldi", "workspace": "2", "monitor": 1},
   {"class": "vivaldi-stable", "title": "CS 61B Students - Vivaldi", "workspace": "5", "monitor": 1},
   {"class": "vivaldi-stable", "title": "Complete Assignment Solutions - Vivaldi", "workspace": "3", "monitor": 1},
-  {"class": "ltspice.exe", "title": "LTspice - [EE64_HW9_Problem6b.asc]", "workspace": "3", "monitor": 1},
-  {"class": "org.gnome.Nautilus", "title": "EE64_HW9_LTspice_Files", "workspace": "3", "monitor": 1}
+  {"class": "org.gnome.Nautilus", "title": "Screenshots", "workspace": "13", "monitor": 0},
+  {"class": "ltspice.exe", "title": "LTspice - EE64_HW9_Problem6a.raw", "workspace": "3", "monitor": 1},
+  {"class": "ltspice.exe", "title": "EE64_HW9_Problem6a.raw", "workspace": "3", "monitor": 1}
 ]

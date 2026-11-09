@@ -3,14 +3,24 @@ mkdir -p ~/Pictures/Screenshots
 FILE="$HOME/Pictures/Screenshots/screenshot-$(date +%Y%m%d-%H%M%S).png"
 
 # Take screenshot of selected area
-grim -g "$(slurp)" "$FILE"
+GEOM=$(slurp 2>/dev/null)
+if [ -z "$GEOM" ]; then
+    exit 0
+fi
 
-# Check if screenshot was actually taken (user didn't cancel slurp)
+grim -g "$GEOM" "$FILE"
+
+# Check if screenshot was actually taken
 if [ -f "$FILE" ]; then
-    # Write directly to CopyQ clipboard manager
-    copyq write image/png - < "$FILE"
-    copyq select 0
+    # 1. Primary Wayland clipboard copy (image/png) for instant Ctrl+V
+    wl-copy --type image/png < "$FILE"
+
+    # 2. Add to CopyQ clipboard manager if available
+    if command -v copyq >/dev/null 2>&1; then
+        copyq write image/png - < "$FILE" 2>/dev/null || true
+        copyq select 0 2>/dev/null || true
+    fi
     
-    # Notify user with a preview of the image!
-    dunstify -a "osd" -r 9999 "SCREENSHOT" "Saved to Pictures/Screenshots"
+    # 3. Notify user with thumbnail preview
+    dunstify -a "osd" -r 9999 -i "$FILE" "📷 SCREENSHOT COPIED" "Copied to clipboard & saved to Pictures/Screenshots"
 fi
