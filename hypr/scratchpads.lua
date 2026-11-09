@@ -363,9 +363,13 @@ function M.toggle(target, is_stack)
         local sp_win = nil
         for _, w in ipairs(hl.get_windows() or {}) do
             if w.workspace and w.workspace.name == target_special then
-                if w.fullscreen and w.fullscreen > 0 then
-                    hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
-                    hl.dispatch(hl.dsp.window.fullscreen())
+                -- Only enforce un-fullscreen on modal HUD scratchpads with 60px gaps (music, discord, calendar, notes)
+                -- Full workspace decks (dev, antigravity, magic) preserve their fullscreen settings
+                if cfg.gaps_out > 0 then
+                    if w.fullscreen and w.fullscreen > 0 then
+                        hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                        hl.dispatch(hl.dsp.window.fullscreen())
+                    end
                 end
                 if w.floating then
                     hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
