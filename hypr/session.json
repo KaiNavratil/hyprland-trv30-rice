@@ -28,5 +28,11 @@
     "title": "Retro Tokyo Camcorder Con...",
     "workspace": "11",
     "monitor": 0
+  },
+  {
+    "class": "vivaldi-stable",
+    "title": "Start Page - Vivaldi",
+    "workspace": "1",
+    "monitor": 1
   }
 ]

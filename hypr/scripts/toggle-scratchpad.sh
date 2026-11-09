@@ -20,12 +20,13 @@ if [ "$TARGET" != "magic" ]; then
         # Before launching a new instance, check if the app window already exists on another workspace
         TARGET_CLASS=""
         case "$TARGET" in
-            music) TARGET_CLASS="Spotify" ;;
-            discord) TARGET_CLASS="vesktop" ;;
+            music) TARGET_CLASS="[Ss]potify" ;;
+            discord) TARGET_CLASS="vesktop|discord" ;;
             calendar) TARGET_CLASS="vivaldi-calendar" ;;
-            dev) TARGET_CLASS="antigravity-ide" ;;
+            dev) TARGET_CLASS="^antigravity-ide$" ;;
+            antigravity) TARGET_CLASS="^antigravity$" ;;
             center) TARGET_CLASS="commandcenter|command-center|com.tokyo.commandcenter" ;;
-            notes) TARGET_CLASS="notes-term" ;;
+            notes) TARGET_CLASS="notes-term|copyq" ;;
             radar) TARGET_CLASS="com.tokyo.radar" ;;
             display) TARGET_CLASS="com.tokyo.displaydeck|display-deck" ;;
         esac
@@ -158,11 +159,8 @@ else
         fi
     fi
 
-    # Bind and migrate the special workspace and its windows to CURRENT_MON
+    # Bind and migrate the special workspace to CURRENT_MON
     hyprctl dispatch moveworkspacetomonitor "special:$TARGET" "$CURRENT_MON" >/dev/null 2>&1
-    for addr in $(hyprctl clients -j | jq -r ".[] | select(.workspace.name == \"special:$TARGET\") | .address"); do
-        hyprctl dispatch movetoworkspacesilent "special:$TARGET,address:$addr" >/dev/null 2>&1
-    done
 
     # Now show the target on this monitor (allows overlapping with existing scratchpads!)
     hyprctl dispatch togglespecialworkspace "$TARGET"
@@ -170,7 +168,6 @@ else
     
     # Ensure all scratchpad windows are tiled so Hyprland enforces exact workspace margins (gapsout:60 or gapsout:0)
     for addr in $(hyprctl clients -j | jq -r ".[] | select(.workspace.name == \"special:$TARGET\") | .address"); do
-        hyprctl dispatch movetoworkspacesilent "special:$TARGET,address:$addr" >/dev/null 2>&1
         hyprctl dispatch settiled address:$addr >/dev/null 2>&1
     done
 

@@ -1,155 +1,223 @@
 #!/usr/bin/env python3
+"""
+Transparent backward-compatibility wrapper for hyprctl on Hyprland 0.57+ (Lua).
+Translates legacy CLI arguments (such as keyword, dispatch, --batch) into native
+Hyprland 0.57 Lua dispatchers and evaluation calls.
+"""
 import sys
 import subprocess
 import re
+import shlex
 
 HYPRCTL_BIN = "/usr/bin/hyprctl"
+
+def translate_dispatch(subargs):
+    if not subargs:
+        return ["dispatch"]
+    d_cmd = subargs[0]
+    rest = subargs[1:]
+
+    # Already native Lua dispatcher
+    if d_cmd.startswith("hl.") or "(" in d_cmd:
+        return ["dispatch", " ".join(subargs)]
+
+    if d_cmd == "togglespecialworkspace":
+        ws = rest[0] if rest else ""
+        return ["dispatch", f'hl.dsp.workspace.toggle_special("{ws}")']
+
+    if d_cmd == "workspace":
+        ws = rest[0] if rest else "1"
+        return ["dispatch", f'hl.dsp.focus({{ workspace = "{ws}" }})']
+
+    if d_cmd == "focusmonitor":
+        mon = rest[0] if rest else "+1"
+        return ["dispatch", f'hl.dsp.focus({{ monitor = "{mon}" }})']
+
+    if d_cmd == "focuswindow":
+        win = rest[0] if rest else ""
+        if win.startswith("0x"):
+            win = f"address:{win}"
+        return ["dispatch", f'hl.dsp.focus({{ window = "{win}" }})']
+
+    if d_cmd == "killactive":
+        return ["dispatch", "hl.dsp.window.kill()"]
+
+    if d_cmd == "fullscreen":
+        return ["dispatch", "hl.dsp.window.fullscreen()"]
+
+    if d_cmd == "togglefloating":
+        win = rest[0] if rest else None
+        if win:
+            if win.startswith("0x"):
+                win = f"address:{win}"
+            return ["dispatch", f'hl.dsp.window.float({{ action = "toggle", window = "{win}" }})']
+        return ["dispatch", 'hl.dsp.window.float({ action = "toggle" })']
+
+    if d_cmd == "settiled":
+        win = rest[0] if rest else None
+        if win:
+            if win.startswith("0x"):
+                win = f"address:{win}"
+            return ["dispatch", f'hl.dsp.window.float({{ action = "disable", window = "{win}" }})']
+        return ["dispatch", 'hl.dsp.window.float({ action = "disable" })']
+
+    if d_cmd == "pin":
+        win = rest[0] if rest else None
+        if win and win != "active":
+            if win.startswith("0x"):
+                win = f"address:{win}"
+            return ["dispatch", f'hl.dsp.window.pin({{ window = "{win}" }})']
+        return ["dispatch", 'hl.dsp.window.pin()']
+
+    if d_cmd == "dpms":
+        state = rest[0] if rest else "toggle"
+        return ["dispatch", f'hl.dsp.dpms("{state}")']
+
+    if d_cmd == "moveworkspacetomonitor" and len(rest) >= 2:
+        ws, mon = rest[0], rest[1]
+        return ["dispatch", f'hl.dsp.workspace.move({{ workspace = "{ws}", monitor = "{mon}" }})']
+
+    if d_cmd in ("movetoworkspace", "movetoworkspacesilent"):
+        s_flag = "true" if d_cmd == "movetoworkspacesilent" else "false"
+        ws_arg = rest[0] if rest else "1"
+        parts = ws_arg.split(",", 1)
+        ws_target = parts[0]
+        win = parts[1].strip() if len(parts) > 1 else (rest[1].strip() if len(rest) > 1 else None)
+        if win:
+            if win.startswith("0x"):
+                win = f"address:{win}"
+            return ["dispatch", f'hl.dsp.window.move({{ workspace = "{ws_target}", window = "{win}", silent = {s_flag} }})']
+        else:
+            return ["dispatch", f'hl.dsp.window.move({{ workspace = "{ws_target}", silent = {s_flag} }})']
+
+    if d_cmd == "exec":
+        exec_str = " ".join(rest)
+        m = re.match(r'^\[(.*?)\]\s*(.*)$', exec_str)
+        if m:
+            cmd_to_run = m.group(2)
+            subprocess.Popen(cmd_to_run, shell=True)
+            return ["eval", "-- exec bypassed"]
+        else:
+            return ["dispatch", f'hl.dsp.exec_cmd("{exec_str}")']
+
+    return ["dispatch"] + subargs
+
+def translate_keyword(subargs):
+    if not subargs:
+        return ["keyword"]
+    key = subargs[0]
+    val = " ".join(subargs[1:]) if len(subargs) > 1 else ""
+
+    if key == "monitor":
+        parts = [p.strip() for p in val.split(",")]
+        out_name = parts[0]
+        if len(parts) > 1 and parts[1] == "disable":
+            return ["eval", f'hl.monitor({{ output = "{out_name}", disabled = true }})']
+        else:
+            mode = parts[1] if len(parts) > 1 else "preferred"
+            pos = parts[2] if len(parts) > 2 else "auto"
+            scale = parts[3] if len(parts) > 3 else "1.0"
+            mirror_part = ""
+            for p in parts[4:]:
+                if p.startswith("mirror,") or p.startswith("mirror:"):
+                    m_out = p.split(",", 1)[1] if "," in p else p.split(":", 1)[1]
+                    mirror_part = f', mirror = "{m_out}"'
+            return ["eval", f'hl.monitor({{ output = "{out_name}", mode = "{mode}", position = "{pos}", scale = {scale}{mirror_part}, disabled = false }})']
+
+    if key == "workspace":
+        parts = [p.strip() for p in val.split(",")]
+        ws_name = parts[0]
+        opts = []
+        if ws_name.isdigit():
+            opts.append(f"workspace = {int(ws_name)}")
+        else:
+            opts.append(f'workspace = "{ws_name}"')
+        for p in parts[1:]:
+            if ":" in p:
+                k, v = [x.strip() for x in p.split(":", 1)]
+                if k == "persistent":
+                    p_val = "true" if v.lower() in ("true", "1") else "false"
+                    opts.append(f"persistent = {p_val}")
+                elif k == "monitor":
+                    opts.append(f'monitor = "{v}"')
+                elif k in ("gapsout", "gaps_out"):
+                    opts.append(f"gaps_out = {v}")
+                elif k in ("gapsin", "gaps_in"):
+                    opts.append(f"gaps_in = {v}")
+                elif k in ("border", "bordersize"):
+                    if v.lower() in ("false", "0"):
+                        opts.append("no_border = true")
+        opt_str = ", ".join(opts)
+        return ["eval", f"hl.workspace_rule({{ {opt_str} }})"]
+
+    if ":" in key:
+        sec, prop = key.split(":", 1)
+        if val.lower() in ("true", "false"):
+            v_lua = val.lower()
+        elif val.isdigit() or (val.startswith("-") and val[1:].isdigit()):
+            v_lua = val
+        else:
+            v_lua = f'"{val}"'
+        return ["eval", f"hl.config({{ {sec} = {{ {prop} = {v_lua} }} }})"]
+
+    return ["keyword"] + subargs
+
+def translate_single_command(tokens):
+    if not tokens:
+        return []
+    cmd = tokens[0]
+    subargs = tokens[1:]
+
+    if cmd == "dispatch":
+        return translate_dispatch(subargs)
+    elif cmd == "keyword":
+        return translate_keyword(subargs)
+    return tokens
+
+def handle_batch(args):
+    # args could be ['--batch', 'dispatch a ; dispatch b'] or ['dispatch a ; dispatch b']
+    batch_str = " ".join([a for a in args if a != "--batch"])
+    subcmds = [s.strip() for s in batch_str.split(";") if s.strip()]
+    translated_cmds = []
+
+    for sc in subcmds:
+        try:
+            tokens = shlex.split(sc)
+        except Exception:
+            tokens = sc.split()
+        trans = translate_single_command(tokens)
+        if trans and trans[0] != "-- exec bypassed":
+            # format as command
+            translated_cmds.append(" ".join(trans))
+
+    if not translated_cmds:
+        return 0
+
+    batch_payload = " ; ".join(translated_cmds)
+    return subprocess.call([HYPRCTL_BIN, "--batch", batch_payload])
 
 def main():
     args = sys.argv[1:]
     if not args:
         sys.exit(subprocess.call([HYPRCTL_BIN]))
 
+    if "--batch" in args:
+        sys.exit(handle_batch(args))
+
     cmd = args[0]
     subargs = args[1:]
 
-    if cmd == "keyword" and subargs:
-        key = subargs[0]
-        val = " ".join(subargs[1:]) if len(subargs) > 1 else ""
+    if cmd == "dispatch":
+        trans = translate_dispatch(subargs)
+        if trans[0] == "eval" and "-- exec bypassed" in trans[1]:
+            sys.exit(0)
+        sys.exit(subprocess.call([HYPRCTL_BIN] + trans))
 
-        # monitors
-        if key == "monitor":
-            parts = [p.strip() for p in val.split(",")]
-            out_name = parts[0]
-            if len(parts) > 1 and parts[1] == "disable":
-                lua = f'hl.monitor({{ output = "{out_name}", disabled = true }})'
-            else:
-                mode = parts[1] if len(parts) > 1 else "preferred"
-                pos = parts[2] if len(parts) > 2 else "auto"
-                scale = parts[3] if len(parts) > 3 else "1.0"
-                lua = f'hl.monitor({{ output = "{out_name}", mode = "{mode}", position = "{pos}", scale = {scale}, disabled = false }})'
-            return subprocess.call([HYPRCTL_BIN, "eval", lua])
+    if cmd == "keyword":
+        trans = translate_keyword(subargs)
+        sys.exit(subprocess.call([HYPRCTL_BIN] + trans))
 
-        # animations
-        if key.startswith("animations:"):
-            prop = key.split(":", 1)[1]
-            bool_val = "true" if val.lower() in ("true", "1", "yes") else "false"
-            lua = f'hl.config({{ animations = {{ {prop} = {bool_val} }} }})'
-            return subprocess.call([HYPRCTL_BIN, "eval", lua])
-
-        # decoration
-        if key.startswith("decoration:"):
-            prop = key.split(":", 1)[1]
-            if "screen_shader" in prop:
-                shader_path = "" if "EMPTY" in val else val
-                lua = f'hl.config({{ decoration = {{ screen_shader = "{shader_path}" }} }})'
-                return subprocess.call([HYPRCTL_BIN, "eval", lua])
-            elif "blur" in prop:
-                bool_val = "true" if val.lower() in ("true", "1", "yes") else "false"
-                lua = f'hl.config({{ decoration = {{ blur = {{ enabled = {bool_val} }} }} }})'
-                return subprocess.call([HYPRCTL_BIN, "eval", lua])
-
-        # misc
-        if key.startswith("misc:"):
-            prop = key.split(":", 1)[1]
-            bool_val = "true" if val.lower() in ("true", "1", "yes") else "false"
-            lua = f'hl.config({{ misc = {{ {prop} = {bool_val} }} }})'
-            return subprocess.call([HYPRCTL_BIN, "eval", lua])
-
-        # workspace
-        if key == "workspace":
-            # parse workspace string
-            # e.g. "special:music, gapsout:60, monitor:HDMI-A-1"
-            ws_parts = [p.strip() for p in val.split(",")]
-            ws_name = ws_parts[0]
-            opts = [f'workspace = "{ws_name}"']
-            for p in ws_parts[1:]:
-                if ":" in p:
-                    k, v = [x.strip() for x in p.split(":", 1)]
-                    if k == "monitor":
-                        opts.append(f'monitor = "{v}"')
-                    elif k in ("gapsout", "gaps_out"):
-                        opts.append(f'gaps_out = {v}')
-                    elif k in ("gapsin", "gaps_in"):
-                        opts.append(f'gaps_in = {v}')
-                    elif k in ("border", "bordersize"):
-                        if v.lower() in ("false", "0"):
-                            opts.append('no_border = true')
-            lua = f'hl.workspace_rule({{ {", ".join(opts)} }})'
-            return subprocess.call([HYPRCTL_BIN, "eval", lua])
-
-        # Fallback to eval
-        return subprocess.call([HYPRCTL_BIN, "eval", f'-- keyword {key} {val}'])
-
-    if cmd == "dispatch" and subargs:
-        d_cmd = subargs[0]
-        rest = subargs[1:]
-
-        # If already Lua syntax, forward as-is
-        if d_cmd.startswith("hl.") or "(" in d_cmd:
-            return subprocess.call([HYPRCTL_BIN, "dispatch", " ".join(subargs)])
-
-        # Map legacy dispatchers
-        if d_cmd == "togglespecialworkspace":
-            ws = rest[0] if rest else ""
-            return subprocess.call([HYPRCTL_BIN, "dispatch", f'hl.dsp.workspace.toggle_special("{ws}")'])
-
-        if d_cmd == "workspace":
-            ws = rest[0] if rest else "1"
-            return subprocess.call([HYPRCTL_BIN, "dispatch", f'hl.dsp.focus({{ workspace = "{ws}" }})'])
-
-        if d_cmd == "focusmonitor":
-            mon = rest[0] if rest else "+1"
-            return subprocess.call([HYPRCTL_BIN, "dispatch", f'hl.dsp.focus({{ monitor = "{mon}" }})'])
-
-        if d_cmd == "focuswindow":
-            win = rest[0] if rest else ""
-            return subprocess.call([HYPRCTL_BIN, "dispatch", f'hl.dsp.focus({{ window = "{win}" }})'])
-
-        if d_cmd == "killactive":
-            return subprocess.call([HYPRCTL_BIN, "dispatch", 'hl.dsp.window.kill()'])
-
-        if d_cmd == "fullscreen":
-            return subprocess.call([HYPRCTL_BIN, "dispatch", 'hl.dsp.window.fullscreen()'])
-
-        if d_cmd == "togglefloating":
-            return subprocess.call([HYPRCTL_BIN, "dispatch", 'hl.dsp.window.float({ action = "toggle" })'])
-
-        if d_cmd == "settiled":
-            return subprocess.call([HYPRCTL_BIN, "dispatch", 'hl.dsp.window.float({ action = "disable" })'])
-
-        if d_cmd == "pin":
-            return subprocess.call([HYPRCTL_BIN, "dispatch", 'hl.dsp.window.pin()'])
-
-        if d_cmd == "dpms":
-            state = rest[0] if rest else "toggle"
-            return subprocess.call([HYPRCTL_BIN, "dispatch", f'hl.dsp.dpms("{state}")'])
-
-        if d_cmd == "moveworkspacetomonitor" and len(rest) >= 2:
-            ws, mon = rest[0], rest[1]
-            return subprocess.call([HYPRCTL_BIN, "dispatch", f'hl.dsp.workspace.move({{ workspace = "{ws}", monitor = "{mon}" }})'])
-
-        if d_cmd in ("movetoworkspace", "movetoworkspacesilent"):
-            ws_arg = rest[0] if rest else "1"
-            # format could be "special:music,address:0x123" or just "special:music"
-            silent = (d_cmd == "movetoworkspacesilent")
-            parts = ws_arg.split(",", 1)
-            ws_target = parts[0]
-            return subprocess.call([HYPRCTL_BIN, "dispatch", f'hl.dsp.window.move({{ workspace = "{ws_target}", silent = {"true" if silent else "false"} }})'])
-
-        if d_cmd == "exec":
-            exec_str = " ".join(rest)
-            # if format is "[workspace special:foo silent] cmd"
-            m = re.match(r'^\[(.*?)\]\s*(.*)$', exec_str)
-            if m:
-                # launch directly via subprocess
-                cmd_to_run = m.group(2)
-                subprocess.Popen(cmd_to_run, shell=True)
-                return 0
-            else:
-                return subprocess.call([HYPRCTL_BIN, "dispatch", f'hl.dsp.exec_cmd("{exec_str}")'])
-
-    return subprocess.call([HYPRCTL_BIN] + args)
+    sys.exit(subprocess.call([HYPRCTL_BIN] + args))
 
 if __name__ == "__main__":
     main()

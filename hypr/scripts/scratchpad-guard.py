@@ -2,16 +2,18 @@
 import os, socket, json, subprocess, time
 
 ALLOWED_CLASSES = {
-    "special:music": ["Spotify", "spotify"],
-    "special:discord": ["vesktop"],
-    "special:notes": ["notes-term", "com.github.hluk.copyq"],
-    "special:calendar": ["vivaldi-calendar.notion.so__-Default"],
-    "special:magic": ["*"] # allow anything
-    ,"special:antigravity": ["antigravity"]
-    ,"special:dev": ["antigravity-ide", "vivaldi-stable", "vivaldi-localhost"]
-    ,"special:center": ["commandcenter", "command-center", "com.tokyo.commandcenter"]
-    ,"special:radar": ["com.tokyo.radar", "trv30-radar", "desktop-radar"]
-    ,"special:display": ["com.tokyo.displaydeck", "displaydeck", "display-deck"]
+    "special:music": ["spotify"],
+    "special:discord": ["vesktop", "discord"],
+    "special:notes": ["notes-term", "copyq", "com.github.hluk.copyq"],
+    "special:calendar": ["vivaldi-calendar", "notion"],
+    "special:magic": ["*"], # allow anything
+    "special:antigravity": ["antigravity"],
+    "special:dev": ["antigravity-ide", "antigravity", "vivaldi"],
+    "special:center": ["commandcenter", "command-center", "com.tokyo.commandcenter", "center"],
+    "special:radar": ["com.tokyo.radar", "trv30-radar", "desktop-radar", "radar"],
+    "special:display": ["com.tokyo.displaydeck", "displaydeck", "display-deck", "display"],
+    "special:cava": ["trv30-cava", "cava"],
+    "special:sysmon": ["trv30-btop", "btop"]
 }
 
 def get_active_workspace():
@@ -31,10 +33,10 @@ def check_and_evict(addr, workspace, class_name):
     if "*" in allowed:
         return
         
-    # Check if the class is allowed
+    # Check if the class is allowed (case-insensitive substring check)
     is_allowed = False
     for a in allowed:
-        if a in class_name: # Simple substring check just in case
+        if a.lower() in class_name.lower():
             is_allowed = True
             break
             
@@ -42,9 +44,10 @@ def check_and_evict(addr, workspace, class_name):
         # EVICT!
         active_ws = get_active_workspace()
         if active_ws.startswith("special:"):
-            active_ws = "1" # Fallback if they are looking at a scratchpad
-        print(f"Evicting {class_name} ({addr}) from {workspace} to {active_ws}")
-        subprocess.run(["hyprctl", "dispatch", "movetoworkspacesilent", f"{active_ws},address:0x{addr}"])
+            active_ws = "1" # Fallback if viewing a scratchpad
+        target_addr = addr if addr.startswith("0x") else f"0x{addr}"
+        print(f"Evicting {class_name} ({target_addr}) from {workspace} to {active_ws}")
+        subprocess.run(["hyprctl", "dispatch", "movetoworkspacesilent", f"{active_ws},address:{target_addr}"])
 
 def daemon():
     his = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE")
@@ -75,12 +78,12 @@ def daemon():
                     parts = line.split(">>")[1].split(",")
                     if len(parts) >= 2:
                         addr, workspace = parts[0], parts[1]
-                        # We don't have class in movewindow event, so we must query hyprctl
+                        # We don't have class in movewindow event, so query hyprctl
                         try:
                             out = subprocess.check_output(["hyprctl", "clients", "-j"], text=True)
                             clients = json.loads(out)
                             for c in clients:
-                                if c.get("address") == f"0x{addr}":
+                                if c.get("address") == f"0x{addr}" or c.get("address") == addr:
                                     check_and_evict(addr, workspace, c.get("class", ""))
                                     break
                         except: pass
