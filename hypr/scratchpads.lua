@@ -97,6 +97,14 @@ local SCRATCHPAD_CONFIG = {
         gaps_in = 0,
         no_border = true,
     },
+    bluetooth = {
+        name = "bluetooth",
+        class_pattern = "com%.tokyo%.bluetoothhq|bluetoothhq|bluetooth%-hq",
+        cmd = "env WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 python3 " .. HOME .. "/.config/hypr/bluetooth-hq/app.py",
+        gaps_out = 0,
+        gaps_in = 0,
+        no_border = true,
+    },
     antigravity = {
         name = "antigravity",
         class_pattern = "antigravity",

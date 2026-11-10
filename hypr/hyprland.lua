@@ -144,6 +144,7 @@ hl.workspace_rule({ workspace = "special:calendar", gaps_out = 60 })
 hl.workspace_rule({ workspace = "special:center", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:radar", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:display", gaps_out = 0, gaps_in = 0, no_border = true })
+hl.workspace_rule({ workspace = "special:bluetooth", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:antigravity", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:dev", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:cava", gaps_out = 60, monitor = "eDP-1" })
@@ -211,6 +212,13 @@ hl.window_rule({
     name = "workspace_special_display",
     match = { class = "^(com\\.tokyo\\.displaydeck)$" },
     workspace = "special:display silent",
+    tile = true,
+})
+
+hl.window_rule({
+    name = "workspace_special_bluetooth",
+    match = { class = "^(com\\.tokyo\\.bluetoothhq)$" },
+    workspace = "special:bluetooth silent",
     tile = true,
 })
 
@@ -319,8 +327,8 @@ hl.bind(mod .. " + SHIFT + T", guards.reopen_last)
 hl.bind(mod .. " + CTRL + T", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mod .. " + M", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/lock.sh"))
 
-hl.bind(mod .. " + B", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/power-mode.sh"))
-hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(HOME .. "/.config/waybar/scripts/restart-waybar.sh"))
+hl.bind(mod .. " + B", function() scratchpads.toggle("bluetooth") end)
+hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/toggle-usual-bluetooth.sh"))
 hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/shader-manager.sh toggle"))
 hl.bind(mod .. " + ALT + C", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/shader-manager.sh next"))
 hl.bind(mod .. " + O", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/toggle-insomnia.sh"))
@@ -339,7 +347,9 @@ hl.bind(mod .. " + H", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/toggle-audio-qual
 hl.bind(mod .. " + ALT + H", hl.dsp.focus({ direction = "left" }))
 hl.bind(mod .. " + J", hl.dsp.focus({ direction = "down" }))
 hl.bind(mod .. " + K", hl.dsp.focus({ direction = "up" }))
-hl.bind(mod .. " + L", hl.dsp.focus({ direction = "right" }))
+hl.bind(mod .. " + L", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/power-mode.sh"))
+hl.bind(mod .. " + SHIFT + L", hl.dsp.exec_cmd(HOME .. "/.config/waybar/scripts/restart-waybar.sh"))
+hl.bind(mod .. " + ALT + L", hl.dsp.focus({ direction = "right" }))
 hl.bind(mod .. " + F", hl.dsp.window.fullscreen())
 
 -- Multi-Monitor Management
@@ -396,6 +406,7 @@ hl.bind(mod .. " + CTRL + C", function() scratchpads.toggle("calendar", true) en
 hl.bind(mod .. " + CTRL + D", function() scratchpads.toggle("dev", true) end)
 hl.bind(mod .. " + CTRL + V", function() scratchpads.toggle("notes", true) end)
 hl.bind(mod .. " + CTRL + G", function() scratchpads.toggle("display", true) end)
+hl.bind(mod .. " + CTRL + B", function() scratchpads.toggle("bluetooth", true) end)
 
 -- Scratchpad Anchor Lock & HUD Pin (Super+Y and Super+Shift+P)
 hl.bind(mod .. " + Y", scratchpads.toggle_anchor)

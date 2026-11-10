@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRV30 Bluetooth Headquarters</title>
+  <style>
+    :root {
+      --bg: #0d0d0c;
+      --card-bg: rgba(24, 23, 22, 0.85);
+      --card-border: rgba(242, 165, 51, 0.25);
+      --amber: #f2a533;
+      --amber-glow: rgba(242, 165, 51, 0.35);
+      --amber-dim: #996922;
+      --green: #4af2a1;
+      --green-glow: rgba(74, 242, 161, 0.3);
+      --red: #f24a4a;
+      --cyan: #3cd0ea;
+      --text-main: #f5eee6;
+      --text-muted: #8c8275;
+      --font-mono: "JetBrains Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* CRT scanline and vignette overlay */
+    body::before {
+      content: " ";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  radial-gradient(circle at center, transparent 65%, rgba(0,0,0,0.6) 100%);
+      background-size: 100% 3px, 100% 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .container {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header OSD */
+    .header-osd {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 14px;
+    }
+
+    .osd-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rec-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .rec-dot {
+      width: 10px;
+      height: 10px;
+      background-color: var(--red);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--red);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.85); }
+    }
+
+    .osd-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--amber);
+      text-shadow: 0 0 10px var(--amber-glow);
+    }
+
+    .osd-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .osd-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .telemetry-tag {
+      font-size: 12px;
+      color: var(--cyan);
+      background: rgba(60, 208, 234, 0.1);
+      border: 1px solid rgba(60, 208, 234, 0.3);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .btn-close {
+      background: rgba(242, 74, 74, 0.15);
+      border: 1px solid rgba(242, 74, 74, 0.4);
+      color: #ff8585;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-close:hover {
+      background: rgba(242, 74, 74, 0.3);
+      color: #fff;
+    }
+
+    /* Master Action Controls */
+    .master-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .cmd-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 14px 16px;
+      border-radius: 6px;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .cmd-btn:hover {
+      border-color: var(--amber);
+      box-shadow: 0 0 12px var(--amber-glow);
+      transform: translateY(-1px);
+    }
+
+    .cmd-btn.active {
+      border-color: var(--green);
+      background: rgba(74, 242, 161, 0.08);
+      box-shadow: 0 0 12px var(--green-glow);
+    }
+
+    .cmd-btn.disabled {
+      opacity: 0.5;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .cmd-btn .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .cmd-btn .value {
+      font-size: 14px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #444;
+    }
+
+    .led.green {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .led.amber {
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber);
+    }
+
+    .led.red {
+      background: var(--red);
+      box-shadow: 0 0 8px var(--red);
+    }
+
+    /* HERO: My Usual Device Card */
+    .hero-card {
+      background: linear-gradient(135deg, rgba(32, 28, 24, 0.9) 0%, rgba(18, 17, 16, 0.95) 100%);
+      border: 1px solid var(--amber);
+      box-shadow: 0 0 20px rgba(242, 165, 51, 0.15), inset 0 0 15px rgba(242, 165, 51, 0.05);
+      border-radius: 8px;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .hero-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--amber);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .hero-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    .hero-mac {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .hero-status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .hero-status-pill.connected {
+      background: rgba(74, 242, 161, 0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+    }
+
+    .hero-status-pill.disconnected {
+      background: rgba(242, 165, 51, 0.1);
+      border: 1px solid rgba(242, 165, 51, 0.4);
+      color: var(--amber);
+    }
+
+    .hero-telemetry-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      padding: 12px 16px;
+    }
+
+    .telemetry-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .telemetry-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .telemetry-val {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .battery-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .battery-track {
+      flex: 1;
+      height: 8px;
+      background: #222;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid #444;
+    }
+
+    .battery-fill {
+      height: 100%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      transition: width 0.3s ease;
+    }
+
+    .hero-actions-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .hero-main-btn {
+      flex: 2;
+      padding: 14px 20px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .hero-main-btn.connect {
+      background: var(--amber);
+      color: #12100e;
+      border: none;
+      box-shadow: 0 0 16px var(--amber-glow);
+    }
+
+    .hero-main-btn.connect:hover {
+      background: #ffb74d;
+      box-shadow: 0 0 24px rgba(242, 165, 51, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .hero-main-btn.disconnect {
+      background: rgba(242, 74, 74, 0.2);
+      border: 1px solid var(--red);
+      color: #ff9e9e;
+    }
+
+    .hero-main-btn.disconnect:hover {
+      background: rgba(242, 74, 74, 0.35);
+      color: #fff;
+    }
+
+    .hero-sub-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .hero-sub-btn:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: rgba(242, 165, 51, 0.1);
+    }
+
+    /* Device Rack */
+    .section-title {
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      color: var(--amber);
+      text-transform: uppercase;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--card-border);
+    }
+
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 12px;
+    }
+
+    .dev-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .dev-card:hover {
+      border-color: rgba(242, 165, 51, 0.5);
+    }
+
+    .dev-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .dev-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dev-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .dev-card-mac {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .dev-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+    }
+
+    .action-btn:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .action-btn.primary {
+      background: rgba(242, 165, 51, 0.15);
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .action-btn.primary:hover {
+      background: var(--amber);
+      color: #12100e;
+    }
+
+    .action-btn.danger {
+      background: rgba(242, 74, 74, 0.1);
+      border-color: rgba(242, 74, 74, 0.3);
+      color: #ff8e8e;
+    }
+
+    .action-btn.danger:hover {
+      background: rgba(242, 74, 74, 0.25);
+      color: #fff;
+    }
+
+    /* Diagnostics & Routing Rack */
+    .diag-rack {
+      background: rgba(14, 13, 12, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .diag-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .diag-label {
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    .diag-val {
+      color: var(--amber);
+      font-weight: bold;
+    }
+
+    /* Footer Guide */
+    .footer-osd {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .hotkey-list {
+      display: flex;
+      gap: 16px;
+    }
+
+    .hotkey {
+      color: var(--amber);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header OSD -->
+    <header class="header-osd">
+      <div class="osd-brand">
+        <div class="rec-indicator">
+          <div class="rec-dot"></div>
+          <span>REC</span>
+        </div>
+        <div>
+          <div class="osd-title">BLUETOOTH HEADQUARTERS // 無線統御司令部</div>
+          <div class="osd-subtitle">SONY DVC TRV30 • WIRELESS MATRIX & AUDIO ROUTER</div>
+        </div>
+      </div>
+      <div class="osd-actions">
+        <div class="telemetry-tag" id="osdClock">00:00:00</div>
+        <button class="btn-close" onclick="sendAction('close')">✕ ESC</button>
+      </div>
+    </header>
+
+    <!-- Master Action Bar -->
+    <div class="master-bar">
+      <!-- 1. Adapter Power Toggle -->
+      <button class="cmd-btn" id="btnPower" onclick="sendAction('toggle_power')">
+        <span class="label">BLUETOOTH ADAPTER</span>
+        <span class="value">
+          <span class="led amber" id="ledPower"></span>
+          <span id="txtPower">CHECKING...</span>
+        </span>
+      </button>
+
+      <!-- 2. Radar Scan Toggle -->
+      <button class="cmd-btn" id="btnScan" onclick="toggleScan()">
+        <span class="label">RADAR SCANNER</span>
+        <span class="value">
+          <span class="led" id="ledScan"></span>
+          <span id="txtScan">SCAN: IDLE</span>
+        </span>
+      </button>
+
+      <!-- 3. Audio Mode Toggle (Hi-Fi vs Call) -->
+      <button class="cmd-btn" id="btnAudioMode" onclick="sendAction('toggle_audio_mode')">
+        <span class="label">AUDIO PIPELINE</span>
+        <span class="value">
+          <span class="led green" id="ledAudio"></span>
+          <span id="txtAudio">HI-FI STEREO</span>
+        </span>
+      </button>
+
+      <!-- 4. Pipeline Restart / Fix -->
+      <button class="cmd-btn" onclick="sendAction('restart_pipeline')">
+        <span class="label">AUDIO ENGINE</span>
+        <span class="value">
+          <span class="led green"></span>
+          <span>↺ RESTART</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- HERO: "MY USUAL" Dedicated Console -->
+    <section class="hero-card" id="heroCard">
+      <div class="hero-top">
+        <div class="hero-info">
+          <div class="hero-badge">★ PRIMARY WIRELESS DEVICE // 指定機器</div>
+          <div class="hero-name">EarFun Air Pro 4</div>
+          <div class="hero-mac" id="heroMac">MAC: 70:5A:6F:6B:56:7B</div>
+        </div>
+        <div class="hero-status-pill disconnected" id="heroStatusPill">
+          <span class="led amber" id="heroLed"></span>
+          <span id="heroStatusText">DISCONNECTED</span>
+        </div>
+      </div>
+
+      <div class="hero-telemetry-row">
+        <div class="telemetry-item">
+          <span class="telemetry-label">ACTIVE AUDIO PROFILE</span>
+          <span class="telemetry-val" id="heroCodec">aptX High-Res Stereo (48kHz)</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">EARBUDS BATTERY</span>
+          <div class="battery-bar-container">
+            <div class="battery-track">
+              <div class="battery-fill" id="heroBatteryFill" style="width: 90%;"></div>
+            </div>
+            <span class="telemetry-val" id="heroBatteryText">90%</span>
+          </div>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">RECORDING PROTECTION</span>
+          <span class="telemetry-val" style="color: var(--green);">LAPTOP MIC ARMED</span>
+        </div>
+      </div>
+
+      <div class="hero-actions-row">
+        <button class="hero-main-btn connect" id="heroMainBtn" onclick="toggleUsual()">
+          <span id="heroBtnIcon">🎧</span>
+          <span id="heroBtnText">CONNECT USUAL</span>
+        </button>
+        <button class="hero-sub-btn" onclick="sendAction('toggle_audio_mode')">
+          <span>🎚️</span>
+          <span>TOGGLE HI-FI / CALL</span>
+        </button>
+        <button class="hero-sub-btn" onclick="sendAction('connect', {mac: '70:5A:6F:6B:56:7B'})">
+          <span>⚡</span>
+          <span>FORCE RE-SYNC</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Paired Devices Rack -->
+    <div class="section-title">PAIRED BLUETOOTH DEVICES (ペアリング済み機器)</div>
+    <div class="device-grid" id="deviceGrid">
+      <!-- Rendered dynamically -->
+    </div>
+
+    <!-- Diagnostics / Audio Route Bar -->
+    <div class="diag-rack">
+      <div class="diag-item">
+        <span class="diag-label">OUTPUT SINK:</span>
+        <span class="diag-val" id="diagSink">EarFun Air Pro 4</span>
+      </div>
+      <div class="diag-item">
+        <span class="diag-label">INPUT SOURCE:</span>
+        <span class="diag-val" id="diagSource">Laptop Digital Mic</span>
+      </div>
+      <div class="diag-item">
+        <span class="diag-label">PIPELINE:</span>
+        <span class="diag-val" style="color: var(--green);">PIPEWIRE 1.6 • WIREPLUMBER 0.5</span>
+      </div>
+    </div>
+
+    <!-- Footer OSD -->
+    <footer class="footer-osd">
+      <div class="hotkey-list">
+        <span><span class="hotkey">Super + B</span> Toggle HQ</span>
+        <span><span class="hotkey">Super + Shift + B</span> Connect / Disconnect Usual</span>
+        <span><span class="hotkey">Super + H</span> Audio Profile Switch</span>
+        <span><span class="hotkey">ESC</span> Stow</span>
+      </div>
+      <div>TOKYO 80s TRV30 CAMCORDER RICE</div>
+    </footer>
+  </div>
+
+  <script>
+    let currentState = null;
+    let isScanning = false;
+
+    function sendAction(action, payload = {}) {
+      const msg = { action, ...payload };
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.bthq) {
+        window.webkit.messageHandlers.bthq.postMessage(JSON.stringify(msg));
+      } else {
+        console.log("Mock message:", msg);
+      }
+    }
+
+    function toggleScan() {
+      isScanning = !isScanning;
+      sendAction("toggle_scan", { scan: isScanning });
+      updateScanUI(isScanning);
+    }
+
+    function updateScanUI(scanning) {
+      const btn = document.getElementById("btnScan");
+      const led = document.getElementById("ledScan");
+      const txt = document.getElementById("txtScan");
+      if (scanning) {
+        btn.classList.add("active");
+        led.className = "led green";
+        txt.innerText = "SCANNING...";
+      } else {
+        btn.classList.remove("active");
+        led.className = "led";
+        txt.innerText = "SCAN: IDLE";
+      }
+    }
+
+    function toggleUsual() {
+      const usual = currentState?.devices?.find(d => d.is_usual);
+      if (usual && usual.connected) {
+        sendAction("disconnect", { mac: usual.mac });
+      } else {
+        sendAction("connect", { mac: "70:5A:6F:6B:56:7B" });
+      }
+    }
+
+    // Called by Python WebKit evaluate_javascript
+    window.updateBluetoothHQ = function(state) {
+      currentState = state;
+      document.getElementById("osdClock").innerText = state.timestamp || "00:00:00";
+
+      // 1. Adapter Power
+      const btnPower = document.getElementById("btnPower");
+      const ledPower = document.getElementById("ledPower");
+      const txtPower = document.getElementById("txtPower");
+      if (state.powered) {
+        btnPower.classList.add("active");
+        ledPower.className = "led green";
+        txtPower.innerText = "ACTIVE (ON)";
+      } else {
+        btnPower.classList.remove("active");
+        ledPower.className = "led red";
+        txtPower.innerText = "DISABLED (OFF)";
+      }
+
+      // 2. Scan status
+      isScanning = !!state.discovering;
+      updateScanUI(isScanning);
+
+      // 3. Audio status
+      const btnAudio = document.getElementById("btnAudioMode");
+      const ledAudio = document.getElementById("ledAudio");
+      const txtAudio = document.getElementById("txtAudio");
+      if (state.audio.is_call) {
+        btnAudio.classList.remove("active");
+        ledAudio.className = "led amber";
+        txtAudio.innerText = "🎙️ CALL MODE";
+      } else {
+        btnAudio.classList.add("active");
+        ledAudio.className = "led green";
+        txtAudio.innerText = "🎧 HI-FI MUSIC";
+      }
+
+      // 4. Hero Usual Device
+      const usual = state.devices.find(d => d.is_usual) || {
+        mac: "70:5A:6F:6B:56:7B",
+        name: "EarFun Air Pro 4",
+        connected: false,
+        battery: null
+      };
+
+      const heroPill = document.getElementById("heroStatusPill");
+      const heroLed = document.getElementById("heroLed");
+      const heroStatusText = document.getElementById("heroStatusText");
+      const heroMainBtn = document.getElementById("heroMainBtn");
+      const heroBtnIcon = document.getElementById("heroBtnIcon");
+      const heroBtnText = document.getElementById("heroBtnText");
+      const heroCodec = document.getElementById("heroCodec");
+      const heroBatteryFill = document.getElementById("heroBatteryFill");
+      const heroBatteryText = document.getElementById("heroBatteryText");
+
+      if (usual.connected) {
+        heroPill.className = "hero-status-pill connected";
+        heroLed.className = "led green";
+        heroStatusText.innerText = "CONNECTED";
+
+        heroMainBtn.className = "hero-main-btn disconnect";
+        heroBtnIcon.innerText = "⚡";
+        heroBtnText.innerText = "DISCONNECT EARFUN";
+
+        heroCodec.innerText = state.audio.codec || "aptX High-Res Stereo (48kHz)";
+      } else {
+        heroPill.className = "hero-status-pill disconnected";
+        heroLed.className = "led amber";
+        heroStatusText.innerText = "DISCONNECTED";
+
+        heroMainBtn.className = "hero-main-btn connect";
+        heroBtnIcon.innerText = "🎧";
+        heroBtnText.innerText = "CONNECT USUAL (EARFUN)";
+
+        heroCodec.innerText = "Standby (Ready to connect)";
+      }
+
+      if (usual.battery !== null && usual.battery !== undefined) {
+        heroBatteryFill.style.width = usual.battery + "%";
+        heroBatteryText.innerText = usual.battery + "%";
+      } else {
+        heroBatteryFill.style.width = usual.connected ? "90%" : "0%";
+        heroBatteryText.innerText = usual.connected ? "Active" : "N/A";
+      }
+
+      // 5. Diagnostics
+      document.getElementById("diagSink").innerText = state.audio.default_sink || "Speakers";
+      document.getElementById("diagSource").innerText = state.audio.default_source || "Laptop Digital Mic";
+
+      // 6. Device Grid
+      renderDeviceGrid(state.devices);
+    };
+
+    function renderDeviceGrid(devices) {
+      const grid = document.getElementById("deviceGrid");
+      grid.innerHTML = "";
+
+      devices.forEach(dev => {
+        const card = document.createElement("div");
+        card.className = "dev-card";
+
+        const iconSymbol = dev.icon === "headphones" ? "🎧" : (dev.icon === "phone" ? "📱" : "🎮");
+        const statusBadge = dev.connected
+          ? `<span style="color: var(--green); font-weight: bold; font-size: 11px;">● CONNECTED</span>`
+          : `<span style="color: var(--text-muted); font-size: 11px;">○ PAIRED</span>`;
+
+        card.innerHTML = `
+          <div class="dev-card-header">
+            <div class="dev-card-info">
+              <div class="dev-card-name">${iconSymbol} ${escapeHtml(dev.name)}</div>
+              <div class="dev-card-mac">${escapeHtml(dev.mac)} ${dev.battery ? `| 🔋 ${dev.battery}%` : ''}</div>
+            </div>
+            ${statusBadge}
+          </div>
+          <div class="dev-card-actions">
+            ${dev.connected
+              ? `<button class="action-btn danger" onclick="sendAction('disconnect', {mac: '${dev.mac}'})">DISCONNECT</button>`
+              : `<button class="action-btn primary" onclick="sendAction('connect', {mac: '${dev.mac}'})">CONNECT</button>`
+            }
+            <button class="action-btn" onclick="sendAction('remove', {mac: '${dev.mac}'})">UNPAIR</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // Keyboard shortcuts inside Deck
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        sendAction("close");
+      } else if (e.key === "c" || e.key === "C") {
+        toggleUsual();
+      } else if (e.key === "h" || e.key === "H") {
+        sendAction("toggle_audio_mode");
+      } else if (e.key === "s" || e.key === "S") {
+        toggleScan();
+      } else if (e.key === "p" || e.key === "P") {
+        sendAction("toggle_power");
+      }
+    });
+
+    // Request initial state on boot
+    window.addEventListener("DOMContentLoaded", () => {
+      sendAction("get_state");
+    });
+  </script>
+</body>
+</html>
