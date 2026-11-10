@@ -1,0 +1,1 @@
+/home/kaijnav/.config/hypr/scripts/toggle-bt-mic.sh
