@@ -18,19 +18,19 @@ function M.apply()
     local has_dp2 = is_output_connected("DP-2")
 
     if has_hdmi then
-        hl.monitor("HDMI-A-1, preferred, 0x0, 1.00")
-        hl.monitor("eDP-1, preferred, 1920x0, 1.30")
+        hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "0x0", scale = 1.00 })
+        hl.monitor({ output = "eDP-1", mode = "preferred", position = "1920x0", scale = 1.30 })
     elseif has_dp1 then
-        hl.monitor("DP-1, preferred, 0x0, 1.00")
-        hl.monitor("eDP-1, preferred, 1920x0, 1.30")
+        hl.monitor({ output = "DP-1", mode = "preferred", position = "0x0", scale = 1.00 })
+        hl.monitor({ output = "eDP-1", mode = "preferred", position = "1920x0", scale = 1.30 })
     elseif has_dp2 then
-        hl.monitor("DP-2, preferred, 0x0, 1.00")
-        hl.monitor("eDP-1, preferred, 1920x0, 1.30")
+        hl.monitor({ output = "DP-2", mode = "preferred", position = "0x0", scale = 1.00 })
+        hl.monitor({ output = "eDP-1", mode = "preferred", position = "1920x0", scale = 1.30 })
     else
-        hl.monitor("eDP-1, preferred, 0x0, 1.30")
+        hl.monitor({ output = "eDP-1", mode = "preferred", position = "0x0", scale = 1.30 })
     end
 
-    hl.monitor(", preferred, auto, 1.00")
+    hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1.00 })
 end
 
 M.apply()
