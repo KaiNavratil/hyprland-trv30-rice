@@ -45,8 +45,8 @@ hl.config({
         border_size = 2,
         layout = "dwindle",
         col = {
-            active_border = "rgba(b8a998ff)",
-            inactive_border = "rgba(0a0808ff)",
+            active_border = "rgba(f2a533ff) rgba(7c4d16ff) 45deg",
+            inactive_border = "rgba(181614ff)",
         },
     },
 
@@ -283,7 +283,8 @@ hl.bind(mod .. " + M", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/lock.sh"))
 
 hl.bind(mod .. " + B", hl.dsp.exec_cmd("~/.config/hypr/scripts/power-mode.sh"))
 hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd("bash ~/.config/waybar/scripts/restart-waybar.sh"))
-hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/toggle-vcr.sh"))
+hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/shader-manager.sh toggle"))
+hl.bind(mod .. " + ALT + C", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/shader-manager.sh next"))
 hl.bind(mod .. " + O", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/toggle-insomnia.sh"))
 hl.bind(mod .. " + G", function() scratchpads.toggle("display") end)
 
@@ -407,7 +408,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("dunst")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("copyq --start-server")
-    hl.exec_cmd("bash ~/.config/hypr/scripts/toggle-vcr.sh")
+    hl.exec_cmd("hyprpaper")
 
     -- Background utilities & daemons
     hl.exec_cmd("python3 ~/.config/hypr/scripts/audio-guard.py")
