@@ -13,6 +13,47 @@ M._ws_map = nil
 M._routed = {}
 M._newly_opened = {}
 
+local EXCLUDED_CLASSES = {
+    ["blueman-manager"] = true,
+    ["blueman-services"] = true,
+    ["blueman-sendto"] = true,
+    ["pavucontrol"] = true,
+    ["org.pulseaudio.pavucontrol"] = true,
+    ["nm-connection-editor"] = true,
+    ["nm-applet"] = true,
+    ["copyq"] = true,
+    ["com.github.hluk.copyq"] = true,
+    ["dunst"] = true,
+    ["rofi"] = true,
+    ["polkit-gnome-authentication-agent-1"] = true,
+    ["org.gnome.Polkit"] = true,
+    ["pinentry-gtk-2"] = true,
+    ["pinentry-gnome3"] = true,
+    ["pinentry-qt"] = true,
+    ["pinentry"] = true,
+    ["xdg-desktop-portal-gtk"] = true,
+    ["xdg-desktop-portal-hyprland"] = true,
+    ["hyprland-share-picker"] = true,
+    ["file-roller"] = true,
+    ["org.kde.polkit-kde-authentication-agent-1"] = true,
+    ["com.tokyo.radar"] = true,
+    ["com.tokyo.commandcenter"] = true,
+    ["com.tokyo.displaydeck"] = true,
+    ["crt-blink"] = true,
+}
+
+local function is_utility_window(win)
+    if not win then return true end
+    if win.floating == true then return true end
+    local cls = win.class and win.class:lower() or ""
+    if EXCLUDED_CLASSES[cls] then return true end
+    if cls:find("^blueman") or cls:find("^pavucontrol") or cls:find("^nm%-")
+       or cls:find("^polkit") or cls:find("^pinentry") or cls:find("^xdg%-desktop%-portal") then
+        return true
+    end
+    return false
+end
+
 local GENERIC_TITLES = {
     ["vivaldi - vivaldi"] = true,
     ["vivaldi"] = true,
@@ -23,6 +64,21 @@ local GENERIC_TITLES = {
     ["kitty"] = true,
     ["~"] = true,
     [""] = true,
+    ["bluetooth devices"] = true,
+    ["open file"] = true,
+    ["open files"] = true,
+    ["save file"] = true,
+    ["save as"] = true,
+    ["choose file"] = true,
+    ["choose files"] = true,
+    ["select a file"] = true,
+    ["select a folder"] = true,
+    ["unlock login keyring"] = true,
+    ["volume control"] = true,
+    ["network connections"] = true,
+    ["file operation progress"] = true,
+    ["confirm to replace files"] = true,
+    ["authentication required"] = true,
 }
 
 local function is_generic_title(t)
@@ -31,6 +87,7 @@ local function is_generic_title(t)
     if not clean or #clean == 0 then return true end
     if GENERIC_TITLES[clean] then return true end
     if clean:find("^new tab") or clean == "vivaldi" then return true end
+    if clean:find("^open file") or clean:find("^save file") or clean:find("^select ") or clean:find("^choose ") then return true end
     return false
 end
 
@@ -67,6 +124,7 @@ end
 --- Automatically routes a window to its saved workspace based on title memory
 function M.route_window(win)
     if not win or not win.address then return end
+    if is_utility_window(win) then return end
     local addr = win.address
 
     -- Never re-route a window that was already routed in this session
@@ -99,6 +157,7 @@ end
 --- Updates window workspace mapping in memory and on disk when a window moves
 function M.track_window(win)
     if not win or not win.title or not win.workspace then return end
+    if is_utility_window(win) then return end
     local ws = win.workspace.name
     if not ws or ws:find("^special:") or not ws:match("^%d+$") then return end
     local title = win.title
@@ -117,7 +176,7 @@ function M.sync_desktop_spaces()
     local clients = hl.get_windows() or {}
     for _, c in ipairs(clients) do
         local ws = c.workspace and c.workspace.name
-        if ws and ws:match("^%d+$") then
+        if ws and ws:match("^%d+$") and not is_utility_window(c) then
             local num = tonumber(ws)
             local space = ((num - 1) % 10) + 1
             if space >= 1 and space <= 9 then
@@ -152,6 +211,11 @@ function M.switch_desktop_space(space_num)
     local mons = hl.get_monitors() or {}
     if #mons == 0 then return end
 
+    -- Verify all monitors are initialized before attempting switch
+    for _, m in ipairs(mons) do
+        if not m or not m.name or not m.active_workspace then return end
+    end
+
     -- Sort monitors left-to-right by X position (HDMI-A-1 Left, eDP-1 Right)
     table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
 
@@ -169,7 +233,7 @@ function M.switch_desktop_space(space_num)
             if sp_mod and sp_mod.remember_state then
                 sp_mod.remember_state(sp_name)
             end
-            hl.dispatch(hl.dsp.workspace.toggle_special(sp_name))
+            pcall(function() hl.dispatch(hl.dsp.workspace.toggle_special(sp_name)) end)
         else
             f:close()
         end
@@ -181,8 +245,10 @@ function M.switch_desktop_space(space_num)
     for idx, m in ipairs(mons) do
         if m.name ~= focused_name then
             local target_ws = tostring(space_num + (idx - 1) * 10)
-            hl.dispatch(hl.dsp.focus({ monitor = m.name }))
-            hl.dispatch(hl.dsp.focus({ workspace = target_ws }))
+            pcall(function()
+                hl.dispatch(hl.dsp.focus({ monitor = m.name }))
+                hl.dispatch(hl.dsp.focus({ workspace = target_ws }))
+            end)
         end
     end
 
@@ -190,8 +256,10 @@ function M.switch_desktop_space(space_num)
     for idx, m in ipairs(mons) do
         if m.name == focused_name then
             local target_ws = tostring(space_num + (idx - 1) * 10)
-            hl.dispatch(hl.dsp.focus({ monitor = m.name }))
-            hl.dispatch(hl.dsp.focus({ workspace = target_ws }))
+            pcall(function()
+                hl.dispatch(hl.dsp.focus({ monitor = m.name }))
+                hl.dispatch(hl.dsp.focus({ workspace = target_ws }))
+            end)
             break
         end
     end
@@ -220,6 +288,13 @@ function M.enforce_dual_monitor_sync(ws)
         return
     end
 
+    -- Safety check: ensure all monitors have valid, initialized active workspaces
+    for _, m in ipairs(mons) do
+        if not m or not m.name or not m.active_workspace or not m.active_workspace.name then
+            return
+        end
+    end
+
     -- Sort monitors left-to-right by X position (HDMI-A-1 Left, eDP-1 Right)
     table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
     local main_mon = mons[1] -- Left: HDMI-A-1 (Spaces 1-9)
@@ -243,8 +318,10 @@ function M.enforce_dual_monitor_sync(ws)
                 local t = (idx == 1) and target_main or target_comp
                 local cur = (idx == 1) and cur_main or cur_comp
                 if cur ~= t then
-                    hl.dispatch(hl.dsp.focus({ monitor = m.name }))
-                    hl.dispatch(hl.dsp.focus({ workspace = t }))
+                    pcall(function()
+                        hl.dispatch(hl.dsp.focus({ monitor = m.name }))
+                        hl.dispatch(hl.dsp.focus({ workspace = t }))
+                    end)
                 end
             end
         end
@@ -255,8 +332,10 @@ function M.enforce_dual_monitor_sync(ws)
                 local t = (idx == 1) and target_main or target_comp
                 local cur = (idx == 1) and cur_main or cur_comp
                 if cur ~= t then
-                    hl.dispatch(hl.dsp.focus({ monitor = m.name }))
-                    hl.dispatch(hl.dsp.focus({ workspace = t }))
+                    pcall(function()
+                        hl.dispatch(hl.dsp.focus({ monitor = m.name }))
+                        hl.dispatch(hl.dsp.focus({ workspace = t }))
+                    end)
                 end
                 break
             end
@@ -342,7 +421,7 @@ function M.save_session()
 
     for _, c in ipairs(clients) do
         local ws = c.workspace and c.workspace.name
-        if ws and not ws:find("^special:") then
+        if ws and not ws:find("^special:") and not is_utility_window(c) then
             table.insert(session_state, string.format(
                 '  {"class": %q, "title": %q, "workspace": %q, "monitor": %d}',
                 c.class or "", c.title or "", ws, c.monitor and c.monitor.id or 0
@@ -367,8 +446,10 @@ function M.setup()
 
     -- Initial scan of clients on startup
     for _, c in ipairs(hl.get_windows() or {}) do
-        M.route_window(c)
-        M.track_window(c)
+        if not is_utility_window(c) then
+            M.route_window(c)
+            M.track_window(c)
+        end
     end
 
     -- Periodic in-memory space persistence & auto-healing (every 4 seconds)
@@ -394,14 +475,23 @@ function M.setup()
         end
     end, { timeout = 4000, type = "repeat" })
 
-    -- Enforce automatic bilateral sync on ANY workspace activation
+    -- Enforce automatic bilateral sync on workspace activation (debounced to prevent hotplug races)
+    local sync_timer = nil
     hl.on("workspace.active", function(ws)
-        M.enforce_dual_monitor_sync(ws)
+        if is_syncing then return end
+        if sync_timer then return end
+        sync_timer = hl.timer(function()
+            sync_timer = nil
+            pcall(function()
+                local cur_ws = hl.get_active_workspace()
+                M.enforce_dual_monitor_sync(cur_ws)
+            end)
+        end, { timeout = 100, type = "oneshot" })
     end)
 
     -- Automatic window routing & title learning hooks
     hl.on("window.open", function(win)
-        if win and win.address then
+        if win and win.address and not is_utility_window(win) then
             M._newly_opened[win.address] = os.time()
             M.route_window(win)
         end
@@ -409,7 +499,7 @@ function M.setup()
     end)
 
     hl.on("window.title", function(win)
-        if win and win.address then
+        if win and win.address and not is_utility_window(win) then
             if not M._routed[win.address] then
                 M.route_window(win)
             else
@@ -421,8 +511,10 @@ function M.setup()
     hl.on("window.move_to_workspace", function(win, ws)
         if win and ws then
             M._routed[win.address] = true
-            local fake_win = { title = win.title, workspace = ws }
-            M.track_window(fake_win)
+            if not is_utility_window(win) then
+                local fake_win = { title = win.title, workspace = ws, class = win.class, floating = win.floating }
+                M.track_window(fake_win)
+            end
         end
         M.sync_desktop_spaces()
     end)
@@ -436,7 +528,15 @@ function M.setup()
     end)
 
     hl.on("monitor.layout_changed", function()
-        M.sync_desktop_spaces()
+        hl.timer(function()
+            pcall(function()
+                local monitors_mod = package.loaded["monitors"]
+                if monitors_mod and monitors_mod.apply then
+                    monitors_mod.apply()
+                end
+                M.sync_desktop_spaces()
+            end)
+        end, { timeout = 250, type = "oneshot" })
     end)
 end
 

@@ -5,6 +5,10 @@
 
 ---@module 'hl'
 
+local HOME = os.getenv("HOME") or "/home/kaijnav"
+local CONFIG_DIR = HOME .. "/.config/hypr"
+package.path = CONFIG_DIR .. "/?.lua;" .. CONFIG_DIR .. "/?/init.lua;" .. package.path
+
 -- ┌─────────────────────────────────────────────────────────────┐
 -- │ 1. MONITORS (モニター)                                      │
 -- └─────────────────────────────────────────────────────────────┘
@@ -248,6 +252,38 @@ hl.window_rule({
     match = { class = "^(crt-blink)$" },
     float = true,
     fullscreen = 1,
+})
+
+-- Utility & System Dialogs (Always float and center, never tile or disrupt workspace layout)
+hl.window_rule({
+    name = "blueman_float",
+    match = { class = "^(blueman-manager|blueman-services|blueman-sendto)$" },
+    float = true,
+    center = true,
+    size = "720 480",
+})
+
+hl.window_rule({
+    name = "pavucontrol_float",
+    match = { class = "^(pavucontrol|org\\.pulseaudio\\.pavucontrol)$" },
+    float = true,
+    center = true,
+    size = "720 500",
+})
+
+hl.window_rule({
+    name = "nm_editor_float",
+    match = { class = "^(nm-connection-editor)$" },
+    float = true,
+    center = true,
+    size = "640 540",
+})
+
+hl.window_rule({
+    name = "utility_dialogs_float",
+    match = { class = "^(file-roller|xdg-desktop-portal-gtk|xdg-desktop-portal-hyprland|hyprland-share-picker|org\\.gnome\\.Polkit|pinentry.*)$" },
+    float = true,
+    center = true,
 })
 
 -- ┌─────────────────────────────────────────────────────────────┐

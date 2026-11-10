@@ -77,6 +77,7 @@ end
 
 --- Scratchpad Guard: Prevents accidental window intrusion into modal scratchpads
 function M.check_scratchpad_guard(win, target_ws_name)
+    if not win or win.floating then return end
     local ws_name = target_ws_name or (win.workspace and win.workspace.name)
     if not ws_name or not ws_name:find("^special:") then return end
 
@@ -103,7 +104,7 @@ function M.check_scratchpad_guard(win, target_ws_name)
                     break
                 end
             end
-            if not cur_win then return end
+            if not cur_win or cur_win.floating then return end
             local cur_ws = cur_win.workspace and cur_win.workspace.name
             if not cur_ws or not cur_ws:find("^special:") then return end
 
