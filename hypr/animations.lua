@@ -46,9 +46,8 @@ function M.setup()
     hl.animation({ leaf = "specialWorkspaceIn", enabled = true, speed = 3.6, spring = "trvDeckSpring", style = "slidefadevert 82%" })
     hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 2.6, bezier = "trvBeamCollapse", style = "slidefadevert 82%" })
 
-    -- Borders & Ambient Phosphor Glow Rotation
+    -- Borders (Subtle, stationary snap)
     hl.animation({ leaf = "border", enabled = true, speed = 2.8, bezier = "trvSnap" })
-    hl.animation({ leaf = "borderangle", enabled = true, speed = 18, bezier = "trvLinear", loop = true })
 
     -- Layers (Waybar / Dunst / Rofi)
     hl.animation({ leaf = "layers", enabled = true, speed = 3.0, bezier = "trvEaseOut" })

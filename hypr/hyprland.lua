@@ -45,11 +45,8 @@ hl.config({
         border_size = 2,
         layout = "dwindle",
         col = {
-            active_border = {
-                colors = { "rgba(f2a533ff)", "rgba(7c4d16ff)" },
-                angle = 45,
-            },
-            inactive_border = "rgba(181614ff)",
+            active_border = "rgba(b8a998ff)",
+            inactive_border = "rgba(0a0808ff)",
         },
     },
 
