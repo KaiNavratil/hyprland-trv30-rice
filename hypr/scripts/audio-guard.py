@@ -51,34 +51,50 @@ def sync_mute_state():
                     subprocess.run(["pactl", "set-sink-mute", s, def_mute], stderr=subprocess.DEVNULL)
 
 def handle_device_connected(mac):
-    # Wait for the initial incoming connection and potential A2DP collision to settle
+    # Wait for the initial incoming connection to settle
     time.sleep(1.2)
     sinks = get_sinks()
     
-    # If PipeWire hasn't created a bluez_output sink, the auto-connect hit the A2DP EBUSY bug
+    # If PipeWire hasn't created a bluez_output sink, connect from PC side
     if not any("bluez" in s for s in sinks):
-        # Force outgoing connect from PC side to establish the A2DP profile
         subprocess.run(["bluetoothctl", "connect", mac], stderr=subprocess.DEVNULL)
-        time.sleep(1.5)
+        time.sleep(1.2)
         sinks = get_sinks()
-        
-        # If still missing, WirePlumber's session manager is hung: restart it
-        if not any("bluez" in s for s in sinks):
-            subprocess.run(["systemctl", "--user", "restart", "wireplumber"], stderr=subprocess.DEVNULL)
-            time.sleep(1.5)
-            sinks = get_sinks()
 
-    # Route default sink to the connected Bluetooth headphones
+    # Route default sink to the connected Bluetooth headphones in highest quality A2DP
     card_name = f"bluez_card.{mac.replace(':', '_')}"
-    subprocess.run(["pactl", "set-card-profile", card_name, "a2dp-sink-aac"], stderr=subprocess.DEVNULL)
+    for prof in ["a2dp-sink", "a2dp-sink-aac", "a2dp-sink-sbc_xq", "a2dp-sink-sbc"]:
+        res = subprocess.run(["pactl", "set-card-profile", card_name, prof], stderr=subprocess.DEVNULL)
+        if res.returncode == 0:
+            break
 
+    # Find the newly created or existing bluez sink
+    time.sleep(0.3)
+    sinks = get_sinks()
+    bt_sink = None
     for s in sinks:
         if "bluez" in s:
+            bt_sink = s
             subprocess.run(["pactl", "set-default-sink", s], stderr=subprocess.DEVNULL)
             break
 
+    # Move active playback streams to Bluetooth sink
+    if bt_sink:
+        inputs_out = run_cmd(["pactl", "list", "sink-inputs", "short"])
+        for line in inputs_out.splitlines():
+            parts = line.split()
+            if parts:
+                subprocess.run(["pactl", "move-sink-input", parts[0], bt_sink], stderr=subprocess.DEVNULL)
+
     # Keep laptop microphone active to prevent Bluetooth dropping to low-quality HFP mono mode
-    subprocess.run(["pactl", "set-default-source", "alsa_input.pci-0000_c3_00.6.HiFi__Mic1__source"], stderr=subprocess.DEVNULL)
+    laptop_mic = run_cmd(["pactl", "list", "sources", "short"])
+    chosen_mic = "alsa_input.pci-0000_c3_00.6.HiFi__Mic1__source"
+    for line in laptop_mic.splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and "alsa_input" in parts[1] and "Mic1" in parts[1]:
+            chosen_mic = parts[1]
+            break
+    subprocess.run(["pactl", "set-default-source", chosen_mic], stderr=subprocess.DEVNULL)
             
     sync_mute_state()
 

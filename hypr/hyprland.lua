@@ -317,13 +317,13 @@ hl.bind("CTRL + Q", hl.dsp.exec_cmd("true"))
 hl.bind(mod .. " + T", guards.reopen_last)
 hl.bind(mod .. " + SHIFT + T", guards.reopen_last)
 hl.bind(mod .. " + CTRL + T", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mod .. " + M", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/lock.sh"))
+hl.bind(mod .. " + M", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/lock.sh"))
 
-hl.bind(mod .. " + B", hl.dsp.exec_cmd("~/.config/hypr/scripts/power-mode.sh"))
-hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd("bash ~/.config/waybar/scripts/restart-waybar.sh"))
-hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/shader-manager.sh toggle"))
-hl.bind(mod .. " + ALT + C", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/shader-manager.sh next"))
-hl.bind(mod .. " + O", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/toggle-insomnia.sh"))
+hl.bind(mod .. " + B", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/power-mode.sh"))
+hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(HOME .. "/.config/waybar/scripts/restart-waybar.sh"))
+hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/shader-manager.sh toggle"))
+hl.bind(mod .. " + ALT + C", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/shader-manager.sh next"))
+hl.bind(mod .. " + O", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/toggle-insomnia.sh"))
 hl.bind(mod .. " + G", function() scratchpads.toggle("display") end)
 
 -- Window Management
@@ -335,7 +335,7 @@ hl.bind("ALT + Tab", function() scratchpads.toggle("radar") end)
 hl.bind(mod .. " + Tab", hl.dsp.focus({ last = true }))
 hl.bind(mod .. " + W", function() scratchpads.toggle("radar") end)
 -- Audio Quality & Bluetooth Profile Toggle (Super+H: Hi-Fi Music Mode <-> Call/Mic Mode)
-hl.bind(mod .. " + H", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/toggle-bt-mic.sh"))
+hl.bind(mod .. " + H", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/toggle-audio-quality.sh"))
 hl.bind(mod .. " + ALT + H", hl.dsp.focus({ direction = "left" }))
 hl.bind(mod .. " + J", hl.dsp.focus({ direction = "down" }))
 hl.bind(mod .. " + K", hl.dsp.focus({ direction = "up" }))
@@ -343,7 +343,7 @@ hl.bind(mod .. " + L", hl.dsp.focus({ direction = "right" }))
 hl.bind(mod .. " + F", hl.dsp.window.fullscreen())
 
 -- Multi-Monitor Management
-hl.bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd("~/.config/hypr/scripts/display-menu.sh"))
+hl.bind(mod .. " + SHIFT + D", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/display-menu.sh"))
 hl.bind(mod .. " + comma", hl.dsp.focus({ monitor = "-1" }))
 hl.bind(mod .. " + period", hl.dsp.focus({ monitor = "+1" }))
 hl.bind(mod .. " + bracketleft", hl.dsp.focus({ monitor = "-1" }))
@@ -402,14 +402,14 @@ hl.bind(mod .. " + Y", scratchpads.toggle_anchor)
 hl.bind(mod .. " + SHIFT + P", scratchpads.toggle_anchor)
 
 -- Media Controls
-hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("~/.config/hypr/scripts/osd.sh play"))
-hl.bind("XF86AudioNext", hl.dsp.exec_cmd("~/.config/hypr/scripts/osd.sh next"))
-hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("~/.config/hypr/scripts/osd.sh prev"))
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/osd.sh play"))
+hl.bind("XF86AudioNext", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/osd.sh next"))
+hl.bind("XF86AudioPrev", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/osd.sh prev"))
 
 -- Volume & Brightness
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("~/.config/hypr/scripts/osd.sh vol-up"), { repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("~/.config/hypr/scripts/osd.sh vol-down"), { repeating = true })
-hl.bind("XF86AudioMute", hl.dsp.exec_cmd("~/.config/hypr/scripts/osd.sh vol-mute"))
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/osd.sh vol-up"), { repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/osd.sh vol-down"), { repeating = true })
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/osd.sh vol-mute"))
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set 5%+"), { repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"), { repeating = true })
 
@@ -422,25 +422,25 @@ hl.bind(mod .. " + N", hl.dsp.exec_cmd("dunstctl close"))
 hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd("dunstctl close-all"))
 
 -- Screenshot
-hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh"))
-hl.bind(mod .. " + P", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh"))
-hl.bind(mod .. " + ALT + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot-ocr.sh"))
-hl.bind(mod .. " + ALT + P", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot-ocr.sh"))
+hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot.sh"))
+hl.bind(mod .. " + P", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot.sh"))
+hl.bind(mod .. " + ALT + S", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot-ocr.sh"))
+hl.bind(mod .. " + ALT + P", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot-ocr.sh"))
 
 -- Mouse binds
 hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind(mod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- Laptop Lid Switch (Clamshell / Insomnia Mode)
-hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/lid-handler.sh close"), { locked = true })
-hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/lid-handler.sh open"), { locked = true })
+hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/lid-handler.sh close"), { locked = true })
+hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/lid-handler.sh open"), { locked = true })
 
 -- ┌─────────────────────────────────────────────────────────────┐
 -- │ 9. AUTOSTART (自動起動)                                     │
 -- └─────────────────────────────────────────────────────────────┘
 hl.on("hyprland.start", function()
     -- System tray & core utilities
-    hl.exec_cmd("waybar -c ~/.config/waybar/config-top -s ~/.config/waybar/style.css")
+    hl.exec_cmd("waybar -c " .. HOME .. "/.config/waybar/config-top -s " .. HOME .. "/.config/waybar/style.css")
     hl.exec_cmd("nm-applet --indicator")
     hl.exec_cmd("blueman-applet")
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
@@ -450,9 +450,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprpaper")
 
     -- Background utilities & daemons
-    hl.exec_cmd("python3 ~/.config/hypr/scripts/audio-guard.py")
-    hl.exec_cmd("python3 ~/.config/hypr/scripts/session-restorer.py")
-    hl.exec_cmd("env WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 python3 ~/.config/hypr/desktop-radar/app.py")
+    hl.exec_cmd("python3 " .. CONFIG_DIR .. "/scripts/audio-guard.py")
+    hl.exec_cmd("python3 " .. CONFIG_DIR .. "/scripts/session-restorer.py")
+    hl.exec_cmd("env WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 python3 " .. CONFIG_DIR .. "/desktop-radar/app.py")
 
     -- Auto-launch apps
     hl.exec_cmd("vivaldi-stable")
