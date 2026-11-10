@@ -159,6 +159,8 @@ function M.kill_and_remember()
             exec_cmd = "vesktop"
         elseif c_class == "antigravity-ide" then
             exec_cmd = "/opt/antigravity-ide/antigravity-ide"
+        elseif c_class == "antigravity" then
+            exec_cmd = "/home/kaijnav/.local/bin/antigravity"
         end
 
         local is_fs = (win.fullscreen and win.fullscreen > 0) or false
