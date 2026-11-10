@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# ══════════════════════════════════════════════════════════════════════════════
+#  TOKYO 80s TRV30 — ANTIGRAVITY LAUNCH WRAPPER
+#  東京 80s TRV30 // 耐障害性保護ラッパー
+#
+#  Protects against "Error: write EIO" caused by terminal (PTY) closures.
+#  Redirects standard output and standard error to a persistent log file.
+# ══════════════════════════════════════════════════════════════════════════════
+
+LOG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/Antigravity/logs"
+mkdir -p "$LOG_DIR"
+
+exec /opt/Antigravity/antigravity "$@" >> "$LOG_DIR/antigravity-console.log" 2>&1
