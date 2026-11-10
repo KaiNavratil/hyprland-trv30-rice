@@ -432,11 +432,13 @@ hl.bind(mod .. " + SHIFT + Backspace", hl.dsp.send_shortcut({ mods = "SHIFT", ke
 hl.bind(mod .. " + N", hl.dsp.exec_cmd("dunstctl close"))
 hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd("dunstctl close-all"))
 
--- Screenshot
-hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot.sh"))
+-- Screenshot & Text Extraction (OCR)
+hl.bind(mod .. " + S", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot.sh"))
+hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot-ocr.sh"))
 hl.bind(mod .. " + P", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot.sh"))
 hl.bind(mod .. " + ALT + S", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot-ocr.sh"))
 hl.bind(mod .. " + ALT + P", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot-ocr.sh"))
+hl.bind("Print", hl.dsp.exec_cmd(CONFIG_DIR .. "/scripts/screenshot.sh"))
 
 -- Mouse binds
 hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
