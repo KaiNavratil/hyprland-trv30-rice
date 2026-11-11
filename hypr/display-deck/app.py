@@ -139,8 +139,9 @@ class DisplayDeckWindow(Gtk.ApplicationWindow):
         self.webview.connect("load-changed", self.on_load_changed)
         self.webview.load_uri(INDEX_URI)
 
-        # Key controller for ESC and Super+G
+        # Key controller for ESC and Super+G (CAPTURE phase ensures keys aren't swallowed)
         key_ctrl = Gtk.EventControllerKey()
+        key_ctrl.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         key_ctrl.connect("key-pressed", self.on_key_pressed)
         self.add_controller(key_ctrl)
 
@@ -175,14 +176,11 @@ class DisplayDeckWindow(Gtk.ApplicationWindow):
             self.send_state_to_js()
 
     def on_key_pressed(self, controller, keyval, keycode, state):
-        if keyval in [Gdk.KEY_q, Gdk.KEY_Q]:
-            subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "display"], stdout=subprocess.DEVNULL)
+        if keyval in [Gdk.KEY_q, Gdk.KEY_Q, Gdk.KEY_Escape]:
+            subprocess.run(["hyprctl", "eval", "require('scratchpads').toggle('display')"], stdout=subprocess.DEVNULL)
             return True
         elif keyval in [Gdk.KEY_s, Gdk.KEY_S, Gdk.KEY_d, Gdk.KEY_D]:
             self.webview.evaluate_javascript("if (window.openDisplaySettings) { window.openDisplaySettings(); }", -1, None, None, None, None, None)
-            return True
-        elif keyval in [Gdk.KEY_Escape]:
-            self.webview.evaluate_javascript("if (window.handleEscape && window.handleEscape()) {} else { closeDeck(); }", -1, None, None, None, None, None)
             return True
         return False
 
@@ -215,7 +213,7 @@ class DisplayDeckWindow(Gtk.ApplicationWindow):
                 self.send_state_to_js()
 
             elif action == "close":
-                subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "display"], stdout=subprocess.DEVNULL)
+                subprocess.run(["hyprctl", "eval", "require('scratchpads').toggle('display')"], stdout=subprocess.DEVNULL)
 
             elif action == "power":
                 mode = msg.get("mode", "sleep")
@@ -265,7 +263,7 @@ class DisplayDeckWindow(Gtk.ApplicationWindow):
 
     def execute_power_action(self, mode):
         # Close the special workspace first so screen is clear
-        subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "display"], stdout=subprocess.DEVNULL)
+        subprocess.run(["hyprctl", "eval", "require('scratchpads').toggle('display')"], stdout=subprocess.DEVNULL)
 
         if mode == "sleep":
             # Sleep / Suspend (S3)

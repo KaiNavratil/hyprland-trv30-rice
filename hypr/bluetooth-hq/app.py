@@ -180,8 +180,9 @@ class BluetoothHQWindow(Gtk.ApplicationWindow):
         self.webview.connect("load-changed", self.on_load_changed)
         self.webview.load_uri(INDEX_URI)
 
-        # Key controller
+        # Key controller (CAPTURE phase ensures Escape/Q works even when WebKit has focus)
         ev_ctrl = Gtk.EventControllerKey.new()
+        ev_ctrl.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         ev_ctrl.connect("key-pressed", self.on_key_pressed)
         self.add_controller(ev_ctrl)
 
@@ -195,13 +196,13 @@ class BluetoothHQWindow(Gtk.ApplicationWindow):
             self.send_state_to_js()
 
     def on_key_pressed(self, controller, keyval, keycode, state):
-        if keyval == Gdk.KEY_Escape:
+        if keyval in (Gdk.KEY_Escape, Gdk.KEY_q, Gdk.KEY_Q):
             self.close_hq()
             return True
         return False
 
     def close_hq(self):
-        subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "bluetooth"], stdout=subprocess.DEVNULL)
+        subprocess.run(["hyprctl", "eval", "require('scratchpads').toggle('bluetooth')"], stdout=subprocess.DEVNULL)
 
     def periodic_poll(self):
         if not self.running:

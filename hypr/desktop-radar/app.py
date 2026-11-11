@@ -401,8 +401,9 @@ class RadarWindow(Gtk.ApplicationWindow):
 
         self.webview.load_uri(INDEX_URI)
 
-        # Key controller for ESC, Q, and 1-9
+        # Key controller for ESC, Q, and 1-9 (CAPTURE phase ensures keys aren't swallowed)
         key_ctrl = Gtk.EventControllerKey()
+        key_ctrl.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         key_ctrl.connect("key-pressed", self.on_key_pressed)
         self.add_controller(key_ctrl)
 
@@ -525,7 +526,7 @@ class RadarWindow(Gtk.ApplicationWindow):
                 space = msg.get("space")
                 addr = msg.get("address")
                 # Close/stow special workspace
-                subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
+                subprocess.run(["hyprctl", "eval", "require('scratchpads').toggle('radar')"], stdout=subprocess.DEVNULL)
                 if space:
                     subprocess.run(["hyprctl", "eval", f"require('spaces').switch_desktop_space({space})"], stdout=subprocess.DEVNULL)
                 if addr:
@@ -615,7 +616,7 @@ class RadarWindow(Gtk.ApplicationWindow):
                     subprocess.run(["hyprctl", "eval", f"require('scratchpads').toggle('{target}')"], stdout=subprocess.DEVNULL)
 
             elif action == "close":
-                subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
+                subprocess.run(["hyprctl", "eval", "require('scratchpads').toggle('radar')"], stdout=subprocess.DEVNULL)
 
         except Exception as e:
             sys.stderr.write(f"on_script_message error: {e}\n")
@@ -626,11 +627,11 @@ class RadarWindow(Gtk.ApplicationWindow):
             return False
 
         if keyname in ["Escape", "q", "Q"]:
-            subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
+            subprocess.run(["hyprctl", "eval", "require('scratchpads').toggle('radar')"], stdout=subprocess.DEVNULL)
             return True
         elif keyname in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]:
             space = int(keyname)
-            subprocess.run(["hyprctl", "dispatch", "togglespecialworkspace", "radar"], stdout=subprocess.DEVNULL)
+            subprocess.run(["hyprctl", "eval", "require('scratchpads').toggle('radar')"], stdout=subprocess.DEVNULL)
             subprocess.run(["hyprctl", "eval", f"require('spaces').switch_desktop_space({space})"], stdout=subprocess.DEVNULL)
             return True
         return False

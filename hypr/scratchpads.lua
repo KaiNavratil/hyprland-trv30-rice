@@ -226,6 +226,28 @@ function M.remember_state(target)
     end
 end
 
+--- Stows whatever scratchpad or special workspace is currently active (on focused or any monitor)
+function M.stow_active()
+    local cur_sp = hl.get_active_special_workspace()
+    if cur_sp and cur_sp.name and cur_sp.name:find("^special:") then
+        local sp_name = cur_sp.name:gsub("^special:", "")
+        M.toggle(sp_name)
+        return true
+    end
+
+    for _, m in ipairs(hl.get_monitors() or {}) do
+        local msp = m.active_special_workspace or m.specialWorkspace
+        local msp_name = (type(msp) == "table") and msp.name or tostring(msp or "")
+        if msp_name:find("^special:") then
+            local sp_name = msp_name:gsub("^special:", "")
+            M.toggle(sp_name)
+            return true
+        end
+    end
+
+    return false
+end
+
 --- Native scratchpad toggler
 function M.toggle(target, is_stack)
     local cur_mon = hl.get_active_monitor()
