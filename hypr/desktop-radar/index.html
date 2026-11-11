@@ -156,6 +156,8 @@
       padding: 2px 6px;
       cursor: pointer;
       font-size: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
       transition: all 0.08s;
     }
     .btn-kill:hover {
@@ -172,6 +174,8 @@
       padding: 2px 6px;
       cursor: pointer;
       font-size: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
       transition: all 0.08s;
     }
     .btn-action-sm:hover {
@@ -192,6 +196,7 @@
       color: var(--accent-audio);
       font-weight: bold;
       font-size: 11px;
+      white-space: nowrap;
     }
     .rec-dot {
       width: 7px;
@@ -201,25 +206,40 @@
       box-shadow: 0 0 6px var(--accent-audio);
     }
 
-    /* ─── TOP MASTER BAR ─── */
+    /* ─── TOP MASTER BAR (2-TIER POPUP-OPTIMIZED) ─── */
     .master-bar {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-chassis);
+      border: 1px solid var(--border-silver);
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .master-row-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: var(--bg-chassis);
-      border: 1px solid var(--border-silver);
-      padding: 4px 10px;
-      height: 34px;
-      min-height: 34px;
-      margin-bottom: 6px;
-      gap: 12px;
+      gap: 10px;
+    }
+
+    .master-row-sub {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid var(--border-dim);
+      padding-top: 5px;
     }
 
     .master-bar-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       white-space: nowrap;
+      min-width: 0;
     }
 
     .master-title {
@@ -229,29 +249,27 @@
       letter-spacing: 0.5px;
     }
 
-    .master-bar-center {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      max-width: 700px;
-    }
-
     /* Quick Spaces Jump Strip */
     .spaces-jump-strip {
       display: flex;
       align-items: center;
       gap: 4px;
+      flex: 1;
       overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .spaces-jump-strip::-webkit-scrollbar {
+      display: none;
     }
     .space-pill {
       background: var(--bg-panel);
       border: 1px solid var(--border-metal);
       color: var(--fg-dim);
-      padding: 2px 6px;
+      padding: 2px 7px;
       cursor: pointer;
       font-size: 10px;
       white-space: nowrap;
+      flex-shrink: 0;
       transition: all 0.08s;
     }
     .space-pill:hover {
@@ -272,7 +290,8 @@
       background: #000000;
       border: 1px solid var(--border-metal);
       padding: 2px 6px;
-      width: 220px;
+      width: 200px;
+      flex-shrink: 0;
     }
     .search-input-box:focus-within {
       border-color: var(--accent-amber);
@@ -283,7 +302,7 @@
       outline: none;
       color: var(--fg-main);
       width: 100%;
-      font-size: 11px;
+      font-size: 10.5px;
     }
     .search-input-box input::placeholder {
       color: var(--fg-dim);
@@ -292,12 +311,13 @@
     .master-bar-right {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .timecode {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: bold;
       color: var(--accent-amber);
       letter-spacing: 1px;
@@ -314,7 +334,7 @@
 
     .spaces-matrix-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      grid-template-columns: 1fr;
       gap: 8px;
     }
 
@@ -487,7 +507,7 @@
     /* Window Visual Viewport (Live thumb or tactile mockup) */
     .window-viewport {
       width: 100%;
-      height: 85px;
+      height: 70px;
       background: #050404;
       border: 1px solid #221e1a;
       overflow: hidden;
@@ -640,44 +660,58 @@
       align-items: center;
       justify-content: space-between;
       border-top: 1px solid #221e1a;
-      padding-top: 3px;
+      padding-top: 4px;
       gap: 4px;
+      flex-wrap: wrap;
     }
 
     .window-settings-left {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
+      flex-wrap: wrap;
     }
 
     .window-settings-right {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
+      flex-shrink: 0;
     }
 
-    /* Space Move Dropdown */
+    /* Space Move Dropdown (styled dark CRT select, never native GTK white) */
     .space-move-select {
+      -webkit-appearance: none;
+      appearance: none;
       background: #141210;
       border: 1px solid var(--border-metal);
       color: var(--accent-amber);
-      font-size: 9.5px;
-      padding: 1px 3px;
+      font-size: 10px;
+      font-family: inherit;
+      padding: 2px 6px;
       outline: none;
       cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .space-move-select:hover {
       border-color: var(--accent-amber);
+      background: #1d1814;
+    }
+    .space-move-select option {
+      background: #141210;
+      color: var(--fg-main);
     }
 
     /* ─── BOTTOM SCRATCHPAD FLEET DECK ─── */
     .bottom-deck {
       background: var(--bg-chassis);
       border: 1px solid var(--border-metal);
-      padding: 6px 10px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
+      flex-shrink: 0;
     }
 
     .bottom-deck-header {
@@ -685,24 +719,27 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-dim);
-      padding-bottom: 3px;
-      font-size: 10.5px;
+      padding-bottom: 4px;
+      font-size: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .scratchpads-fleet-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
       gap: 6px;
     }
 
     .scratchpad-card {
       background: var(--bg-panel);
       border: 1px solid var(--border-metal);
-      padding: 4px 6px;
+      padding: 5px 7px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
       cursor: pointer;
+      min-width: 0;
       transition: all 0.08s;
     }
     .scratchpad-card:hover {
@@ -719,13 +756,28 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 10px;
+      gap: 3px;
+      font-size: 8.5px;
       font-weight: bold;
       color: var(--accent-amber);
+      white-space: nowrap;
+    }
+    .scratchpad-card-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .scratchpad-chord-pill {
+      font-size: 7.5px;
+      color: var(--fg-main);
+      background: #1a1612;
+      border: 1px solid var(--border-metal);
+      padding: 0 3px;
+      flex-shrink: 0;
     }
 
     .scratchpad-title-preview {
-      font-size: 9.5px;
+      font-size: 9px;
       color: var(--fg-dim);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -736,10 +788,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 9px;
+      gap: 4px;
+      font-size: 8.5px;
       color: var(--fg-dim);
       border-top: 1px solid #1a1715;
-      padding-top: 2px;
+      padding-top: 3px;
+      white-space: nowrap;
     }
 
     /* Custom Scrollbar */
@@ -765,18 +819,38 @@
 
   <!-- ─── TOP MASTER BAR ─── -->
   <header class="master-bar">
-    <div class="master-bar-left">
-      <span class="badge-sony">SONY</span>
-      <span class="master-title" id="radar-main-title">TRV30 SPATIAL RADAR</span>
-      <span style="color: var(--accent-amber); font-size: 11px;" id="radar-sub-title">// 多画面タクティカルコンソール</span>
-      <div class="rec-indicator">
-        <span class="rec-dot"></span>
-        <span>RADAR ACTIVE</span>
+    <div class="master-row-top">
+      <div class="master-bar-left">
+        <span class="badge-sony">SONY</span>
+        <span class="master-title" id="radar-main-title">TRV30 SPATIAL RADAR</span>
+        <span style="color: var(--accent-amber); font-size: 10.5px;" id="radar-sub-title">// タクティカルコンソール</span>
+        <div class="rec-indicator">
+          <span class="rec-dot"></span>
+          <span>ACTIVE</span>
+        </div>
+      </div>
+
+      <!-- Right Telemetry & Actions -->
+      <div class="master-bar-right">
+        <div style="font-size: 10.5px;">
+          <span style="color: var(--fg-dim);">DISP:</span>
+          <span id="stat-displays-count" style="color: var(--accent-amber); font-weight: bold;">--</span>
+        </div>
+        <div style="font-size: 10.5px;">
+          <span style="color: var(--fg-dim);">SPACES:</span>
+          <span id="stat-active-spaces" style="color: var(--accent-bright); font-weight: bold;">--</span>
+        </div>
+        <div style="font-size: 10.5px;">
+          <span style="color: var(--fg-dim);">WIN:</span>
+          <span id="stat-total-wins" style="color: var(--accent-audio); font-weight: bold;">--</span>
+        </div>
+        <div class="timecode" id="hud-timecode">00:00:00:00</div>
+        <button class="btn-kill" onclick="closeRadar()">✕ CLOSE [ESC]</button>
       </div>
     </div>
 
-    <!-- Center Jump Strip & Search Filter -->
-    <div class="master-bar-center">
+    <!-- Sub Row: Quick Jump Strip & Search Filter -->
+    <div class="master-row-sub">
       <div id="spaces-jump-strip" class="spaces-jump-strip">
         <!-- Injected via JS -->
       </div>
@@ -790,24 +864,6 @@
         />
       </div>
     </div>
-
-    <!-- Right Telemetry & Actions -->
-    <div class="master-bar-right">
-      <div style="font-size: 11px;">
-        <span style="color: var(--fg-dim);">DISPLAYS:</span>
-        <span id="stat-displays-count" style="color: var(--accent-amber); font-weight: bold;">--</span>
-      </div>
-      <div style="font-size: 11px;">
-        <span style="color: var(--fg-dim);">ACTIVE SPACES:</span>
-        <span id="stat-active-spaces" style="color: var(--accent-bright); font-weight: bold;">--</span>
-      </div>
-      <div style="font-size: 11px;">
-        <span style="color: var(--fg-dim);">WINDOWS:</span>
-        <span id="stat-total-wins" style="color: var(--accent-audio); font-weight: bold;">--</span>
-      </div>
-      <div class="timecode" id="hud-timecode">00:00:00:00</div>
-      <button class="btn-kill" onclick="closeRadar()">✕ CLOSE [ESC]</button>
-    </div>
   </header>
 
   <!-- ─── MAIN MATRIX: ONLY ACTIVE SPACES ─── -->
@@ -820,14 +876,14 @@
   <!-- ─── BOTTOM SCRATCHPAD FLEET DECK ─── -->
   <footer class="bottom-deck">
     <div class="bottom-deck-header">
-      <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;">
         <span style="color: var(--accent-amber); font-weight: bold;">⚡ RESIDENT SCRATCHPAD FLEET</span>
         <span style="color: var(--fg-dim);">Click to summon / stow on current display</span>
       </div>
-      <div style="color: var(--fg-dim); font-size: 9.5px; display: flex; gap: 12px;">
-        <span>CHORDS: <b style="color: var(--accent-amber);">Super + Z / X / C / D / V / Esc</b></span>
-        <span>PANORAMIC: <b style="color: var(--accent-amber);">Super + Shift + Z / X / V / Esc</b></span>
+      <div style="color: var(--fg-dim); font-size: 9.5px; display: flex; gap: 10px; white-space: nowrap;">
+        <span>PANORAMIC: <b style="color: var(--accent-amber);">Super + Shift + Chord</b></span>
         <span>ANCHOR: <b style="color: var(--accent-bright);">Super + Y</b></span>
+        <span>STOW: <b style="color: var(--accent-amber);">Esc / Super + Esc</b></span>
       </div>
     </div>
     <div id="scratchpads-deck" class="scratchpads-fleet-grid">
@@ -876,9 +932,9 @@
       "calendar": { label: "CALENDAR", icon: "📅", chord: "Super+C" },
       "dev": { label: "DEV / IDE", icon: "💻", chord: "Super+D" },
       "notes": { label: "NOTES", icon: "📝", chord: "Super+V" },
-      "center": { label: "COCKPIT", icon: "🕹️", chord: "Super+Esc" },
+      "center": { label: "COCKPIT", icon: "🕹️", chord: "Super+=" },
       "antigravity": { label: "ANTIGRAVITY", icon: "🧠", chord: "Super+A" },
-      "display": { label: "DISPLAYS & POWER", icon: "🖥️", chord: "Super+G" }
+      "display": { label: "DISPLAYS", icon: "🖥️", chord: "Super+G" }
     };
 
     function sendNative(payload) {
@@ -1233,18 +1289,17 @@
 
         card.innerHTML = `
           <div class="scratchpad-card-top">
-            <span>${meta.icon} ${meta.label}</span>
-            ${isAnchored ? '<span style="color: var(--accent-bright); font-size: 8.5px;">📌 PIN</span>' : ''}
+            <span class="scratchpad-card-label">${meta.icon} ${meta.label}</span>
+            <span class="scratchpad-chord-pill">${meta.chord}</span>
           </div>
           <div class="scratchpad-title-preview" title="${firstTitle}">
-            ${firstTitle}
+            ${isAnchored ? '📌 ' : ''}${firstTitle}
           </div>
           <div class="scratchpad-status-row">
             <span style="color: ${onMonitor ? 'var(--accent-bright)' : 'var(--fg-dim)'}; font-weight: ${onMonitor ? 'bold' : 'normal'};">
               ${onMonitor ? `ON: ${onMonitor}` : 'STOWED'}
             </span>
-            ${spCpu !== null ? `<span class="scratchpad-metric-tag">⚡${spCpu}% 💾${spMem}</span>` : ''}
-            <span style="color: var(--accent-amber);">${meta.chord}</span>
+            ${spCpu !== null ? `<span class="scratchpad-metric-tag">${spCpu}% · ${spMem}</span>` : '<span style="opacity: 0.45;">IDLE</span>'}
           </div>
         `;
         spDeck.appendChild(card);
@@ -1364,7 +1419,7 @@
           <div class="window-settings-right">
             <!-- Move To Space Selector -->
             <select class="space-move-select" onchange="if(this.value) { moveWindowToSpace('${w.address}', ${currentWs}, this.value); this.value=''; }" title="Move window to another space">
-              <option value="">⇄ MOVE...</option>
+              <option value="">⇄ MOVE ▾</option>
               <option value="1">SPACE 1</option>
               <option value="2">SPACE 2</option>
               <option value="3">SPACE 3</option>

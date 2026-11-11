@@ -52,13 +52,13 @@
     }
 
     .container {
-      max-width: 1020px;
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 16px 20px;
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 12px;
       position: relative;
       z-index: 1;
     }
@@ -69,7 +69,8 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--card-border);
-      padding-bottom: 14px;
+      padding-bottom: 10px;
+      gap: 12px;
     }
 
     .osd-brand {
@@ -119,7 +120,9 @@
     .osd-actions {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .telemetry-tag {
@@ -152,23 +155,24 @@
     /* Master Action Controls */
     .master-bar {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
     }
 
     .cmd-btn {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       color: var(--text-main);
-      padding: 14px 16px;
+      padding: 10px 12px;
       border-radius: 6px;
       font-family: inherit;
       cursor: pointer;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       transition: all 0.2s ease;
       text-align: left;
+      min-width: 0;
     }
 
     .cmd-btn:hover {
@@ -231,10 +235,10 @@
       border: 1px solid var(--amber);
       box-shadow: 0 0 20px rgba(242, 165, 51, 0.15), inset 0 0 15px rgba(242, 165, 51, 0.05);
       border-radius: 8px;
-      padding: 20px 24px;
+      padding: 14px 18px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
     }
 
     .hero-top {
@@ -297,12 +301,12 @@
 
     .hero-telemetry-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
       background: rgba(0, 0, 0, 0.35);
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 6px;
-      padding: 12px 16px;
+      padding: 10px 14px;
     }
 
     .telemetry-item {
@@ -348,23 +352,26 @@
 
     .hero-actions-row {
       display: flex;
-      gap: 12px;
-      margin-top: 4px;
+      gap: 10px;
+      margin-top: 2px;
+      flex-wrap: wrap;
     }
 
     .hero-main-btn {
-      flex: 2;
-      padding: 14px 20px;
+      flex: 1.5;
+      min-width: 180px;
+      padding: 11px 16px;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
       border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
+      white-space: nowrap;
       transition: all 0.2s ease;
     }
 
@@ -394,11 +401,13 @@
 
     .hero-sub-btn {
       flex: 1;
+      min-width: 150px;
+      padding: 11px 12px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--card-border);
       color: var(--text-main);
       font-family: inherit;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
       border-radius: 6px;
       cursor: pointer;
@@ -407,6 +416,7 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+      white-space: nowrap;
     }
 
     .hero-sub-btn:hover {
@@ -436,18 +446,18 @@
 
     .device-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 10px;
     }
 
     .dev-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 6px;
-      padding: 14px 16px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       transition: all 0.2s ease;
     }
 
@@ -486,13 +496,14 @@
 
     .action-btn {
       flex: 1;
-      padding: 8px 10px;
+      padding: 7px 9px;
       font-family: inherit;
       font-size: 11px;
       font-weight: 700;
       border-radius: 4px;
       cursor: pointer;
       text-align: center;
+      white-space: nowrap;
       transition: all 0.15s ease;
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -531,22 +542,25 @@
       background: rgba(14, 13, 12, 0.7);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 6px;
-      padding: 12px 18px;
+      padding: 9px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
+      font-size: 10.5px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .diag-item {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      white-space: nowrap;
     }
 
     .diag-label {
       color: var(--text-muted);
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
     }
 
     .diag-val {
@@ -557,17 +571,21 @@
     /* Footer Guide */
     .footer-osd {
       border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 12px;
+      padding-top: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
+      font-size: 10.5px;
       color: var(--text-muted);
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .hotkey-list {
       display: flex;
-      gap: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+      white-space: nowrap;
     }
 
     .hotkey {
@@ -710,12 +728,12 @@
     <!-- Footer OSD -->
     <footer class="footer-osd">
       <div class="hotkey-list">
-        <span><span class="hotkey">Super + B</span> Toggle HQ</span>
-        <span><span class="hotkey">Super + Shift + B</span> Connect / Disconnect Usual</span>
-        <span><span class="hotkey">Super + H</span> Audio Profile Switch</span>
+        <span><span class="hotkey">Super+B</span> Toggle</span>
+        <span><span class="hotkey">Super+Shift+B</span> Quick Usual</span>
+        <span><span class="hotkey">Super+H</span> Hi-Fi/Call</span>
         <span><span class="hotkey">ESC</span> Stow</span>
       </div>
-      <div>TOKYO 80s TRV30 CAMCORDER RICE</div>
+      <div style="white-space: nowrap;">TRV30 WIRELESS HQ</div>
     </footer>
   </div>
 

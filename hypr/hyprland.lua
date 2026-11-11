@@ -207,7 +207,7 @@ hl.window_rule({
     workspace = "special:radar silent",
     float = true,
     center = true,
-    size = "78% 82%",
+    size = "82% 84%",
 })
 
 hl.window_rule({
@@ -223,7 +223,7 @@ hl.window_rule({
     workspace = "special:bluetooth silent",
     float = true,
     center = true,
-    size = "64% 72%",
+    size = "68% 76%",
 })
 
 hl.window_rule({
