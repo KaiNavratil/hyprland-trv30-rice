@@ -643,12 +643,12 @@ end
 --- Sets up native scratchpad hooks
 function M.setup()
     hl.on("workspace.active", function()
-        M.update_active_scratchpad()
+        pcall(M.update_active_scratchpad)
     end)
     hl.on("window.active", function()
-        M.update_active_scratchpad()
+        pcall(M.update_active_scratchpad)
     end)
-    M.update_active_scratchpad()
+    pcall(M.update_active_scratchpad)
 end
 
 return M

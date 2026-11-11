@@ -282,47 +282,53 @@ end
 function M.setup()
     -- Smart Split & Scratchpad Guard on window events
     hl.on("window.open", function(win)
-        M.update_smart_split()
-        if win then
-            local ws_name = win.workspace and win.workspace.name
-            if ws_name and ws_name:find("^special:") and ws_name ~= "special:magic" and ws_name ~= "special:dev" and ws_name ~= "special:antigravity" and ws_name ~= "special:center" and ws_name ~= "special:radar" and ws_name ~= "special:display" and ws_name ~= "special:bluetooth" then
-                if win.fullscreen and win.fullscreen > 0 then
-                    hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
-                    hl.dispatch(hl.dsp.window.fullscreen())
+        pcall(function()
+            M.update_smart_split()
+            if win then
+                local ws_name = win.workspace and win.workspace.name
+                if ws_name and ws_name:find("^special:") and ws_name ~= "special:magic" and ws_name ~= "special:dev" and ws_name ~= "special:antigravity" and ws_name ~= "special:center" and ws_name ~= "special:radar" and ws_name ~= "special:display" and ws_name ~= "special:bluetooth" then
+                    if win.fullscreen and win.fullscreen > 0 then
+                        hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
+                        hl.dispatch(hl.dsp.window.fullscreen())
+                    end
+                    if win.floating then
+                        hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
+                        hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+                    end
                 end
-                if win.floating then
-                    hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
-                    hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
-                end
+                M.check_scratchpad_guard(win)
             end
-            M.check_scratchpad_guard(win)
-        end
+        end)
     end)
-    hl.on("window.close", M.update_smart_split)
+    hl.on("window.close", function() pcall(M.update_smart_split) end)
     hl.on("workspace.active", function()
-        M.update_smart_split()
-        M.update_cinema_cursor()
+        pcall(function()
+            M.update_smart_split()
+            M.update_cinema_cursor()
+        end)
     end)
 
     -- Cinema Cursor Hooks
-    hl.on("window.fullscreen", M.update_cinema_cursor)
-    hl.on("window.active", M.update_cinema_cursor)
+    hl.on("window.fullscreen", function() pcall(M.update_cinema_cursor) end)
+    hl.on("window.active", function() pcall(M.update_cinema_cursor) end)
 
     -- Scratchpad Guard Hook
     hl.on("window.move_to_workspace", function(win, ws)
-        if win and ws then
-            if ws.name and ws.name:find("^special:") and ws.name ~= "special:magic" and ws.name ~= "special:dev" and ws.name ~= "special:antigravity" and ws.name ~= "special:center" and ws.name ~= "special:radar" and ws.name ~= "special:display" and ws.name ~= "special:bluetooth" then
-                if win.fullscreen and win.fullscreen > 0 then
-                    hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
-                    hl.dispatch(hl.dsp.window.fullscreen())
+        pcall(function()
+            if win and ws then
+                if ws.name and ws.name:find("^special:") and ws.name ~= "special:magic" and ws.name ~= "special:dev" and ws.name ~= "special:antigravity" and ws.name ~= "special:center" and ws.name ~= "special:radar" and ws.name ~= "special:display" and ws.name ~= "special:bluetooth" then
+                    if win.fullscreen and win.fullscreen > 0 then
+                        hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
+                        hl.dispatch(hl.dsp.window.fullscreen())
+                    end
+                    if win.floating then
+                        hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
+                        hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+                    end
                 end
-                if win.floating then
-                    hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
-                    hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
-                end
+                M.check_scratchpad_guard(win, ws.name)
             end
-            M.check_scratchpad_guard(win, ws.name)
-        end
+        end)
     end)
 end
 

@@ -81,13 +81,20 @@ local GENERIC_TITLES = {
     ["authentication required"] = true,
 }
 
+local function clean_title_key(t)
+    if not t or type(t) ~= "string" then return nil end
+    local s = t:gsub("\\+", ""):gsub('"', ""):gsub("[%c]", " "):match("^%s*(.-)%s*$")
+    if not s or #s == 0 or #s > 120 then return nil end
+    return s
+end
+
 local function is_generic_title(t)
-    if not t or #t == 0 then return true end
-    local clean = t:lower():match("^%s*(.-)%s*$")
+    local clean = clean_title_key(t)
     if not clean or #clean == 0 then return true end
-    if GENERIC_TITLES[clean] then return true end
-    if clean:find("^new tab") or clean == "vivaldi" then return true end
-    if clean:find("^open file") or clean:find("^save file") or clean:find("^select ") or clean:find("^choose ") then return true end
+    local lower = clean:lower()
+    if GENERIC_TITLES[lower] then return true end
+    if lower:find("^new tab") or lower == "vivaldi" then return true end
+    if lower:find("^open file") or lower:find("^save file") or lower:find("^select ") or lower:find("^choose ") then return true end
     return false
 end
 
@@ -98,8 +105,14 @@ function M.load_workspaces_map()
     if not f then return end
     local content = f:read("*a")
     f:close()
-    for k, v in content:gmatch('"([^"]+)"%s*:%s*"([^"]+)"') do
-        M._ws_map[k] = v
+    if not content or #content > 500000 then return end
+
+    for k, v in content:gmatch('"([^"\r\n]+)"%s*:%s*"([^"\r\n]+)"') do
+        local clean_k = clean_title_key(k)
+        local clean_v = v:match("^%d+$")
+        if clean_k and clean_v and not is_generic_title(clean_k) then
+            M._ws_map[clean_k] = clean_v
+        end
     end
 end
 
@@ -108,7 +121,11 @@ function M.save_workspaces_map()
     if not M._ws_map then return end
     local entries = {}
     for k, v in pairs(M._ws_map) do
-        table.insert(entries, string.format('  %q: %q', k, v))
+        local clean_k = clean_title_key(k)
+        local clean_v = tostring(v):match("^%d+$")
+        if clean_k and clean_v and not is_generic_title(clean_k) then
+            table.insert(entries, string.format('  "%s": "%s"', clean_k, clean_v))
+        end
     end
     table.sort(entries)
     local json_str = "{\n" .. table.concat(entries, ",\n") .. "\n}\n"
@@ -130,8 +147,8 @@ function M.route_window(win)
     -- Never re-route a window that was already routed in this session
     if M._routed[addr] then return end
 
-    local title = win.title
-    if is_generic_title(title) then return end
+    local title = clean_title_key(win.title)
+    if not title or is_generic_title(title) then return end
 
     local cur_ws = win.workspace and win.workspace.name
     if not cur_ws or cur_ws:find("^special:") then return end
@@ -158,10 +175,10 @@ end
 function M.track_window(win)
     if not win or not win.title or not win.workspace then return end
     if is_utility_window(win) then return end
-    local ws = win.workspace.name
+    local ws = type(win.workspace) == "table" and win.workspace.name or (win.workspace.name or tostring(win.workspace))
     if not ws or ws:find("^special:") or not ws:match("^%d+$") then return end
-    local title = win.title
-    if is_generic_title(title) then return end
+    local title = clean_title_key(win.title)
+    if not title or is_generic_title(title) then return end
 
     if not M._ws_map then M.load_workspaces_map() end
     if M._ws_map[title] ~= ws then
@@ -491,40 +508,46 @@ function M.setup()
 
     -- Automatic window routing & title learning hooks
     hl.on("window.open", function(win)
-        if win and win.address and not is_utility_window(win) then
-            M._newly_opened[win.address] = os.time()
-            M.route_window(win)
-        end
-        M.sync_desktop_spaces()
+        pcall(function()
+            if win and win.address and not is_utility_window(win) then
+                M._newly_opened[win.address] = os.time()
+                M.route_window(win)
+            end
+            M.sync_desktop_spaces()
+        end)
     end)
 
     hl.on("window.title", function(win)
-        if win and win.address and not is_utility_window(win) then
-            if not M._routed[win.address] then
-                M.route_window(win)
-            else
-                M.track_window(win)
+        pcall(function()
+            if win and win.address and not is_utility_window(win) then
+                if not M._routed[win.address] then
+                    M.route_window(win)
+                end
             end
-        end
+        end)
     end)
 
     hl.on("window.move_to_workspace", function(win, ws)
-        if win and ws then
-            M._routed[win.address] = true
-            if not is_utility_window(win) then
-                local fake_win = { title = win.title, workspace = ws, class = win.class, floating = win.floating }
-                M.track_window(fake_win)
+        pcall(function()
+            if win and ws then
+                M._routed[win.address] = true
+                if not is_utility_window(win) then
+                    local fake_win = { title = win.title, workspace = ws, class = win.class, floating = win.floating }
+                    M.track_window(fake_win)
+                end
             end
-        end
-        M.sync_desktop_spaces()
+            M.sync_desktop_spaces()
+        end)
     end)
 
     hl.on("window.close", function(win)
-        if win and win.address then
-            M._routed[win.address] = nil
-            M._newly_opened[win.address] = nil
-        end
-        M.sync_desktop_spaces()
+        pcall(function()
+            if win and win.address then
+                M._routed[win.address] = nil
+                M._newly_opened[win.address] = nil
+            end
+            M.sync_desktop_spaces()
+        end)
     end)
 
     hl.on("monitor.layout_changed", function()
