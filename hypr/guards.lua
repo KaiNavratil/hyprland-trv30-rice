@@ -18,6 +18,7 @@ local ALLOWED_SCRATCHPADS = {
     ["special:center"] = { "commandcenter", "command-center", "com.tokyo.commandcenter", "center" },
     ["special:radar"] = { "com.tokyo.radar", "trv30-radar", "desktop-radar", "radar" },
     ["special:display"] = { "com.tokyo.displaydeck", "displaydeck", "display-deck", "display" },
+    ["special:bluetooth"] = { "com.tokyo.bluetoothhq", "bluetoothhq", "bluetooth-hq" },
     ["special:cava"] = { "trv30-cava", "cava" },
     ["special:sysmon"] = { "trv30-btop", "btop" },
 }
@@ -284,7 +285,7 @@ function M.setup()
         M.update_smart_split()
         if win then
             local ws_name = win.workspace and win.workspace.name
-            if ws_name and ws_name:find("^special:") and ws_name ~= "special:magic" and ws_name ~= "special:dev" and ws_name ~= "special:antigravity" and ws_name ~= "special:center" and ws_name ~= "special:radar" and ws_name ~= "special:display" then
+            if ws_name and ws_name:find("^special:") and ws_name ~= "special:magic" and ws_name ~= "special:dev" and ws_name ~= "special:antigravity" and ws_name ~= "special:center" and ws_name ~= "special:radar" and ws_name ~= "special:display" and ws_name ~= "special:bluetooth" then
                 if win.fullscreen and win.fullscreen > 0 then
                     hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
                     hl.dispatch(hl.dsp.window.fullscreen())
@@ -310,7 +311,7 @@ function M.setup()
     -- Scratchpad Guard Hook
     hl.on("window.move_to_workspace", function(win, ws)
         if win and ws then
-            if ws.name and ws.name:find("^special:") and ws.name ~= "special:magic" and ws.name ~= "special:dev" and ws.name ~= "special:antigravity" and ws.name ~= "special:center" and ws.name ~= "special:radar" and ws.name ~= "special:display" then
+            if ws.name and ws.name:find("^special:") and ws.name ~= "special:magic" and ws.name ~= "special:dev" and ws.name ~= "special:antigravity" and ws.name ~= "special:center" and ws.name ~= "special:radar" and ws.name ~= "special:display" and ws.name ~= "special:bluetooth" then
                 if win.fullscreen and win.fullscreen > 0 then
                     hl.dispatch(hl.dsp.focus({ window = "address:" .. win.address }))
                     hl.dispatch(hl.dsp.window.fullscreen())

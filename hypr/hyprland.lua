@@ -365,7 +365,6 @@ hl.bind(mod .. " + SHIFT + bracketright", hl.dsp.window.move({ monitor = "+1" })
 
 -- Master Layout
 hl.bind(mod .. " + SHIFT + H", hl.dsp.layout("swapwithmaster master"))
-hl.bind(mod .. " + SHIFT + L", hl.dsp.layout("rollnext"))
 
 -- Workspaces (Native C++/Lua Desktop Space Engine)
 for i = 1, 9 do
