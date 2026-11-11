@@ -471,25 +471,27 @@ function M.setup()
 
     -- Periodic in-memory space persistence & auto-healing (every 4 seconds)
     hl.timer(function()
-        M.sync_desktop_spaces()
-        M.save_session()
+        pcall(function()
+            M.sync_desktop_spaces()
+            M.save_session()
 
-        -- Auto-heal any bilateral desync across dual monitors
-        local mons = hl.get_monitors() or {}
-        if #mons > 1 and not is_syncing then
-            table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
-            local m1_ws = mons[1].active_workspace and tonumber(mons[1].active_workspace.name)
-            local m2_ws = mons[2].active_workspace and tonumber(mons[2].active_workspace.name)
-            if m1_ws and m2_ws then
-                local sp1 = ((m1_ws - 1) % 10) + 1
-                local sp2 = ((m2_ws - 1) % 10) + 1
-                if sp1 ~= sp2 then
-                    local focused = hl.get_active_monitor()
-                    local heal_space = (focused and focused.name == mons[2].name) and sp2 or sp1
-                    M.switch_desktop_space(heal_space)
+            -- Auto-heal any bilateral desync across dual monitors
+            local mons = hl.get_monitors() or {}
+            if #mons > 1 and not is_syncing then
+                table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
+                local m1_ws = mons[1].active_workspace and tonumber(mons[1].active_workspace.name)
+                local m2_ws = mons[2].active_workspace and tonumber(mons[2].active_workspace.name)
+                if m1_ws and m2_ws then
+                    local sp1 = ((m1_ws - 1) % 10) + 1
+                    local sp2 = ((m2_ws - 1) % 10) + 1
+                    if sp1 ~= sp2 then
+                        local focused = hl.get_active_monitor()
+                        local heal_space = (focused and focused.name == mons[2].name) and sp2 or sp1
+                        M.switch_desktop_space(heal_space)
+                    end
                 end
             end
-        end
+        end)
     end, { timeout = 4000, type = "repeat" })
 
     -- Enforce automatic bilateral sync on workspace activation (debounced to prevent hotplug races)

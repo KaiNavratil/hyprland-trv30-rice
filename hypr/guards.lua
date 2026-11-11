@@ -98,37 +98,39 @@ function M.check_scratchpad_guard(win, target_ws_name)
     if not is_allowed then
         -- Delay eviction by 600ms to allow apps (like kitty notes-term, vivaldi calendar) to set their title/class
         hl.timer(function()
-            local cur_win = nil
-            for _, w in ipairs(hl.get_windows() or {}) do
-                if w.address == win.address then
-                    cur_win = w
-                    break
+            pcall(function()
+                local cur_win = nil
+                for _, w in ipairs(hl.get_windows() or {}) do
+                    if w.address == win.address then
+                        cur_win = w
+                        break
+                    end
                 end
-            end
-            if not cur_win or cur_win.floating then return end
-            local cur_ws = cur_win.workspace and cur_win.workspace.name
-            if not cur_ws or not cur_ws:find("^special:") then return end
+                if not cur_win or cur_win.floating then return end
+                local cur_ws = cur_win.workspace and cur_win.workspace.name
+                if not cur_ws or not cur_ws:find("^special:") then return end
 
-            local cur_c = cur_win.class and cur_win.class:lower() or ""
-            local cur_t = cur_win.title and cur_win.title:lower() or ""
-            local still_allowed = false
-            for _, a in ipairs(allowed) do
-                if cur_c:find(a:lower(), 1, true) or cur_t:find(a:lower(), 1, true) then
-                    still_allowed = true
-                    break
+                local cur_c = cur_win.class and cur_win.class:lower() or ""
+                local cur_t = cur_win.title and cur_win.title:lower() or ""
+                local still_allowed = false
+                for _, a in ipairs(allowed) do
+                    if cur_c:find(a:lower(), 1, true) or cur_t:find(a:lower(), 1, true) then
+                        still_allowed = true
+                        break
+                    end
                 end
-            end
 
-            if not still_allowed then
-                local mon = hl.get_active_monitor()
-                local dest = mon and mon.active_workspace and mon.active_workspace.name or "1"
-                if dest:find("^special:") then dest = "1" end
-                hl.dispatch(hl.dsp.window.move({
-                    workspace = dest,
-                    window = "address:" .. cur_win.address,
-                    silent = true
-                }))
-            end
+                if not still_allowed then
+                    local mon = hl.get_active_monitor()
+                    local dest = mon and mon.active_workspace and mon.active_workspace.name or "1"
+                    if dest:find("^special:") then dest = "1" end
+                    hl.dispatch(hl.dsp.window.move({
+                        workspace = dest,
+                        window = "address:" .. cur_win.address,
+                        silent = true
+                    }))
+                end
+            end)
         end, { timeout = 600, type = "oneshot" })
     end
 end
@@ -247,16 +249,18 @@ function M.reopen_last()
 
     if target.fullscreen then
         hl.timer(function()
-            for _, w in ipairs(hl.get_windows() or {}) do
-                local c = w.class or ""
-                if c == target.class or (target.class:find("vivaldi%-localhost") and c:find("vivaldi%-localhost")) then
-                    if not (w.fullscreen and w.fullscreen > 0) then
-                        hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
-                        hl.dispatch(hl.dsp.window.fullscreen())
+            pcall(function()
+                for _, w in ipairs(hl.get_windows() or {}) do
+                    local c = w.class or ""
+                    if c == target.class or (target.class:find("vivaldi%-localhost") and c:find("vivaldi%-localhost")) then
+                        if not (w.fullscreen and w.fullscreen > 0) then
+                            hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                            hl.dispatch(hl.dsp.window.fullscreen())
+                        end
+                        break
                     end
-                    break
                 end
-            end
+            end)
         end, { timeout = 400, type = "oneshot" })
     end
 

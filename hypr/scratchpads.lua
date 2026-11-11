@@ -12,7 +12,7 @@ M._last_focused = {}
 local function set_timeout(fn, ms)
     local t
     t = hl.timer(function()
-        fn()
+        pcall(fn)
         for i, val in ipairs(M._timers) do
             if val == t then
                 table.remove(M._timers, i)
@@ -181,26 +181,13 @@ end
 
 --- Updates atomic state file for Waybar and external scripts (0 hyprctl overhead)
 function M.update_active_scratchpad(override_name)
-    local active_name = override_name
-    if not active_name then
-        local sp = hl.get_active_special_workspace()
-        active_name = (sp and sp.name and sp.name:find("^special:")) and sp.name:gsub("^special:", "") or ""
-
-        if active_name == "" then
-            local mons = hl.get_monitors() or {}
-            for _, m in ipairs(mons) do
-                local msp = m.active_special_workspace or m.specialWorkspace
-                local msp_name = ""
-                if type(msp) == "table" then
-                    msp_name = msp.name or ""
-                elseif type(msp) == "string" then
-                    msp_name = msp
-                end
-                if msp_name:find("^special:") then
-                    active_name = msp_name:gsub("^special:", "")
-                    break
-                end
-            end
+    local active_name = ""
+    if type(override_name) == "string" then
+        active_name = override_name
+    else
+        local ok, sp = pcall(hl.get_active_special_workspace)
+        if ok and sp and sp.name and type(sp.name) == "string" and sp.name:find("^special:") then
+            active_name = sp.name:gsub("^special:", "")
         end
     end
 
