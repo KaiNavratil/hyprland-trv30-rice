@@ -360,7 +360,7 @@ def get_radar_state():
 class RadarWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title="Tokyo Space Radar")
-        self.set_default_size(1500, 920)
+        self.set_default_size(1100, 700)
         self.running = True
         self.is_visible = False
         self.dirty = True

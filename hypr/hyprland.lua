@@ -142,9 +142,9 @@ hl.workspace_rule({ workspace = "special:discord", gaps_out = 60 })
 hl.workspace_rule({ workspace = "special:notes", gaps_out = 60, gaps_in = 4 })
 hl.workspace_rule({ workspace = "special:calendar", gaps_out = 60 })
 hl.workspace_rule({ workspace = "special:center", gaps_out = 0, gaps_in = 0, no_border = true })
-hl.workspace_rule({ workspace = "special:radar", gaps_out = 0, gaps_in = 0, no_border = true })
+hl.workspace_rule({ workspace = "special:radar", gaps_out = 0, gaps_in = 0 })
 hl.workspace_rule({ workspace = "special:display", gaps_out = 0, gaps_in = 0, no_border = true })
-hl.workspace_rule({ workspace = "special:bluetooth", gaps_out = 0, gaps_in = 0, no_border = true })
+hl.workspace_rule({ workspace = "special:bluetooth", gaps_out = 0, gaps_in = 0 })
 hl.workspace_rule({ workspace = "special:antigravity", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:dev", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:cava", gaps_out = 60, monitor = "eDP-1" })
@@ -205,7 +205,9 @@ hl.window_rule({
     name = "workspace_special_radar",
     match = { class = "^(com\\.tokyo\\.radar)$" },
     workspace = "special:radar silent",
-    tile = true,
+    float = true,
+    center = true,
+    size = "78% 82%",
 })
 
 hl.window_rule({
@@ -219,7 +221,9 @@ hl.window_rule({
     name = "workspace_special_bluetooth",
     match = { class = "^(com\\.tokyo\\.bluetoothhq)$" },
     workspace = "special:bluetooth silent",
-    tile = true,
+    float = true,
+    center = true,
+    size = "64% 72%",
 })
 
 hl.window_rule({

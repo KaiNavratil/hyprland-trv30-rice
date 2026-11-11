@@ -156,7 +156,7 @@ def get_bluetooth_state():
 class BluetoothHQWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title="TRV30 Bluetooth Headquarters")
-        self.set_default_size(1080, 720)
+        self.set_default_size(920, 620)
         self.running = True
 
         # WebKit Settings

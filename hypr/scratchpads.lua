@@ -85,9 +85,10 @@ local SCRATCHPAD_CONFIG = {
         name = "radar",
         class_pattern = "com%.tokyo%.radar|trv30%-radar|desktop%-radar|radar",
         cmd = "env WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 python3 " .. HOME .. "/.config/hypr/desktop-radar/app.py",
+        floating = true,
         gaps_out = 0,
         gaps_in = 0,
-        no_border = true,
+        no_border = false,
     },
     display = {
         name = "display",
@@ -101,9 +102,10 @@ local SCRATCHPAD_CONFIG = {
         name = "bluetooth",
         class_pattern = "com%.tokyo%.bluetoothhq|bluetoothhq|bluetooth%-hq",
         cmd = "env WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 python3 " .. HOME .. "/.config/hypr/bluetooth-hq/app.py",
+        floating = true,
         gaps_out = 0,
         gaps_in = 0,
-        no_border = true,
+        no_border = false,
     },
     antigravity = {
         name = "antigravity",
@@ -462,8 +464,8 @@ function M.toggle(target, is_stack)
 
                 -- Check fullscreen status
                 if w.fullscreen and w.fullscreen > 0 then
-                    if cfg.gaps_out > 0 then
-                        -- For modal HUD scratchpads (music, discord, calendar, notes), enforce un-fullscreen
+                    if cfg.gaps_out > 0 or cfg.floating then
+                        -- For modal HUD scratchpads / popups, enforce un-fullscreen
                         hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
                         hl.dispatch(hl.dsp.window.fullscreen())
                     else
@@ -484,9 +486,17 @@ function M.toggle(target, is_stack)
                     notes_term_win = w
                 end
 
-                if w.floating then
-                    hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
-                    hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+                if cfg.floating then
+                    if not w.floating then
+                        hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                        hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+                    end
+                    hl.dispatch(hl.dsp.window.center({ window = "address:" .. w.address }))
+                else
+                    if w.floating then
+                        hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                        hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+                    end
                 end
 
                 local hid = tonumber(w.focusHistoryID) or 999999
