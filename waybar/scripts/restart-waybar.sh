@@ -1,13 +1,28 @@
-#!/bin/bash
-# Cleanly kill all waybar instances
-killall waybar
-sleep 0.5
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════
+#  WAYBAR RESTART SCRIPT (TRV30 Phosphor Theme)
+#  Kills any stuck Waybar instances and cleanly reloads
+# ═══════════════════════════════════════════════════════════
 
-# Restart the top bar
-nohup waybar -c ~/.config/waybar/config-top -s ~/.config/waybar/style.css >/dev/null 2>&1 &
+set -euo pipefail
+
+# Gracefully terminate waybar
+pkill -x waybar 2>/dev/null || killall -q waybar 2>/dev/null || true
+sleep 0.2
+
+# Force kill if still lingering
+if pgrep -x waybar >/dev/null 2>&1; then
+    pkill -9 -x waybar 2>/dev/null || true
+    sleep 0.1
+fi
+
+# Relaunch waybar with top configuration
+nohup waybar -c "$HOME/.config/waybar/config-top" -s "$HOME/.config/waybar/style.css" >/dev/null 2>&1 &
 disown
 
-
-
-# Restart the background scanlines (optional visual effect)
-# waybar -c ~/.config/waybar/config-scanlines -s ~/.config/waybar/style-scanlines.css &
+# Notify user of successful restart
+if command -v dunstify >/dev/null 2>&1; then
+    dunstify -u normal -t 2000 -r 8888 "⚡ WAYBAR RESET" "システムバー再起動 — Waybar reloaded cleanly"
+elif command -v notify-send >/dev/null 2>&1; then
+    notify-send -t 2000 "⚡ WAYBAR RESET" "システムバー再起動 — Waybar reloaded cleanly"
+fi
