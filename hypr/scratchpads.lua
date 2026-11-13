@@ -24,6 +24,17 @@ local function set_timeout(fn, ms)
     return t
 end
 
+local function match_class(c_class, pattern)
+    if not c_class or not pattern then return false end
+    c_class = c_class:lower()
+    for subpat in pattern:gmatch("[^|]+") do
+        if c_class:match(subpat) then
+            return true
+        end
+    end
+    return false
+end
+
 local SCRATCHPAD_CONFIG = {
     music = {
         name = "music",
@@ -59,8 +70,8 @@ local SCRATCHPAD_CONFIG = {
     },
     dev = {
         name = "dev",
-        class_pattern = "antigravity%-ide|antigravity|vivaldi%-localhost",
-        cmd = "/opt/antigravity-ide/antigravity-ide",
+        class_pattern = "^antigravity%-ide$|vivaldi%-localhost",
+        cmd = "/usr/bin/antigravity-ide",
         gaps_out = 0,
         gaps_in = 0,
         no_border = true,
@@ -109,7 +120,7 @@ local SCRATCHPAD_CONFIG = {
     },
     antigravity = {
         name = "antigravity",
-        class_pattern = "antigravity",
+        class_pattern = "^antigravity$",
         cmd = "/home/kaijnav/.local/bin/antigravity",
         gaps_out = 0,
         gaps_in = 0,
@@ -339,8 +350,8 @@ function M.toggle(target, is_stack)
         local ide_found = false
         local browser_found = false
         for _, w in ipairs(wins) do
-            local c_class = w.class or ""
-            if c_class == "antigravity-ide" or c_class:find("antigravity%-ide") then
+            local c_class = (w.class or ""):lower()
+            if c_class == "antigravity-ide" or c_class:find("^antigravity%-ide") then
                 ide_found = true
                 if not (w.workspace and w.workspace.name == target_special) then
                     hl.dispatch(hl.dsp.window.move({
@@ -362,7 +373,7 @@ function M.toggle(target, is_stack)
         end
 
         if not ide_found then
-            hl.exec_cmd("/opt/antigravity-ide/antigravity-ide")
+            hl.exec_cmd("/usr/bin/antigravity-ide")
         end
         if not browser_found then
             hl.exec_cmd("vivaldi-stable --app=http://localhost:3000")
@@ -419,7 +430,7 @@ function M.toggle(target, is_stack)
                 break
             elseif target ~= "magic" and cfg.class_pattern and not candidate_win then
                 local c_class = w.class or ""
-                if c_class:lower():match(cfg.class_pattern) then
+                if match_class(c_class, cfg.class_pattern) then
                     candidate_win = w
                 end
             end

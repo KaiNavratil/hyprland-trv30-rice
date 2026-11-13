@@ -14,7 +14,7 @@ local ALLOWED_SCRATCHPADS = {
     ["special:calendar"] = { "vivaldi-calendar", "notion" },
     ["special:magic"] = { "*" },
     ["special:antigravity"] = { "antigravity" },
-    ["special:dev"] = { "antigravity-ide", "antigravity", "vivaldi" },
+    ["special:dev"] = { "antigravity-ide", "vivaldi" },
     ["special:center"] = { "commandcenter", "command-center", "com.tokyo.commandcenter", "center" },
     ["special:radar"] = { "com.tokyo.radar", "trv30-radar", "desktop-radar", "radar" },
     ["special:display"] = { "com.tokyo.displaydeck", "displaydeck", "display-deck", "display" },
@@ -76,6 +76,27 @@ function M.update_cinema_cursor()
     end
 end
 
+local function is_win_allowed_in_sp(c_class, c_title, allowed_list)
+    for _, a in ipairs(allowed_list) do
+        if a == "antigravity" then
+            -- Strict check: Antigravity 2 must be exact "antigravity", never "antigravity-ide"
+            if c_class == "antigravity" then
+                return true
+            end
+        elseif a == "antigravity-ide" then
+            -- Strict check: Antigravity IDE
+            if c_class == "antigravity-ide" or c_class:find("^antigravity%-ide") then
+                return true
+            end
+        else
+            if c_class:find(a:lower(), 1, true) or c_title:find(a:lower(), 1, true) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 --- Scratchpad Guard: Prevents accidental window intrusion into modal scratchpads
 function M.check_scratchpad_guard(win, target_ws_name)
     if not win or win.floating then return end
@@ -87,13 +108,7 @@ function M.check_scratchpad_guard(win, target_ws_name)
 
     local c_class = win.class and win.class:lower() or ""
     local c_title = win.title and win.title:lower() or ""
-    local is_allowed = false
-    for _, a in ipairs(allowed) do
-        if c_class:find(a:lower(), 1, true) or c_title:find(a:lower(), 1, true) then
-            is_allowed = true
-            break
-        end
-    end
+    local is_allowed = is_win_allowed_in_sp(c_class, c_title, allowed)
 
     if not is_allowed then
         -- Delay eviction by 600ms to allow apps (like kitty notes-term, vivaldi calendar) to set their title/class
@@ -112,13 +127,7 @@ function M.check_scratchpad_guard(win, target_ws_name)
 
                 local cur_c = cur_win.class and cur_win.class:lower() or ""
                 local cur_t = cur_win.title and cur_win.title:lower() or ""
-                local still_allowed = false
-                for _, a in ipairs(allowed) do
-                    if cur_c:find(a:lower(), 1, true) or cur_t:find(a:lower(), 1, true) then
-                        still_allowed = true
-                        break
-                    end
-                end
+                local still_allowed = is_win_allowed_in_sp(cur_c, cur_t, allowed)
 
                 if not still_allowed then
                     local mon = hl.get_active_monitor()
@@ -161,7 +170,7 @@ function M.kill_and_remember()
         elseif c_class == "vesktop" or c_class == "discord" then
             exec_cmd = "vesktop"
         elseif c_class == "antigravity-ide" then
-            exec_cmd = "/opt/antigravity-ide/antigravity-ide"
+            exec_cmd = "/usr/bin/antigravity-ide"
         elseif c_class == "antigravity" then
             exec_cmd = "/home/kaijnav/.local/bin/antigravity"
         end
