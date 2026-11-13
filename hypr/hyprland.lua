@@ -377,11 +377,7 @@ for i = 1, 9 do
 end
 
 -- Scratchpad Toggles & Multi-Deck Controls (Native C++/Lua Engine)
-hl.bind(mod .. " + Escape", function()
-    if not scratchpads.stow_active() then
-        scratchpads.toggle("magic")
-    end
-end)
+hl.bind(mod .. " + Escape", function() scratchpads.toggle("magic") end)
 hl.bind(mod .. " + SHIFT + Escape", hl.dsp.window.move({ workspace = "special:magic" }))
 hl.bind(mod .. " + grave", function() scratchpads.toggle("magic") end)
 hl.bind(mod .. " + SHIFT + grave", hl.dsp.window.move({ workspace = "special:magic" }))
