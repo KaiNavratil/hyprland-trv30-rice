@@ -239,6 +239,23 @@ function M.remember_state(target)
     end
 end
 
+--- Safely extracts active special workspace name from an HL.Monitor (userdata or table)
+local function get_monitor_special_name(m)
+    if not m then return "" end
+    local sp = m.active_special_workspace or m.specialWorkspace
+    if not sp then return "" end
+    if type(sp) == "table" or type(sp) == "userdata" then
+        local ok, name = pcall(function() return sp.name end)
+        if ok and type(name) == "string" and name ~= "" then
+            return name
+        end
+    end
+    local s = tostring(sp)
+    local match = s:match("%((special:[^%):]+)")
+    if match then return match end
+    return s:find("^special:") and s or ""
+end
+
 --- Stows whatever scratchpad or special workspace is currently active (on focused or any monitor)
 function M.stow_active()
     local cur_sp = hl.get_active_special_workspace()
@@ -249,10 +266,10 @@ function M.stow_active()
     end
 
     for _, m in ipairs(hl.get_monitors() or {}) do
-        local msp = m.active_special_workspace or m.specialWorkspace
-        local msp_name = (type(msp) == "table") and msp.name or tostring(msp or "")
+        local msp_name = get_monitor_special_name(m)
         if msp_name:find("^special:") then
             local sp_name = msp_name:gsub("^special:", "")
+            hl.dispatch(hl.dsp.focus({ monitor = m.name }))
             M.toggle(sp_name)
             return true
         end
@@ -276,35 +293,13 @@ function M.toggle(target, is_stack)
 
     local target_special = "special:" .. target
     local cur_sp = hl.get_active_special_workspace()
+    local cur_sp_name = cur_sp and cur_sp.name or ""
 
-    -- Check if target is already open on THIS monitor or ANY monitor
-    local is_open_on_mon = nil
-    if cur_sp and cur_sp.name == target_special then
-        is_open_on_mon = cur_mon.name
-    else
-        for _, m in ipairs(hl.get_monitors() or {}) do
-            local msp = m.active_special_workspace or m.specialWorkspace
-            local msp_name = (type(msp) == "table") and msp.name or tostring(msp or "")
-            if msp_name == target_special then
-                is_open_on_mon = m.name
-                break
-            end
-        end
-    end
-
-    if is_open_on_mon then
-        -- Remember fullscreen and focus state before stowing
+    -- 1. If target is already active on THIS monitor: stow it
+    if cur_sp_name == target_special then
         M.remember_state(target)
-
-        -- Stow target and clear anchor
         os.remove("/tmp/scratchpad_anchored_" .. target)
-        if is_open_on_mon ~= cur_mon.name then
-            hl.dispatch(hl.dsp.focus({ monitor = is_open_on_mon }))
-        end
         hl.dispatch(hl.dsp.workspace.toggle_special(target))
-        if is_open_on_mon ~= cur_mon.name then
-            hl.dispatch(hl.dsp.focus({ monitor = cur_mon.name }))
-        end
         if target == "notes" then
             os.execute("copyq hide &")
         end
@@ -314,17 +309,34 @@ function M.toggle(target, is_stack)
         return
     end
 
-    -- If target workspace exists on another monitor, migrate it to the current monitor
+    -- 2. Check if target is currently open on ANOTHER monitor
+    local open_on_other_mon = nil
+    for _, m in ipairs(hl.get_monitors() or {}) do
+        if m.name ~= cur_mon.name then
+            local msp_name = get_monitor_special_name(m)
+            if msp_name == target_special then
+                open_on_other_mon = m.name
+                break
+            end
+        end
+    end
+
+    -- 3. If target workspace exists on another monitor (active or stowed), move it to current monitor
+    local ws_on_other_mon = false
     for _, ws in ipairs(hl.get_workspaces() or {}) do
         if ws.name == target_special and ws.monitor and ws.monitor.name ~= cur_mon.name then
-            hl.dispatch(hl.dsp.workspace.move({ workspace = target_special, monitor = cur_mon.name }))
+            ws_on_other_mon = true
             break
         end
     end
 
-    -- If not stacking, stow any unanchored scratchpad currently visible on THIS monitor
-    if not is_stack and cur_sp and cur_sp.name and cur_sp.name:find("^special:") then
-        local active_sp = cur_sp.name:gsub("^special:", "")
+    if open_on_other_mon or ws_on_other_mon then
+        hl.dispatch(hl.dsp.workspace.move({ workspace = target_special, monitor = cur_mon.name }))
+    end
+
+    -- 4. If not stacking, stow any unanchored scratchpad currently visible on THIS monitor
+    if not is_stack and cur_sp_name ~= "" and cur_sp_name:find("^special:") then
+        local active_sp = cur_sp_name:gsub("^special:", "")
         if active_sp ~= target and not is_anchored(active_sp) then
             M.remember_state(active_sp)
             hl.dispatch(hl.dsp.workspace.toggle_special(active_sp))
@@ -334,14 +346,13 @@ function M.toggle(target, is_stack)
         end
     end
 
-    -- Apply workspace rules for margins on this monitor
+    -- 5. Apply workspace rules for margins (dynamic without hard monitor binding)
     hl.workspace_rule({
         workspace = target_special,
         gaps_out = cfg.gaps_out,
         gaps_in = cfg.gaps_in,
         no_border = cfg.no_border,
         border_size = cfg.no_border and 0 or 2,
-        monitor = cur_mon.name,
     })
 
     if target == "dev" then
@@ -451,11 +462,20 @@ function M.toggle(target, is_stack)
         end
     end
 
-    -- Toggle special workspace on
-    hl.dispatch(hl.dsp.workspace.toggle_special(target))
+    -- If moving the workspace to this monitor didn't already activate it, toggle it on
+    local post_sp = hl.get_active_special_workspace()
+    local post_sp_name = post_sp and post_sp.name or ""
+    if post_sp_name ~= target_special then
+        hl.dispatch(hl.dsp.workspace.toggle_special(target))
+    end
 
     -- Ensure windows are tiled to respect gaps (immediate and async timer passes)
     local function enforce_tiled()
+        local cur_act_sp = hl.get_active_special_workspace()
+        if not cur_act_sp or cur_act_sp.name ~= target_special then
+            return
+        end
+
         local saved_fs = M._fullscreen_state and M._fullscreen_state[target]
         local saved_foc = M._last_focused and M._last_focused[target]
 
@@ -591,10 +611,8 @@ function M.toggle_panoramic(deck_key)
     local main_sp_target = "special:" .. deck.main
     local comp_sp_target = "special:" .. deck.comp
 
-    local main_sp_obj = main_mon.active_special_workspace or main_mon.specialWorkspace
-    local comp_sp_obj = comp_mon.active_special_workspace or comp_mon.specialWorkspace
-    local main_cur_sp = main_sp_obj and (type(main_sp_obj) == "table" and main_sp_obj.name or tostring(main_sp_obj)) or ""
-    local comp_cur_sp = comp_sp_obj and (type(comp_sp_obj) == "table" and comp_sp_obj.name or tostring(comp_sp_obj)) or ""
+    local main_cur_sp = get_monitor_special_name(main_mon)
+    local comp_cur_sp = get_monitor_special_name(comp_mon)
 
     if main_cur_sp == main_sp_target and comp_cur_sp == comp_sp_target then
         os.remove("/tmp/scratchpad_anchored_" .. deck.main)
