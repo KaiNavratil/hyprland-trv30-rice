@@ -67,3 +67,6 @@ case "$CHOSEN" in
         bash ~/.config/hypr/scripts/sleep-system.sh screen
         ;;
 esac
+
+# Ensure spaces engine synchronizes topology seamlessly
+hyprctl eval "require('spaces').handle_monitor_topology_change()" >/dev/null 2>&1 || true

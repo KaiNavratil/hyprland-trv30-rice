@@ -19,6 +19,7 @@ if [ "$EVENT" = "close" ]; then
         # Keep laptop awake. If external display is connected, disable internal screen
         if [ "$NUM_MONITORS" -gt 1 ]; then
             hyprctl eval "hl.monitor({ output = '$INTERNAL_MONITOR', disabled = true })"
+            hyprctl eval "require('spaces').handle_monitor_topology_change()" >/dev/null 2>&1 || true
         else
             hyprctl dispatch dpms off "$INTERNAL_MONITOR"
         fi
@@ -35,4 +36,5 @@ elif [ "$EVENT" = "open" ]; then
     fi
     # Wake up screen immediately
     hyprctl dispatch dpms on "$INTERNAL_MONITOR"
+    hyprctl eval "require('spaces').handle_monitor_topology_change()" >/dev/null 2>&1 || true
 fi

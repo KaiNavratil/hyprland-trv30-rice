@@ -12,6 +12,8 @@ local is_syncing = false
 M._ws_map = nil
 M._routed = {}
 M._newly_opened = {}
+M._companion_windows = {}
+M._last_mon_count = nil
 
 local EXCLUDED_CLASSES = {
     ["blueman-manager"] = true,
@@ -176,6 +178,13 @@ function M.route_window(win)
 
     local target_ws = M._ws_map[title]
     if not target_ws then return end
+
+    local mons = hl.get_monitors() or {}
+    local tgt_num = tonumber(target_ws)
+    if #mons <= 1 and tgt_num and tgt_num >= 11 and tgt_num <= 19 then
+        target_ws = tostring(tgt_num - 10)
+    end
+
     if target_ws ~= "special:magic" and (target_ws:find("^special:") or not target_ws:match("^%d+$")) then return end
 
     if cur_ws ~= target_ws then
@@ -197,6 +206,13 @@ function M.track_window(win)
     if is_utility_window(win) then return end
     local ws = type(win.workspace) == "table" and win.workspace.name or (win.workspace.name or tostring(win.workspace))
     if not ws then return end
+
+    local mons = hl.get_monitors() or {}
+    local num = tonumber(ws)
+    if #mons <= 1 and num and num >= 11 and num <= 19 then
+        ws = tostring(num - 10)
+    end
+
     -- Allow normal numbered workspaces and special:magic
     if ws ~= "special:magic" and (ws:find("^special:") or not ws:match("^%d+$")) then return end
     local title = clean_title_key(win.title)
@@ -206,6 +222,160 @@ function M.track_window(win)
     if M._ws_map[title] ~= ws then
         M._ws_map[title] = ws
         M.save_workspaces_map()
+    end
+end
+
+--- Updates ~/.config/hypr/workspaces.conf and applies live workspace rules dynamically
+function M.apply_workspace_rules()
+    local mons = hl.get_monitors() or {}
+    if #mons == 0 then return end
+
+    local conf_lines = {
+        "# ══════════════════════════════════════════════════════════════════════════════",
+        "#  TOKYO 80s TRV30 — DYNAMIC WORKSPACE CONFIGURATION",
+        "#  Automatically regenerated on monitor connect / disconnect / layout changes",
+        "# ══════════════════════════════════════════════════════════════════════════════",
+        ""
+    }
+
+    if #mons == 1 then
+        local primary = mons[1].name
+        table.insert(conf_lines, "# Single Monitor Mode: " .. primary .. " -> Spaces 1-9")
+        for s = 1, 9 do
+            local def_str = (s == 1) and ", default:true" or ""
+            table.insert(conf_lines, string.format("workspace = %d, monitor:%s%s", s, primary, def_str))
+            hl.workspace_rule({
+                workspace = s,
+                monitor = primary,
+                default = (s == 1),
+            })
+            hl.workspace_rule({
+                workspace = s + 10,
+                persistent = false,
+                monitor = "",
+            })
+        end
+    else
+        table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
+        local main_mon = mons[1].name
+        local comp_mon = mons[2].name
+
+        table.insert(conf_lines, "# Main Monitor (Left): " .. main_mon .. " -> Spaces 1-9")
+        for s = 1, 9 do
+            local def_str = (s == 1) and ", default:true" or ""
+            table.insert(conf_lines, string.format("workspace = %d, monitor:%s%s", s, main_mon, def_str))
+            hl.workspace_rule({
+                workspace = s,
+                monitor = main_mon,
+                default = (s == 1),
+            })
+        end
+
+        table.insert(conf_lines, "")
+        table.insert(conf_lines, "# Companion Monitor (Right): " .. comp_mon .. " -> Companion Spaces 11-19")
+        for s = 1, 9 do
+            local ws = s + 10
+            local def_str = (s == 1) and ", default:true" or ""
+            table.insert(conf_lines, string.format("workspace = %d, monitor:%s%s", ws, comp_mon, def_str))
+            hl.workspace_rule({
+                workspace = ws,
+                monitor = comp_mon,
+                default = (s == 1),
+            })
+        end
+    end
+
+    local conf_path = HOME .. "/.config/hypr/workspaces.conf"
+    local tmp_path = conf_path .. ".tmp"
+    local f = io.open(tmp_path, "w")
+    if f then
+        f:write(table.concat(conf_lines, "\n") .. "\n")
+        f:close()
+        os.rename(tmp_path, conf_path)
+    end
+end
+
+--- Handles transitions between 1 monitor and 2 monitors (hotplug / disconnect / layout change)
+function M.handle_monitor_topology_change()
+    local mons = hl.get_monitors() or {}
+    local mon_count = #mons
+    if mon_count == 0 then return end
+
+    local prev_count = M._last_mon_count
+    M._last_mon_count = mon_count
+
+    M.apply_workspace_rules()
+
+    if mon_count <= 1 then
+        -- TRANSITIONING TO 1 DISPLAY:
+        -- Merge any windows on companion workspaces 11..19 into main spaces 1..9
+        local clients = hl.get_windows() or {}
+        for _, c in ipairs(clients) do
+            local ws_name = c.workspace and c.workspace.name
+            if ws_name and ws_name:match("^%d+$") then
+                local num = tonumber(ws_name)
+                if num >= 11 and num <= 19 then
+                    local target_space = num - 10
+                    M._companion_windows[c.address] = target_space
+                    hl.dispatch(hl.dsp.window.move({
+                        workspace = tostring(target_space),
+                        window = "address:" .. c.address,
+                        silent = true,
+                    }))
+                end
+            end
+        end
+
+        -- Ensure companion workspaces 11..19 are evicted and destroyed
+        for s = 1, 9 do
+            hl.workspace_rule({ workspace = s + 10, persistent = false })
+        end
+
+        -- If current active workspace on the single monitor is in 11..19, switch to 1..9
+        local cur_act = mons[1].active_workspace and mons[1].active_workspace.name
+        if cur_act and cur_act:match("^%d+$") then
+            local act_num = tonumber(cur_act)
+            if act_num >= 11 and act_num <= 19 then
+                local space = act_num - 10
+                hl.dispatch(hl.dsp.focus({ workspace = tostring(space) }))
+            end
+        end
+
+        M.sync_desktop_spaces()
+        os.execute("pkill -SIGUSR2 waybar &")
+
+    elseif mon_count >= 2 and prev_count and prev_count < 2 then
+        -- TRANSITIONING BACK TO 2 DISPLAYS:
+        -- Restore companion windows that were temporarily merged into 1..9
+        local clients = hl.get_windows() or {}
+        for _, c in ipairs(clients) do
+            local orig_space = M._companion_windows[c.address]
+            if orig_space and orig_space >= 1 and orig_space <= 9 then
+                local target_ws = tostring(orig_space + 10)
+                hl.dispatch(hl.dsp.window.move({
+                    workspace = target_ws,
+                    window = "address:" .. c.address,
+                    silent = true,
+                }))
+                M._companion_windows[c.address] = nil
+            end
+        end
+
+        -- Sync active workspaces across both screens
+        table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
+        local m1_ws = mons[1].active_workspace and tonumber(mons[1].active_workspace.name)
+        if m1_ws and m1_ws >= 1 and m1_ws <= 9 then
+            pcall(function()
+                hl.dispatch(hl.dsp.focus({ monitor = mons[2].name }))
+                hl.dispatch(hl.dsp.focus({ workspace = tostring(m1_ws + 10) }))
+                hl.dispatch(hl.dsp.focus({ monitor = mons[1].name }))
+            end)
+        end
+
+        M.sync_desktop_spaces()
+        os.execute("pkill -SIGUSR2 waybar &")
+    else
+        M.sync_desktop_spaces()
     end
 end
 
@@ -241,6 +411,8 @@ function M.sync_desktop_spaces()
         hl.workspace_rule({ workspace = s, persistent = is_occ })
         if #mons > 1 then
             hl.workspace_rule({ workspace = s + 10, persistent = is_occ })
+        else
+            hl.workspace_rule({ workspace = s + 10, persistent = false })
         end
     end
 end
@@ -280,6 +452,18 @@ function M.switch_desktop_space(space_num)
 
     is_syncing = true
     M._last_switch_time = os.time()
+
+    if #mons <= 1 then
+        local target_ws = tostring(space_num)
+        pcall(function()
+            hl.dispatch(hl.dsp.focus({ workspace = target_ws }))
+        end)
+        M.sync_desktop_spaces()
+        hl.timer(function()
+            is_syncing = false
+        end, { timeout = 350, type = "oneshot" })
+        return
+    end
 
     -- Switch non-focused monitors first, focused monitor last (retaining input focus)
     for idx, m in ipairs(mons) do
@@ -486,6 +670,7 @@ end
 --- Sets up native event hooks and timers
 function M.setup()
     M.load_workspaces_map()
+    M.handle_monitor_topology_change()
 
     -- Initial scan of clients on startup
     for _, c in ipairs(hl.get_windows() or {}) do
@@ -498,11 +683,15 @@ function M.setup()
     -- Periodic in-memory space persistence & auto-healing (every 4 seconds)
     hl.timer(function()
         pcall(function()
-            M.sync_desktop_spaces()
+            local mons = hl.get_monitors() or {}
+            if M._last_mon_count and #mons ~= M._last_mon_count then
+                M.handle_monitor_topology_change()
+            else
+                M.sync_desktop_spaces()
+            end
             M.save_session()
 
             -- Auto-heal any bilateral desync across dual monitors
-            local mons = hl.get_monitors() or {}
             local now = os.time()
             if #mons > 1 and not is_syncing and (now - (M._last_switch_time or 0) >= 2) then
                 table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
@@ -584,17 +773,21 @@ function M.setup()
         end)
     end)
 
-    hl.on("monitor.layout_changed", function()
+    local function on_monitor_event()
         hl.timer(function()
             pcall(function()
                 local monitors_mod = package.loaded["monitors"]
                 if monitors_mod and monitors_mod.apply then
                     monitors_mod.apply()
                 end
-                M.sync_desktop_spaces()
+                M.handle_monitor_topology_change()
             end)
         end, { timeout = 250, type = "oneshot" })
-    end)
+    end
+
+    hl.on("monitor.layout_changed", on_monitor_event)
+    hl.on("monitor.added", on_monitor_event)
+    hl.on("monitor.removed", on_monitor_event)
 end
 
 return M

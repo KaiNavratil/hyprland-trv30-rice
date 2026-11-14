@@ -116,24 +116,8 @@ hl.config({
 -- ┌─────────────────────────────────────────────────────────────┐
 -- │ 4. WORKSPACES (ワークスペース)                              │
 -- └─────────────────────────────────────────────────────────────┘
--- Desktop Spaces across Dual Monitors:
--- Main Monitor (HDMI-A-1 / Left): Workspaces 1-9
-for ws = 1, 9 do
-    hl.workspace_rule({
-        workspace = ws,
-        monitor = "HDMI-A-1",
-        default = (ws == 1),
-    })
-end
-
--- Companion Monitor (eDP-1 / Right): Workspaces 11-19
-for ws = 11, 19 do
-    hl.workspace_rule({
-        workspace = ws,
-        monitor = "eDP-1",
-        default = (ws == 11),
-    })
-end
+-- Dynamic Desktop Space Topology across Dual & Single Displays
+spaces.apply_workspace_rules()
 
 -- Scratchpads
 hl.workspace_rule({ workspace = "special:magic", gaps_out = 0, gaps_in = 0, no_border = true })
