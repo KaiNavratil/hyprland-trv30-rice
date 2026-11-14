@@ -20,9 +20,10 @@ OPTIONS="1. ▶  EXTEND RIGHT   [Laptop ── External]
 5. ⧉  MIRROR DISPLAY [Duplicate Screen]
 6. 💻 LAPTOP ONLY    [Disable External]
 7. 🖥️  EXTERNAL ONLY  [Clamshell / Desk Mode]
-8. 💤 SLEEP / SCREEN OFF [Ignore Mouse Wakes]"
+8. 💤 SLEEP / SUSPEND [Power Saving Mode]
+9. 🌙 SCREEN OFF     [Displays Off Only]"
 
-CHOSEN=$(echo -e "$OPTIONS" | rofi -dmenu -i -p "モニター // DISPLAY CONFIG" -theme-str 'window { width: 520px; height: 360px; } listview { lines: 8; }')
+CHOSEN=$(echo -e "$OPTIONS" | rofi -dmenu -i -p "モニター // DISPLAY CONFIG" -theme-str 'window { width: 520px; height: 400px; } listview { lines: 9; }')
 
 case "$CHOSEN" in
     *"EXTEND RIGHT"*)
@@ -64,6 +65,9 @@ case "$CHOSEN" in
         dunstify -a "osd" -r 9997 -u normal "🖥️ DISPLAY: EXTERNAL ONLY" "Laptop screen off. Windows merged to Spaces 1-9"
         ;;
     *"SLEEP"*)
+        bash ~/.config/hypr/scripts/sleep-system.sh suspend
+        ;;
+    *"SCREEN OFF"*)
         bash ~/.config/hypr/scripts/sleep-system.sh screen
         ;;
 esac

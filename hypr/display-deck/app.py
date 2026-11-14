@@ -271,7 +271,7 @@ class DisplayDeckWindow(Gtk.ApplicationWindow):
             subprocess.run(["hyprctl", "eval", 'hl.config({ misc = { mouse_move_enables_dpms = false, key_press_enables_dpms = true } })'], stdout=subprocess.DEVNULL)
             subprocess.run(["loginctl", "lock-session"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             time.sleep(0.3)
-            subprocess.run(["systemctl", "suspend"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["systemctl", "suspend", "-i"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         elif mode == "screen":
             # Screen Off (DPMS)

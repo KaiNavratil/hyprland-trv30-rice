@@ -29,5 +29,5 @@ fi
 dunstify -a "osd" -r 9998 -u normal "💤 GOING TO SLEEP" "Press any keyboard key or power button to wake"
 sleep 0.5
 
-# Suspend system (hypridle's before_sleep_cmd will automatically trigger hyprlock)
-systemctl suspend
+# Suspend system with -i to ignore any inhibitors (hypridle will trigger lock)
+systemctl suspend -i

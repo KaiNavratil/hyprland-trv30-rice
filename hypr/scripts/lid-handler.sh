@@ -25,7 +25,7 @@ if [ "$EVENT" = "close" ]; then
         fi
     else
         # Normal behavior: Always suspend on lid close, even when external monitor is connected!
-        systemctl suspend
+        systemctl suspend -i
     fi
 elif [ "$EVENT" = "open" ]; then
     # Re-enable internal laptop monitor if it was disabled
