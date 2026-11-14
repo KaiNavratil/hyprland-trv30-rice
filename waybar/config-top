@@ -75,6 +75,7 @@
         "format": "墳 {volume}%",
         "format-muted": "墳 MUTE",
         "scroll-step": 5,
+        "max-volume": 150,
         "on-click": "pavucontrol"
     },
     "custom/battery": {
