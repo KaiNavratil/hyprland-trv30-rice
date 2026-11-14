@@ -324,8 +324,9 @@ local mod = "SUPER"
 
 -- Applications
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd("kitty"))
-hl.bind(mod .. " + Space", hl.dsp.exec_cmd("pkill rofi || rofi -show combi"))
+hl.bind(mod .. " + Space", hl.dsp.exec_cmd("pkill rofi || rofi -show drun"))
 hl.bind(mod .. " + E", hl.dsp.exec_cmd("nautilus"))
+hl.bind(mod .. " + R", hl.dsp.exec_cmd("/home/kaijnav/.local/bin/roblox-studio"))
 hl.bind(mod .. " + A", function() scratchpads.toggle("antigravity") end)
 hl.bind(mod .. " + SHIFT + left", function() spaces.swap_workspace("left") end)
 hl.bind(mod .. " + SHIFT + right", function() spaces.swap_workspace("right") end)

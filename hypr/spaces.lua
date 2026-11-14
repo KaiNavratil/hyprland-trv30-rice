@@ -147,16 +147,36 @@ function M.route_window(win)
     -- Never re-route a window that was already routed in this session
     if M._routed[addr] then return end
 
+    local cur_ws = win.workspace and win.workspace.name
+    -- If window is currently in ANY special workspace (including special:magic), DO NOT route it away!
+    if cur_ws and cur_ws:find("^special:") then
+        M._routed[addr] = true
+        return
+    end
+
+    -- If special:magic is currently active on the focused monitor and a newly opened window/tab appears,
+    -- adopt it into special:magic
+    local active_sp = hl.get_active_special_workspace()
+    if active_sp and active_sp.name == "special:magic" then
+        M._routed[addr] = true
+        hl.dispatch(hl.dsp.window.move({
+            workspace = "special:magic",
+            window = "address:" .. addr,
+            silent = true,
+        }))
+        local fake_win = { title = win.title, workspace = "special:magic", class = win.class, floating = win.floating }
+        M.track_window(fake_win)
+        return
+    end
+
     local title = clean_title_key(win.title)
     if not title or is_generic_title(title) then return end
-
-    local cur_ws = win.workspace and win.workspace.name
-    if not cur_ws or cur_ws:find("^special:") then return end
 
     if not M._ws_map then M.load_workspaces_map() end
 
     local target_ws = M._ws_map[title]
-    if not target_ws or target_ws:find("^special:") then return end
+    if not target_ws then return end
+    if target_ws ~= "special:magic" and (target_ws:find("^special:") or not target_ws:match("^%d+$")) then return end
 
     if cur_ws ~= target_ws then
         M._routed[addr] = true
@@ -176,7 +196,9 @@ function M.track_window(win)
     if not win or not win.title or not win.workspace then return end
     if is_utility_window(win) then return end
     local ws = type(win.workspace) == "table" and win.workspace.name or (win.workspace.name or tostring(win.workspace))
-    if not ws or ws:find("^special:") or not ws:match("^%d+$") then return end
+    if not ws then return end
+    -- Allow normal numbered workspaces and special:magic
+    if ws ~= "special:magic" and (ws:find("^special:") or not ws:match("^%d+$")) then return end
     local title = clean_title_key(win.title)
     if not title or is_generic_title(title) then return end
 
@@ -291,6 +313,7 @@ end
 --- Automatically enforces bilateral synchronization across dual monitors
 function M.enforce_dual_monitor_sync(ws)
     if is_syncing then return end
+    if os.time() - (M._last_switch_time or 0) < 1 then return end
     if not ws then return end
 
     local ws_name = ws.name and tostring(ws.name) or ""
@@ -441,7 +464,7 @@ function M.save_session()
 
     for _, c in ipairs(clients) do
         local ws = c.workspace and c.workspace.name
-        if ws and not ws:find("^special:") and not is_utility_window(c) then
+        if ws and (ws == "special:magic" or not ws:find("^special:")) and not is_utility_window(c) then
             table.insert(session_state, string.format(
                 '  {"class": %q, "title": %q, "workspace": %q, "monitor": %d}',
                 c.class or "", c.title or "", ws, c.monitor and c.monitor.id or 0
@@ -500,17 +523,21 @@ function M.setup()
 
     -- Enforce automatic bilateral sync on workspace activation (debounced to prevent hotplug races)
     local sync_timer = nil
+    local pending_active_ws = nil
     hl.on("workspace.active", function(ws)
         if is_syncing then return end
+        if os.time() - (M._last_switch_time or 0) < 1 then return end
+        pending_active_ws = ws
         if sync_timer then return end
         sync_timer = hl.timer(function()
             sync_timer = nil
             if is_syncing then return end
+            if os.time() - (M._last_switch_time or 0) < 1 then return end
             pcall(function()
-                local cur_ws = hl.get_active_workspace()
+                local cur_ws = pending_active_ws or hl.get_active_workspace()
                 M.enforce_dual_monitor_sync(cur_ws)
             end)
-        end, { timeout = 200, type = "oneshot" })
+        end, { timeout = 250, type = "oneshot" })
     end)
 
     -- Automatic window routing & title learning hooks

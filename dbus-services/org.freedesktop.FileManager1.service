@@ -1,4 +1,3 @@
 [D-BUS Service]
 Name=org.freedesktop.FileManager1
-Exec=/usr/bin/dolphin --daemon
-SystemdService=plasma-dolphin.service
+Exec=/usr/bin/nautilus --new-window
