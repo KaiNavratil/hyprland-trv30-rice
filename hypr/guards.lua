@@ -14,6 +14,7 @@ local ALLOWED_SCRATCHPADS = {
     ["special:calendar"] = { "vivaldi-calendar", "notion" },
     ["special:magic"] = { "*" },
     ["special:antigravity"] = { "antigravity" },
+    ["special:roblox"] = { "vinegar", "roblox", "wine", "sober" },
     ["special:dev"] = { "antigravity-ide", "vivaldi" },
     ["special:center"] = { "commandcenter", "command-center", "com.tokyo.commandcenter", "center" },
     ["special:radar"] = { "com.tokyo.radar", "trv30-radar", "desktop-radar", "radar" },

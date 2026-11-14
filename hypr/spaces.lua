@@ -257,6 +257,7 @@ function M.switch_desktop_space(space_num)
     end
 
     is_syncing = true
+    M._last_switch_time = os.time()
 
     -- Switch non-focused monitors first, focused monitor last (retaining input focus)
     for idx, m in ipairs(mons) do
@@ -282,7 +283,9 @@ function M.switch_desktop_space(space_num)
     end
 
     M.sync_desktop_spaces()
-    is_syncing = false
+    hl.timer(function()
+        is_syncing = false
+    end, { timeout = 350, type = "oneshot" })
 end
 
 --- Automatically enforces bilateral synchronization across dual monitors
@@ -477,7 +480,8 @@ function M.setup()
 
             -- Auto-heal any bilateral desync across dual monitors
             local mons = hl.get_monitors() or {}
-            if #mons > 1 and not is_syncing then
+            local now = os.time()
+            if #mons > 1 and not is_syncing and (now - (M._last_switch_time or 0) >= 2) then
                 table.sort(mons, function(a, b) return (a.x or 0) < (b.x or 0) end)
                 local m1_ws = mons[1].active_workspace and tonumber(mons[1].active_workspace.name)
                 local m2_ws = mons[2].active_workspace and tonumber(mons[2].active_workspace.name)
@@ -501,11 +505,12 @@ function M.setup()
         if sync_timer then return end
         sync_timer = hl.timer(function()
             sync_timer = nil
+            if is_syncing then return end
             pcall(function()
                 local cur_ws = hl.get_active_workspace()
                 M.enforce_dual_monitor_sync(cur_ws)
             end)
-        end, { timeout = 100, type = "oneshot" })
+        end, { timeout = 200, type = "oneshot" })
     end)
 
     -- Automatic window routing & title learning hooks

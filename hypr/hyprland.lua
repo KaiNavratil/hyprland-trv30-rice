@@ -101,7 +101,7 @@ hl.config({
     misc = {
         disable_hyprland_logo = true,
         force_default_wallpaper = 0,
-        focus_on_activate = true,
+        focus_on_activate = false,
         mouse_move_enables_dpms = false,
         key_press_enables_dpms = true,
         animate_mouse_windowdragging = false,
@@ -147,6 +147,7 @@ hl.workspace_rule({ workspace = "special:display", gaps_out = 0, gaps_in = 0, no
 hl.workspace_rule({ workspace = "special:bluetooth", gaps_out = 0, gaps_in = 0 })
 hl.workspace_rule({ workspace = "special:antigravity", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:dev", gaps_out = 0, gaps_in = 0, no_border = true })
+hl.workspace_rule({ workspace = "special:roblox", gaps_out = 0, gaps_in = 0, no_border = true })
 hl.workspace_rule({ workspace = "special:cava", gaps_out = 60, monitor = "eDP-1" })
 hl.workspace_rule({ workspace = "special:sysmon", gaps_out = 60, monitor = "eDP-1" })
 
@@ -244,6 +245,14 @@ hl.window_rule({
     name = "workspace_special_antigravity",
     match = { class = "^(antigravity)$" },
     workspace = "special:antigravity silent",
+    tile = true,
+})
+
+hl.window_rule({
+    name = "workspace_special_roblox",
+    match = { class = "^(vinegar|org\\.vinegarhq\\.Vinegar|RobloxStudioBeta.*|roblox.*)$" },
+    workspace = "special:roblox silent",
+    suppress_event = "activate",
     tile = true,
 })
 
@@ -383,6 +392,8 @@ hl.bind(mod .. " + grave", function() scratchpads.toggle("magic") end)
 hl.bind(mod .. " + SHIFT + grave", hl.dsp.window.move({ workspace = "special:magic" }))
 
 -- Single-Monitor Scratchpads
+hl.bind(mod .. " + R", function() scratchpads.toggle("roblox") end)
+hl.bind(mod .. " + SHIFT + R", hl.dsp.window.move({ workspace = "special:roblox" }))
 hl.bind(mod .. " + Z", function() scratchpads.toggle("music") end)
 hl.bind(mod .. " + X", function() scratchpads.toggle("discord") end)
 hl.bind(mod .. " + C", function() scratchpads.toggle("calendar") end)
@@ -403,6 +414,7 @@ hl.bind(mod .. " + SHIFT + V", function() scratchpads.toggle_panoramic("research
 hl.bind(mod .. " + CTRL + equal", function() scratchpads.toggle_panoramic("cockpit") end)
 
 -- Scratchpad Stacking & Concurrent Mode (Native C++/Lua Engine)
+hl.bind(mod .. " + CTRL + R", function() scratchpads.toggle("roblox", true) end)
 hl.bind(mod .. " + CTRL + Z", function() scratchpads.toggle("music", true) end)
 hl.bind(mod .. " + CTRL + X", function() scratchpads.toggle("discord", true) end)
 hl.bind(mod .. " + CTRL + C", function() scratchpads.toggle("calendar", true) end)

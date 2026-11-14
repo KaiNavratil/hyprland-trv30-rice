@@ -126,6 +126,14 @@ local SCRATCHPAD_CONFIG = {
         gaps_in = 0,
         no_border = true,
     },
+    roblox = {
+        name = "roblox",
+        class_pattern = "vinegar|roblox",
+        cmd = "/home/kaijnav/.local/bin/vinegar",
+        gaps_out = 0,
+        gaps_in = 0,
+        no_border = true,
+    },
     cava = {
         name = "cava",
         class_pattern = "trv30%-cava|cava",
