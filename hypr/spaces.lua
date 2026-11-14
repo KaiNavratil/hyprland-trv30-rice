@@ -56,6 +56,89 @@ local function is_utility_window(win)
     return false
 end
 
+local ROUTE_EXCLUDED_CLASSES = {
+    -- Terminals
+    ["kitty"] = true,
+    ["alacritty"] = true,
+    ["foot"] = true,
+    ["ghostty"] = true,
+    ["wezterm"] = true,
+    ["wezterm-gui"] = true,
+    ["org.wezfurlong.wezterm"] = true,
+    ["gnome-terminal"] = true,
+    ["org.gnome.terminal"] = true,
+    ["org.gnome.console"] = true,
+    ["konsole"] = true,
+    ["xterm"] = true,
+    ["urxvt"] = true,
+    ["terminator"] = true,
+    ["tilix"] = true,
+    ["xfce4-terminal"] = true,
+    ["notes-term"] = true,
+    ["trv30-cava"] = true,
+    ["trv30-btop"] = true,
+
+    -- File Managers
+    ["org.gnome.nautilus"] = true,
+    ["nautilus"] = true,
+    ["dolphin"] = true,
+    ["org.kde.dolphin"] = true,
+    ["thunar"] = true,
+    ["pcmanfm"] = true,
+    ["pcmanfm-qt"] = true,
+    ["nemo"] = true,
+    ["caja"] = true,
+    ["io.elementary.files"] = true,
+
+    -- Editors & Viewers
+    ["nvim"] = true,
+    ["vim"] = true,
+    ["code"] = true,
+    ["code-oss"] = true,
+    ["idea"] = true,
+    ["gedit"] = true,
+    ["org.gnome.texteditor"] = true,
+    ["kate"] = true,
+    ["kwrite"] = true,
+    ["evince"] = true,
+    ["org.gnome.evince"] = true,
+    ["zathura"] = true,
+    ["loupe"] = true,
+    ["org.gnome.loupe"] = true,
+    ["eog"] = true,
+    ["papers"] = true,
+    ["org.gnome.papers"] = true,
+    ["org.gnome.baobab"] = true,
+    ["org.gnome.calculator"] = true,
+
+    -- Media, Games & System Scratchpads
+    ["mpv"] = true,
+    ["vlc"] = true,
+    ["spotify"] = true,
+    ["vesktop"] = true,
+    ["discord"] = true,
+    ["vinegar"] = true,
+    ["roblox"] = true,
+    ["antigravity"] = true,
+    ["antigravity-ide"] = true,
+}
+
+local function is_route_excluded(win)
+    if not win then return true end
+    if is_utility_window(win) then return true end
+    local cls = win.class and win.class:lower() or ""
+    if ROUTE_EXCLUDED_CLASSES[cls] then return true end
+    if cls:find("terminal") or cls:find("nautilus") or cls:find("dolphin") or cls:find("thunar")
+       or cls:find("^trv30%-") or cls:find("^com%.tokyo") or cls:find("roblox") or cls:find("vinegar") then
+        return true
+    end
+    -- Strict check: Only web browsers are eligible for title-based desktop space routing
+    if not (cls:find("vivaldi") or cls:find("chromium") or cls:find("chrome") or cls:find("firefox") or cls:find("brave") or cls:find("zen")) then
+        return true
+    end
+    return false
+end
+
 local GENERIC_TITLES = {
     ["vivaldi - vivaldi"] = true,
     ["vivaldi"] = true,
@@ -66,6 +149,18 @@ local GENERIC_TITLES = {
     ["kitty"] = true,
     ["~"] = true,
     [""] = true,
+    ["home"] = true,
+    ["files"] = true,
+    ["downloads"] = true,
+    ["documents"] = true,
+    ["pictures"] = true,
+    ["music"] = true,
+    ["videos"] = true,
+    ["desktop"] = true,
+    ["trash"] = true,
+    ["bash"] = true,
+    ["zsh"] = true,
+    ["sh"] = true,
     ["bluetooth devices"] = true,
     ["open file"] = true,
     ["open files"] = true,
@@ -97,6 +192,8 @@ local function is_generic_title(t)
     if GENERIC_TITLES[lower] then return true end
     if lower:find("^new tab") or lower == "vivaldi" then return true end
     if lower:find("^open file") or lower:find("^save file") or lower:find("^select ") or lower:find("^choose ") then return true end
+    if lower:find("^kaijnav@") or lower:find("^root@") or lower:find("@batman") then return true end
+    if lower == "home" or lower == "files" or lower == "downloads" or lower == "trash" then return true end
     return false
 end
 
@@ -143,11 +240,16 @@ end
 --- Automatically routes a window to its saved workspace based on title memory
 function M.route_window(win)
     if not win or not win.address then return end
-    if is_utility_window(win) then return end
     local addr = win.address
 
     -- Never re-route a window that was already routed in this session
     if M._routed[addr] then return end
+
+    -- Utility windows, terminals, file managers, and non-browser apps always stay on active workspace
+    if is_utility_window(win) or is_route_excluded(win) then
+        M._routed[addr] = true
+        return
+    end
 
     local cur_ws = win.workspace and win.workspace.name
     -- If window is currently in ANY special workspace (including special:magic), DO NOT route it away!
@@ -203,7 +305,7 @@ end
 --- Updates window workspace mapping in memory and on disk when a window moves
 function M.track_window(win)
     if not win or not win.title or not win.workspace then return end
-    if is_utility_window(win) then return end
+    if is_utility_window(win) or is_route_excluded(win) then return end
     local ws = type(win.workspace) == "table" and win.workspace.name or (win.workspace.name or tostring(win.workspace))
     if not ws then return end
 
@@ -648,7 +750,7 @@ function M.save_session()
 
     for _, c in ipairs(clients) do
         local ws = c.workspace and c.workspace.name
-        if ws and (ws == "special:magic" or not ws:find("^special:")) and not is_utility_window(c) then
+        if ws and (ws == "special:magic" or not ws:find("^special:")) and not is_utility_window(c) and not is_route_excluded(c) then
             table.insert(session_state, string.format(
                 '  {"class": %q, "title": %q, "workspace": %q, "monitor": %d}',
                 c.class or "", c.title or "", ws, c.monitor and c.monitor.id or 0
@@ -674,9 +776,13 @@ function M.setup()
 
     -- Initial scan of clients on startup
     for _, c in ipairs(hl.get_windows() or {}) do
-        if not is_utility_window(c) then
+        if not is_utility_window(c) and not is_route_excluded(c) then
             M.route_window(c)
             M.track_window(c)
+        else
+            if c and c.address then
+                M._routed[c.address] = true
+            end
         end
     end
 
@@ -734,7 +840,11 @@ function M.setup()
         pcall(function()
             if win and win.address and not is_utility_window(win) then
                 M._newly_opened[win.address] = os.time()
-                M.route_window(win)
+                if not is_route_excluded(win) then
+                    M.route_window(win)
+                else
+                    M._routed[win.address] = true
+                end
             end
             M.sync_desktop_spaces()
         end)
@@ -742,7 +852,7 @@ function M.setup()
 
     hl.on("window.title", function(win)
         pcall(function()
-            if win and win.address and not is_utility_window(win) then
+            if win and win.address and not is_utility_window(win) and not is_route_excluded(win) then
                 if not M._routed[win.address] then
                     M.route_window(win)
                 end
@@ -760,7 +870,7 @@ function M.setup()
         pcall(function()
             if win and ws then
                 M._routed[win.address] = true
-                if not is_utility_window(win) then
+                if not is_utility_window(win) and not is_route_excluded(win) then
                     local fake_win = { title = win.title, workspace = ws, class = win.class, floating = win.floating }
                     M.track_window(fake_win)
                 end

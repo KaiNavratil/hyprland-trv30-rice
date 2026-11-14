@@ -35,6 +35,12 @@ def main():
             c_class = c.get("class", "")
             c_title = c.get("title", "")
             curr_ws = c.get("workspace", {}).get("name", "")
+
+            # Strict check: Terminals, file managers, and system utilities stay where launched
+            c_class_lower = c_class.lower()
+            if not ("vivaldi" in c_class_lower or "chromium" in c_class_lower or "chrome" in c_class_lower or "firefox" in c_class_lower):
+                moved_addresses.add(addr)
+                continue
             
             # Find a matching target state
             best_match = None
