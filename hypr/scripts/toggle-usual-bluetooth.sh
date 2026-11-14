@@ -20,12 +20,13 @@ DEV_INFO=$(bluetoothctl info "$USUAL_MAC" 2>/dev/null)
 IS_CONNECTED=$(echo "$DEV_INFO" | grep -i "Connected: yes")
 
 if [ -n "$IS_CONNECTED" ]; then
-    # ─── ALREADY CONNECTED -> DISCONNECT ─────────────────────────────────────
+    # ─── ALREADY CONNECTED -> DISCONNECT & POWER OFF ─────────────────────────
     dunstify -a "TRV30_OSD" -r 9997 -u normal -i "bluetooth-disabled" \
-        "📡 BLUETOOTH DISCONNECT" "Disconnecting $USUAL_NAME...\nAudio returning to internal speakers" -t 2000
+        "📡 BLUETOOTH OFF" "Disconnecting $USUAL_NAME & powering down Bluetooth radio...\nEarbuds released for phone connection." -t 2000
 
     bluetoothctl disconnect "$USUAL_MAC" >/dev/null 2>&1
-    sleep 0.5
+    sleep 0.3
+    bluetoothctl power off >/dev/null 2>&1
 
     # Switch default sink back to laptop speakers if needed
     SPEAKER_SINK=$(pactl list sinks short 2>/dev/null | grep -E "alsa_output.*HiFi.*Speaker|alsa_output.*speaker|alsa_output" | awk '{print $2}' | head -n 1)
@@ -34,7 +35,7 @@ if [ -n "$IS_CONNECTED" ]; then
     fi
 
     dunstify -a "TRV30_OSD" -r 9997 -u normal -i "bluetooth-disabled" \
-        "💤 BLUETOOTH RELEASED" "$USUAL_NAME disconnected.\nInternal Audio Active." -t 2500
+        "💤 BLUETOOTH POWERED OFF" "$USUAL_NAME disconnected & radio disabled.\nPhone connection ready | Internal Audio Active." -t 2500
 else
     # ─── NOT CONNECTED -> ENABLE & CONNECT ───────────────────────────────────
     # If RF blocked or powered off, restore power
@@ -91,8 +92,10 @@ else
         dunstify -a "TRV30_OSD" -r 9997 -u normal -i "audio-headphones" \
             "🎧 USUAL CONNECTED" "$USUAL_NAME ($CODEC_LABEL)${BAT_STR}\nHigh-Fidelity Audio Linked" -t 3000
     else
-        # Could not connect immediately (e.g. headphones in case or powered off)
+        # Could not connect immediately (e.g. headphones in case, powered off, or linked to phone)
+        # Power radio off so it doesn't fight phone or keep radio running needlessly
+        bluetoothctl power off >/dev/null 2>&1
         dunstify -a "TRV30_OSD" -r 9997 -u critical -i "dialog-warning" \
-            "⚠️ CONNECTION FAILED" "$USUAL_NAME not found.\nEnsure headphones are out of case & in range." -t 4000
+            "⚠️ CONNECTION FAILED" "$USUAL_NAME not found or linked to phone.\nBluetooth powered down." -t 4000
     fi
 fi
