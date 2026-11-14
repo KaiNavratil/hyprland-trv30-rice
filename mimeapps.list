@@ -6,7 +6,7 @@ x-scheme-handler/about=vivaldi-stable.desktop
 x-scheme-handler/unknown=vivaldi-stable.desktop
 x-scheme-handler/antigravity=antigravity.desktop
 x-scheme-handler/discord=vesktop.desktop
-inode/directory=org.kde.dolphin.desktop
+inode/directory=org.gnome.Nautilus.desktop
 application/pdf=vivaldi-stable.desktop
 
 [Added Associations]
