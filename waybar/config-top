@@ -74,8 +74,8 @@
     "pulseaudio": {
         "format": "墳 {volume}%",
         "format-muted": "墳 MUTE",
-        "scroll-step": 5,
-        "max-volume": 150,
+        "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +5%",
+        "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -5%",
         "on-click": "pavucontrol"
     },
     "custom/battery": {

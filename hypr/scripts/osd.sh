@@ -7,6 +7,7 @@ generate_osd_vol() {
     local VOL=$1
     local PCT=$(printf "%3d%%" "$VOL")
     local TOTAL_BARS=$((VOL / 5))
+    if [ "$TOTAL_BARS" -gt 40 ]; then TOTAL_BARS=40; fi
     local BARS=""
     for (( i=1; i<=TOTAL_BARS; i++ )); do
         BARS="${BARS}|"
@@ -39,7 +40,6 @@ if [ "$ACTION" = "vol-up" ] || [ "$ACTION" = "vol-down" ]; then
         CUR_VOL=$(get_rounded_vol)
         if [ "$ACTION" = "vol-up" ]; then
             NEW_VOL=$(( (CUR_VOL / 5 + 1) * 5 ))
-            if [ "$NEW_VOL" -gt 2000 ]; then NEW_VOL=2000; fi
             if wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED; then
                 wpctl set-mute @DEFAULT_AUDIO_SINK@ 0
                 sync_mute_all_sinks 0
@@ -48,7 +48,7 @@ if [ "$ACTION" = "vol-up" ] || [ "$ACTION" = "vol-down" ]; then
             NEW_VOL=$(( ((CUR_VOL + 4) / 5 - 1) * 5 ))
             if [ "$NEW_VOL" -lt 0 ]; then NEW_VOL=0; fi
         fi
-        wpctl set-volume -l 20.0 @DEFAULT_AUDIO_SINK@ "${NEW_VOL}%"
+        wpctl set-volume -l 1000.0 @DEFAULT_AUDIO_SINK@ "${NEW_VOL}%"
         OSD_MSG=$(generate_osd_vol "$NEW_VOL")
         dunstify -a "osd" -r 9999 "$OSD_MSG" ""
     ) 200>/tmp/osd_vol.lock
