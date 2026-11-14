@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Roblox Studio
+GenericName=Game Development Studio
+Comment=Roblox Studio (via Vinegar)
+Exec=/home/kaijnav/.local/bin/roblox-studio %U
+Icon=/home/kaijnav/.local/share/flatpak/app/org.vinegarhq.Vinegar/current/active/export/share/icons/hicolor/scalable/apps/org.vinegarhq.Vinegar.studio.svg
+Terminal=false
+Type=Application
+Categories=Development;Game;
+Keywords=roblox;studio;game;vinegar;dev;

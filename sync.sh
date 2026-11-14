@@ -23,6 +23,9 @@ cp -a ~/.local/bin/wl-copy "$RICE_DIR/bin/" 2>/dev/null || true
 cp -a ~/.local/bin/wl-paste "$RICE_DIR/bin/" 2>/dev/null || true
 cp -a ~/.local/bin/wtype "$RICE_DIR/bin/" 2>/dev/null || true
 cp -a ~/.local/bin/vinegar "$RICE_DIR/bin/" 2>/dev/null || true
+cp -a ~/.local/bin/roblox-studio "$RICE_DIR/bin/" 2>/dev/null || true
+mkdir -p "$RICE_DIR/applications"
+cp -a ~/.local/share/applications/roblox-studio.desktop "$RICE_DIR/applications/" 2>/dev/null || true
 mkdir -p "$RICE_DIR/copyq"
 cp -a ~/.config/copyq/*.conf ~/.config/copyq/*.ini "$RICE_DIR/copyq/" 2>/dev/null || true
 
