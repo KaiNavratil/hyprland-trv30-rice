@@ -467,6 +467,22 @@ function M.toggle(target, is_stack)
             elseif cfg.cmd then
                 hl.exec_cmd(cfg.cmd)
             end
+        elseif not has_window and target == "magic" then
+            local spaces_mod = package.loaded["spaces"]
+            if spaces_mod and spaces_mod._ws_map then
+                for _, w in ipairs(wins) do
+                    local t = w.title and w.title:gsub("^%([%d%+]+%)%s*", ""):gsub("\\+", ""):gsub('"', ""):gsub("[%c]", " "):match("^%s*(.-)%s*$")
+                    if t and spaces_mod._ws_map[t] == "special:magic" then
+                        hl.dispatch(hl.dsp.window.move({
+                            workspace = target_special,
+                            window = "address:" .. w.address,
+                            silent = true,
+                        }))
+                        has_window = true
+                        break
+                    end
+                end
+            end
         end
     end
 

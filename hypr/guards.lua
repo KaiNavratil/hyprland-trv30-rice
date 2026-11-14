@@ -154,7 +154,7 @@ function M.kill_and_remember()
     end
 
     local ws = win.workspace and win.workspace.name or ""
-    if win.class and (not ws:find("^special:") or ws == "special:dev") then
+    if win.class and (not ws:find("^special:") or ws == "special:dev" or ws == "special:magic") then
         local c_class = win.class
         local c_title = win.title or ""
         local exec_cmd = c_class:lower()

@@ -46,7 +46,7 @@ def main():
             
             if best_match:
                 ws = str(best_match.get("workspace", ""))
-                if ws and not ws.startswith("special:"):
+                if ws and (not ws.startswith("special:") or ws == "special:magic"):
                     if curr_ws != ws:
                         try:
                             target_addr = addr if addr.startswith("0x") else f"0x{addr}"

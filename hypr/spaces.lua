@@ -85,7 +85,7 @@ local GENERIC_TITLES = {
 
 local function clean_title_key(t)
     if not t or type(t) ~= "string" then return nil end
-    local s = t:gsub("\\+", ""):gsub('"', ""):gsub("[%c]", " "):match("^%s*(.-)%s*$")
+    local s = t:gsub("^%([%d%+]+%)%s*", ""):gsub("\\+", ""):gsub('"', ""):gsub("[%c]", " "):match("^%s*(.-)%s*$")
     if not s or #s == 0 or #s > 120 then return nil end
     return s
 end
@@ -111,7 +111,7 @@ function M.load_workspaces_map()
 
     for k, v in content:gmatch('"([^"\r\n]+)"%s*:%s*"([^"\r\n]+)"') do
         local clean_k = clean_title_key(k)
-        local clean_v = v:match("^%d+$")
+        local clean_v = v:match("^%d+$") or (v == "special:magic" and "special:magic" or nil)
         if clean_k and clean_v and not is_generic_title(clean_k) then
             M._ws_map[clean_k] = clean_v
         end
@@ -124,7 +124,7 @@ function M.save_workspaces_map()
     local entries = {}
     for k, v in pairs(M._ws_map) do
         local clean_k = clean_title_key(k)
-        local clean_v = tostring(v):match("^%d+$")
+        local clean_v = tostring(v):match("^%d+$") or (tostring(v) == "special:magic" and "special:magic" or nil)
         if clean_k and clean_v and not is_generic_title(clean_k) then
             table.insert(entries, string.format('  "%s": "%s"', clean_k, clean_v))
         end
@@ -745,6 +745,12 @@ function M.setup()
             if win and win.address and not is_utility_window(win) then
                 if not M._routed[win.address] then
                     M.route_window(win)
+                end
+                -- Continuously track workspace location when title updates
+                local cur_ws = win.workspace and win.workspace.name
+                if cur_ws and (cur_ws == "special:magic" or cur_ws:match("^%d+$")) then
+                    local fake_win = { title = win.title, workspace = cur_ws, class = win.class, floating = win.floating }
+                    M.track_window(fake_win)
                 end
             end
         end)
