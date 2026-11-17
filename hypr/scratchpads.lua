@@ -286,6 +286,29 @@ function M.stow_active()
     return false
 end
 
+--- Ensures scratchpad is open and focused on the active monitor (idempotent open, never stows)
+function M.show(target)
+    local cur_mon = hl.get_active_monitor()
+    if not cur_mon then return end
+
+    local target_special = "special:" .. target
+    local cur_sp = hl.get_active_special_workspace()
+    local cur_sp_name = cur_sp and cur_sp.name or ""
+
+    if cur_sp_name ~= target_special then
+        M.toggle(target)
+    else
+        -- Already open on current monitor: ensure the scratchpad window has focus
+        local wins = hl.get_windows() or {}
+        for _, w in ipairs(wins) do
+            if w.workspace and w.workspace.name == target_special then
+                hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+                break
+            end
+        end
+    end
+end
+
 --- Native scratchpad toggler
 function M.toggle(target, is_stack)
     local cur_mon = hl.get_active_monitor()

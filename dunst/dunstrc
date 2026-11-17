@@ -106,11 +106,15 @@ timeout = 2
 
 [messaging_discord]
 appname = "*[Dd]iscord*"
+action_name = default
+script = /home/kaijnav/.config/hypr/scripts/dunst-track-app.sh
 timeout = 8
 override_dbus_timeout = 8
 
 [messaging_vesktop]
 appname = "*[Vv]esktop*"
+action_name = default
+script = /home/kaijnav/.config/hypr/scripts/dunst-track-app.sh
 timeout = 8
 override_dbus_timeout = 8
 

@@ -10,6 +10,11 @@ if [ -z "$TARGET" ]; then
     exit 0
 fi
 
+if [ "$MODE" == "--show" ]; then
+    hyprctl repl "local sp = require('scratchpads'); if sp.show then sp.show('$TARGET') else sp.toggle('$TARGET') end" >/dev/null 2>&1
+    exit 0
+fi
+
 IS_STACK="false"
 if [ "$MODE" == "--stack" ]; then
     IS_STACK="true"
