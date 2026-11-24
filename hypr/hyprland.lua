@@ -82,6 +82,7 @@ hl.config({
         kb_layout = "custom_arrows",
         follow_mouse = 1,
         sensitivity = 0,
+        accel_profile = "flat",
         touchpad = {
             natural_scroll = true,
             tap_to_click = true,
@@ -299,6 +300,18 @@ hl.window_rule({
 hl.device({
     name = "earfun-air-pro-4-(avrcp)",
     enabled = false,
+})
+
+hl.device({
+    name = "razer-razer-deathadder-v3-pro-mouse",
+    sensitivity = 0,
+    accel_profile = "flat",
+})
+
+hl.device({
+    name = "razer-razer-deathadder-v3-pro",
+    sensitivity = 0,
+    accel_profile = "flat",
 })
 
 -- ┌─────────────────────────────────────────────────────────────┐
